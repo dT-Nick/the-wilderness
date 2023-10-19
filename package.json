@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev": "npx http-server . -p 3000",
+    "build": "tsc -p ./tsconfig.json --watch"
+  },
+  "devDependencies": {
+    "eslint": "^8.51.0",
+    "typescript": "^5.2.2"
+  }
+}
