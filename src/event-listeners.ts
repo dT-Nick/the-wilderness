@@ -6,6 +6,7 @@ export function startListeners() {
 
   document.addEventListener('mousedown', handleMouseDown)
   document.addEventListener('mouseup', handleMouseUp)
+  document.addEventListener('mousemove', handleMouseMove)
 }
 
 export function stopListeners() {
@@ -14,28 +15,42 @@ export function stopListeners() {
 
   document.removeEventListener('mousedown', handleMouseDown)
   document.removeEventListener('mouseup', handleMouseUp)
+  document.removeEventListener('mousemove', handleMouseMove)
 }
 
 function handleKeyDown(e: KeyboardEvent) {
+  const key = e.key.toLowerCase()
   updateState((currentState) => ({
-    keysDown: new Set([...currentState.keysDown, e.key]),
+    keysDown: currentState.keysDown.includes(key)
+      ? currentState.keysDown
+      : [...currentState.keysDown, key],
   }))
 }
 
 function handleKeyUp(e: KeyboardEvent) {
+  const key = e.key.toLowerCase()
   updateState((currentState) => {
-    const keysDown = new Set(currentState.keysDown)
-    keysDown.delete(e.key)
     return {
-      keysDown,
+      keysDown: currentState.keysDown.filter((k) => k !== key),
     }
   })
 }
 
 function handleMouseDown(e: MouseEvent) {
-  console.log('mousedown', e)
+  updateState({
+    mouseDown: true,
+  })
 }
 
 function handleMouseUp(e: MouseEvent) {
-  console.log('mouseup', e)
+  updateState({
+    mouseDown: false,
+  })
+}
+
+function handleMouseMove(e: MouseEvent) {
+  updateState({
+    mouseX: e.clientX,
+    mouseY: e.clientY,
+  })
 }

@@ -1,7 +1,17 @@
+import { Player } from './player.js'
+
 type WindowState = {
   height: number
   width: number
-  keysDown: Set<string>
+  keysDown: Array<string>
+  prevMouseDown: boolean
+  mouseDown: boolean
+  mouseX: number
+  mouseY: number
+  blocksHorizontal: number
+  blockSize: number
+  blocksVertical: number
+  verticalOffset: number
 }
 
 type State =
@@ -9,20 +19,31 @@ type State =
       status: 'inactive'
       lastFrameTime: null
       ctx: null
+      player: null
     } & WindowState)
   | ({
-      status: 'active'
+      status: 'active' | 'paused'
       lastFrameTime: number
       ctx: CanvasRenderingContext2D
+      player: Player
     } & WindowState)
 
 const defaultStateValues: State = {
   status: 'inactive',
   lastFrameTime: null,
   ctx: null,
-  height: window.innerHeight - 50,
-  width: window.innerWidth - 50,
-  keysDown: new Set(),
+  height: window.innerHeight,
+  width: window.innerWidth,
+  keysDown: [],
+  prevMouseDown: false,
+  mouseDown: false,
+  player: null,
+  mouseX: 0,
+  mouseY: 0,
+  blocksHorizontal: 0,
+  blocksVertical: 0,
+  verticalOffset: 0,
+  blockSize: 0,
 }
 
 class GameState {
