@@ -53,12 +53,15 @@ export function runGameLoop() {
     const deltaTime = now - lastFrameTime
     if (deltaTime > 1000 / 60 && state.status === 'active') {
       ctx.clearRect(0, 0, state.width, state.height)
+      const endGame = handleInput()
       generateBackgroundGrid()
       generatePlayer()
       generateExitMenu()
-      handleInput()
+      updateState({
+        lastFrameTime: now,
+      })
+      if (endGame) return stopGameLoop()
     }
-    state.lastFrameTime = Date.now()
     return requestAnimationFrame(runGameLoop)
   }
 }

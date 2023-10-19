@@ -34,10 +34,19 @@ export function generateStartMenu() {
 
 export function generateExitMenu() {
   const { state } = gameState
-  const { ctx, status } = state
+  const { ctx, status, verticalOffset, mouseX, mouseY } = state
 
   if (status === 'active') {
-    ctx.fillStyle = 'red'
-    ctx.fillRect(state.width - 110, 10, 100, 100)
+    if (
+      mouseX > state.width - 55 &&
+      mouseX < state.width - 5 &&
+      mouseY > 5 + verticalOffset / 2 &&
+      mouseY < 55 + verticalOffset / 2
+    ) {
+      ctx.fillStyle = 'orangered'
+    } else {
+      ctx.fillStyle = 'red'
+    }
+    ctx.fillRect(state.width - 55, 5 + verticalOffset / 2, 50, 50)
   }
 }

@@ -5,9 +5,12 @@ export function handleInput() {
   const { state } = gameState
 
   if (state.mouseDown && !state.prevMouseDown) {
-    if (state.mouseX > state.width - 110 && state.mouseX < state.width - 10) {
-      if (state.mouseY > 10 && state.mouseY < 110) {
-        stopGameLoop()
+    if (state.mouseX > state.width - 55 && state.mouseX < state.width - 5) {
+      if (
+        state.mouseY > 5 + state.verticalOffset / 2 &&
+        state.mouseY < 55 + state.verticalOffset / 2
+      ) {
+        return true
       }
     }
 
@@ -60,7 +63,7 @@ export function handleInput() {
 
     if (state.player.movementStatus === 'up') {
       const destinationY = state.player.prevY - state.blockSize
-      const newY = state.player.y - state.blockSize / 16
+      const newY = state.player.y - state.blockSize / 8
       const isOnDestination = newY < destinationY
 
       state.player.updatePosition(
@@ -73,7 +76,7 @@ export function handleInput() {
     }
     if (state.player.movementStatus === 'down') {
       const destinationY = state.player.prevY + state.blockSize
-      const newY = state.player.y + state.blockSize / 16
+      const newY = state.player.y + state.blockSize / 8
       const isOnDestination = newY > destinationY
 
       state.player.updatePosition(
@@ -86,7 +89,7 @@ export function handleInput() {
     }
     if (state.player.movementStatus === 'left') {
       const destinationX = state.player.prevX - state.blockSize
-      const newX = state.player.x - state.blockSize / 16
+      const newX = state.player.x - state.blockSize / 8
       const isOnDestination = newX < destinationX
 
       state.player.updatePosition(
@@ -99,7 +102,7 @@ export function handleInput() {
     }
     if (state.player.movementStatus === 'right') {
       const destinationX = state.player.prevX + state.blockSize
-      const newX = state.player.x + state.blockSize / 16
+      const newX = state.player.x + state.blockSize / 8
       const isOnDestination = newX > destinationX
 
       state.player.updatePosition(
@@ -111,4 +114,6 @@ export function handleInput() {
       }
     }
   }
+
+  return false
 }
