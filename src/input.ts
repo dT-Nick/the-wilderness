@@ -39,19 +39,22 @@ export function handleInput() {
   }
 
   if (status === 'active') {
-    if (player.movementStatus === 'idle') {
-      const lastMovementKeyIndex = Math.max(
-        keysDown.indexOf('arrowup'),
-        keysDown.indexOf('arrowdown'),
-        keysDown.indexOf('arrowleft'),
-        keysDown.indexOf('arrowright'),
-        keysDown.indexOf('w'),
-        keysDown.indexOf('s'),
-        keysDown.indexOf('a'),
-        keysDown.indexOf('d')
-      )
-      const lastMovementKey = keysDown[lastMovementKeyIndex]
-
+    const lastMovementKeyIndex = Math.max(
+      keysDown.indexOf('arrowup'),
+      keysDown.indexOf('arrowdown'),
+      keysDown.indexOf('arrowleft'),
+      keysDown.indexOf('arrowright'),
+      keysDown.indexOf('w'),
+      keysDown.indexOf('s'),
+      keysDown.indexOf('a'),
+      keysDown.indexOf('d')
+    )
+    const lastMovementKey =
+      lastMovementKeyIndex >= 0 ? keysDown[lastMovementKeyIndex] : null
+    if (
+      player.movementStatus === 'idle' ||
+      player.movementStatus === 'stable'
+    ) {
       switch (lastMovementKey) {
         case 'arrowup':
         case 'w':
@@ -81,7 +84,11 @@ export function handleInput() {
 
       player.updatePosition(player.x, isOnDestination ? destinationY : newY)
       if (isOnDestination) {
-        player.stopMoving()
+        if (lastMovementKey) {
+          player.keepMoving()
+        } else {
+          player.stopMoving()
+        }
       }
     }
     if (player.movementStatus === 'down') {
@@ -91,7 +98,11 @@ export function handleInput() {
 
       player.updatePosition(player.x, isOnDestination ? destinationY : newY)
       if (isOnDestination) {
-        player.stopMoving()
+        if (lastMovementKey) {
+          player.keepMoving()
+        } else {
+          player.stopMoving()
+        }
       }
     }
     if (player.movementStatus === 'left') {
@@ -101,7 +112,11 @@ export function handleInput() {
 
       player.updatePosition(isOnDestination ? destinationX : newX, player.y)
       if (isOnDestination) {
-        player.stopMoving()
+        if (lastMovementKey) {
+          player.keepMoving()
+        } else {
+          player.stopMoving()
+        }
       }
     }
     if (player.movementStatus === 'right') {
@@ -111,7 +126,11 @@ export function handleInput() {
 
       player.updatePosition(isOnDestination ? destinationX : newX, player.y)
       if (isOnDestination) {
-        player.stopMoving()
+        if (lastMovementKey) {
+          player.keepMoving()
+        } else {
+          player.stopMoving()
+        }
       }
     }
   }
