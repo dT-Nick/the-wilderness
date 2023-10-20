@@ -109,10 +109,10 @@ export function runGameLoop() {
       ctx.clearRect(0, 0, state.width, state.height)
       generateBackgroundGrid()
       generatePlayer()
-      if (state.player.coords[0] === 1) {
+      if (state.player.coordinates[0] === 1) {
         console.log('LEFT SIDE')
       }
-      if (state.player.coords[1] === 1) {
+      if (state.player.coordinates[1] === 1) {
         console.log('TOP SIDE')
       }
       generateExitMenu()

@@ -3,7 +3,6 @@ import { gameState } from './state.js'
 export class Player {
   x: number
   y: number
-  coords: [number, number]
   size: number
   prevX: number
   prevY: number
@@ -13,11 +12,19 @@ export class Player {
   constructor(startX: number, startY: number, startSize: number) {
     this.x = startX
     this.y = startY
-    this.coords = [17, 6]
     this.size = startSize
     this.prevX = startX
     this.prevY = startY
     this.movementStatus = 'idle'
+  }
+
+  get coordinates() {
+    const { state } = gameState
+    const { blockSize } = state
+    return [
+      Math.ceil(this.prevX / blockSize),
+      Math.ceil(this.prevY / blockSize),
+    ]
   }
 
   public moveUp() {
@@ -41,11 +48,8 @@ export class Player {
   }
 
   public stopMoving() {
-    const { state } = gameState
-    const { blockSize } = state
     this.prevX = this.x
     this.prevY = this.y
-    this.coords = [Math.ceil(this.x / blockSize), Math.ceil(this.y / blockSize)]
     this.movementStatus = 'idle'
   }
 
