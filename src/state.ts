@@ -3,6 +3,7 @@ import { Player } from './player.js'
 type WindowState = {
   height: number
   width: number
+  scale: number
   keysDown: Array<string>
   prevMouseDown: boolean
   mouseDown: boolean
@@ -34,6 +35,7 @@ const defaultStateValues: State = {
   ctx: null,
   height: window.innerHeight,
   width: window.innerWidth,
+  scale: window.innerWidth / 1920,
   keysDown: [],
   prevMouseDown: false,
   mouseDown: false,

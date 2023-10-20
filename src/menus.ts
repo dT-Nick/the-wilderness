@@ -6,27 +6,24 @@ export function generateStartMenu() {
   const { ctx, status } = state
 
   if (status !== 'inactive') {
-    document.addEventListener('mousedown', handleMouseDown)
     ctx.fillStyle = 'green'
-    ctx.clearRect(0, 0, state.width, state.height)
     ctx.fillRect(state.width / 2 - 100, state.height / 2 - 100, 200, 200)
+  }
+}
 
-    function handleMouseDown(e: MouseEvent) {
-      if (status === 'inactive')
-        return document.removeEventListener('mousedown', handleMouseDown)
+export function handleMenuInput() {
+  const { state } = gameState
+  const { status, mouseDown, mouseX, mouseY } = state
 
+  if (status === 'paused') {
+    if (mouseDown) {
       if (
-        e.clientX > state.width / 2 - 100 &&
-        e.clientX < state.width / 2 + 100
+        mouseX > state.width / 2 - 100 &&
+        mouseX < state.width / 2 + 100 &&
+        mouseY > state.height / 2 - 100 &&
+        mouseY < state.height / 2 + 100
       ) {
-        if (
-          e.clientY > state.height / 2 - 100 &&
-          e.clientY < state.height / 2 + 100
-        ) {
-          document.removeEventListener('mousedown', handleMouseDown)
-          ctx.clearRect(0, 0, state.width, state.height)
-          startGameLoop()
-        }
+        startGameLoop()
       }
     }
   }
@@ -34,19 +31,24 @@ export function generateStartMenu() {
 
 export function generateExitMenu() {
   const { state } = gameState
-  const { ctx, status, verticalOffset, mouseX, mouseY } = state
+  const { ctx, status, verticalOffset, mouseX, mouseY, scale } = state
 
   if (status === 'active') {
     if (
-      mouseX > state.width - 55 &&
-      mouseX < state.width - 5 &&
-      mouseY > 5 + verticalOffset / 2 &&
-      mouseY < 55 + verticalOffset / 2
+      mouseX > state.width - 54 * scale &&
+      mouseX < state.width - 5 * scale &&
+      mouseY > 5 * scale + verticalOffset / 2 &&
+      mouseY < 54 * scale + verticalOffset / 2
     ) {
       ctx.fillStyle = 'orangered'
     } else {
       ctx.fillStyle = 'red'
     }
-    ctx.fillRect(state.width - 55, 5 + verticalOffset / 2, 50, 50)
+    ctx.fillRect(
+      state.width - 54 * scale,
+      5 * scale + verticalOffset / 2,
+      49 * scale,
+      49 * scale
+    )
   }
 }

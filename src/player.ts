@@ -3,14 +3,18 @@ import { gameState } from './state.js'
 export class Player {
   x: number
   y: number
+  coords: [number, number]
+  size: number
   prevX: number
   prevY: number
   movementStatus: 'idle' | 'up' | 'down' | 'left' | 'right'
   id: string
 
-  constructor(startX: number, startY: number) {
+  constructor(startX: number, startY: number, startSize: number) {
     this.x = startX
     this.y = startY
+    this.coords = [17, 6]
+    this.size = startSize
     this.prevX = startX
     this.prevY = startY
     this.movementStatus = 'idle'
@@ -37,8 +41,11 @@ export class Player {
   }
 
   public stopMoving() {
+    const { state } = gameState
+    const { blockSize } = state
     this.prevX = this.x
     this.prevY = this.y
+    this.coords = [Math.ceil(this.x / blockSize), Math.ceil(this.y / blockSize)]
     this.movementStatus = 'idle'
   }
 
@@ -50,10 +57,15 @@ export class Player {
 
 export function generatePlayer() {
   const { state } = gameState
-  const { ctx, status, player } = state
+  const { ctx, status, player, scale, verticalOffset } = state
 
   if (status !== 'inactive') {
     ctx.fillStyle = 'white'
-    ctx.fillRect(player.x, player.y, 20, 20)
+    ctx.fillRect(
+      player.x * scale,
+      player.y * scale + verticalOffset / 2,
+      player.size * scale,
+      player.size * scale
+    )
   }
 }

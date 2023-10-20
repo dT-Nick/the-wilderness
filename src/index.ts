@@ -1,16 +1,53 @@
 import { generateBackgroundGrid } from './background.js'
 import { startListeners, stopListeners } from './event-listeners.js'
 import { handleInput } from './input.js'
-import { generateExitMenu, generateStartMenu } from './menus.js'
+import {
+  generateExitMenu,
+  generateStartMenu,
+  handleMenuInput,
+} from './menus.js'
 import { Player, generatePlayer } from './player.js'
 import { gameState, updateState } from './state.js'
 
 document.addEventListener('DOMContentLoaded', function () {
   const { state } = gameState
 
+  const resizeObserver = new ResizeObserver((entries) => {
+    const { width, height } = entries[0].contentRect
+    const canvas = document.querySelector('canvas')
+    if (!canvas) throw new Error('Canvas not found')
+
+    if (state.status !== 'inactive') {
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = state.width
+      tempCanvas.height = state.height
+      const tempCtx = tempCanvas.getContext('2d')
+      if (!tempCtx) throw new Error('Could not get temp canvas context')
+      tempCtx.drawImage(state.ctx.canvas, 0, 0)
+
+      canvas.width = width
+      canvas.height = height
+
+      state.ctx.drawImage(tempCtx.canvas, 0, 0, width, height)
+    } else {
+      canvas.width = width
+      canvas.height = height
+    }
+
+    updateState((c) => ({
+      width,
+      height,
+      scale: width / 1920,
+      verticalOffset:
+        height - c.blocksVertical * ((width - 1) / c.blocksHorizontal),
+    }))
+  })
+
   function initialise() {
     const root = document.getElementById('root')
     if (!root) throw new Error('Root element not found')
+
+    resizeObserver.observe(root)
 
     const canvas = document.createElement('canvas')
     canvas.width = state.width
@@ -19,21 +56,39 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('Could not get canvas context')
 
+    const blockSize = 1919 / 33
+    const verticalOffset = state.height - 11 * (blockSize * state.scale)
+
     updateState({
       status: 'paused',
       lastFrameTime: Date.now(),
       ctx,
-      player: new Player(state.width / 2 - 10, state.height / 2 - 10),
+      player: new Player(
+        1920 / 2 - 10,
+        (1920 * ((state.height - verticalOffset) / state.width)) / 2 - 10,
+        20
+      ),
       blocksHorizontal: 33,
-      blocksVertical: Math.floor(state.height / ((state.width - 1) / 33)),
-      verticalOffset: state.height % ((state.width - 1) / 33),
-      blockSize: (state.width - 1) / 33,
+      blocksVertical: 11,
+      verticalOffset,
+      blockSize,
     })
-    generateStartMenu()
+    startListeners()
+    startMenuLoop()
   }
 
   initialise()
 })
+
+export function startMenuLoop() {
+  const { state } = gameState
+  const { status, ctx } = state
+  if (status !== 'paused') return
+  ctx.clearRect(0, 0, state.width, state.height)
+  generateStartMenu()
+  handleMenuInput()
+  return requestAnimationFrame(startMenuLoop)
+}
 
 export function startGameLoop() {
   updateState({
@@ -41,7 +96,6 @@ export function startGameLoop() {
     lastFrameTime: Date.now(),
   })
 
-  startListeners()
   runGameLoop()
 }
 
@@ -53,10 +107,16 @@ export function runGameLoop() {
     const deltaTime = now - lastFrameTime
     if (deltaTime > 1000 / 60 && state.status === 'active') {
       ctx.clearRect(0, 0, state.width, state.height)
-      const endGame = handleInput()
       generateBackgroundGrid()
       generatePlayer()
+      if (state.player.coords[0] === 1) {
+        console.log('LEFT SIDE')
+      }
+      if (state.player.coords[1] === 1) {
+        console.log('TOP SIDE')
+      }
       generateExitMenu()
+      const endGame = handleInput()
       updateState({
         lastFrameTime: now,
       })
@@ -81,6 +141,5 @@ export function stopGameLoop() {
     keysDown: [],
   })
 
-  stopListeners()
-  generateStartMenu()
+  startMenuLoop()
 }

@@ -1,8 +1,6 @@
 import { gameState } from './state.js'
 
 export function generateBackgroundGrid() {
-  // 160 blocks wide, 90 blocks tall
-
   const { state } = gameState
   const {
     ctx,
@@ -11,6 +9,7 @@ export function generateBackgroundGrid() {
     blocksVertical,
     blockSize,
     verticalOffset,
+    scale,
   } = state
 
   if (status !== 'inactive') {
@@ -18,17 +17,17 @@ export function generateBackgroundGrid() {
     for (let i = 0; i < blocksHorizontal + 1; i++) {
       if (blocksHorizontal % 2 === 0) {
         ctx.fillRect(
-          i * blockSize + blockSize / 2,
+          i * (blockSize * scale) + (blockSize * scale) / 2,
           verticalOffset / 2,
           1,
-          blocksVertical * blockSize
+          blocksVertical * (blockSize * scale)
         )
       } else {
         ctx.fillRect(
-          i * blockSize,
+          i * (blockSize * scale),
           verticalOffset / 2,
           1,
-          blocksVertical * blockSize
+          blocksVertical * (blockSize * scale)
         )
       }
     }
@@ -36,15 +35,17 @@ export function generateBackgroundGrid() {
       if (blocksVertical % 2 === 0) {
         ctx.fillRect(
           0,
-          j * blockSize + blockSize / 2 + verticalOffset / 2,
-          blocksHorizontal * blockSize,
+          j * (blockSize * scale) +
+            (blockSize * scale) / 2 +
+            verticalOffset / 2,
+          blocksHorizontal * (blockSize * scale),
           1
         )
       } else {
         ctx.fillRect(
           0,
-          j * blockSize + verticalOffset / 2,
-          blocksHorizontal * blockSize,
+          j * (blockSize * scale) + verticalOffset / 2,
+          blocksHorizontal * (blockSize * scale),
           1
         )
       }
