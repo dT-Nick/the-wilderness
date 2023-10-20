@@ -1,5 +1,10 @@
 import { stopGameLoop } from './index.js'
-import { gameState, updateState } from './state.js'
+import {
+  battleState,
+  gameState,
+  updateBattleState,
+  updateState,
+} from './state.js'
 
 export function handleInput() {
   const { state } = gameState
@@ -139,4 +144,51 @@ export function handleInput() {
   }
 
   return false
+}
+
+export function handleBattleInput() {
+  const { state } = gameState
+  const { state: bState } = battleState
+  const { keysDown, prevKeysDown } = state
+
+  if (
+    (!prevKeysDown.includes('arrowup') && keysDown.includes('arrowup')) ||
+    (!prevKeysDown.includes('w') && keysDown.includes('w'))
+  ) {
+    if (bState.selectedMove !== 1 && bState.selectedMove !== 2) {
+      updateBattleState({
+        selectedMove: bState.selectedMove === 3 ? 1 : 2,
+      })
+    }
+  }
+  if (
+    (!prevKeysDown.includes('arrowdown') && keysDown.includes('arrowdown')) ||
+    (!prevKeysDown.includes('s') && keysDown.includes('s'))
+  ) {
+    if (bState.selectedMove !== 3 && bState.selectedMove !== 4) {
+      updateBattleState({
+        selectedMove: bState.selectedMove === 1 ? 3 : 4,
+      })
+    }
+  }
+  if (
+    (!prevKeysDown.includes('arrowleft') && keysDown.includes('arrowleft')) ||
+    (!prevKeysDown.includes('a') && keysDown.includes('a'))
+  ) {
+    if (bState.selectedMove !== 1 && bState.selectedMove !== 3) {
+      updateBattleState({
+        selectedMove: bState.selectedMove === 2 ? 1 : 3,
+      })
+    }
+  }
+  if (
+    (!prevKeysDown.includes('arrowright') && keysDown.includes('arrowright')) ||
+    (!prevKeysDown.includes('d') && keysDown.includes('d'))
+  ) {
+    if (bState.selectedMove !== 2 && bState.selectedMove !== 4) {
+      updateBattleState({
+        selectedMove: bState.selectedMove === 1 ? 2 : 4,
+      })
+    }
+  }
 }

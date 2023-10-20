@@ -6,7 +6,15 @@ export class Player {
   size: number
   prevX: number
   prevY: number
-  movementStatus: 'idle' | 'up' | 'down' | 'left' | 'right' | 'stable'
+  health: number
+  movementStatus:
+    | 'idle'
+    | 'up'
+    | 'down'
+    | 'left'
+    | 'right'
+    | 'stable'
+    | 'interrupted'
   faceDirection: 'up' | 'down' | 'left' | 'right'
   faceCount: {
     up: number
@@ -22,6 +30,7 @@ export class Player {
     this.size = startSize
     this.prevX = startX
     this.prevY = startY
+    this.health = 100
     this.faceDirection = 'down'
     this.faceCount = {
       up: 0,
@@ -50,6 +59,10 @@ export class Player {
     } else {
       this.faceDirection = 'up'
     }
+  }
+
+  public interruptMovement(value: boolean) {
+    this.movementStatus = value ? 'interrupted' : 'stable'
   }
 
   public moveDown() {
@@ -152,7 +165,11 @@ export function generatePlayer() {
     )
 
     gradient.addColorStop(0, 'orangered')
-    gradient.addColorStop(1, 'white')
+    if (player.movementStatus === 'interrupted') {
+      gradient.addColorStop(0.5, 'red')
+    } else {
+      gradient.addColorStop(1, 'white')
+    }
     ctx.fillStyle = gradient
 
     ctx.save()

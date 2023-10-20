@@ -5,6 +5,7 @@ type WindowState = {
   width: number
   scale: number
   keysDown: Array<string>
+  prevKeysDown: Array<string>
   prevMouseDown: boolean
   mouseDown: boolean
   mouseX: number
@@ -40,13 +41,14 @@ const defaultStateValues: State = {
   width: window.innerWidth,
   scale: window.innerWidth / 1920,
   keysDown: [],
+  prevKeysDown: [],
   prevMouseDown: false,
   mouseDown: false,
   player: null,
   mouseX: 0,
   mouseY: 0,
-  blocksHorizontal: 0,
-  blocksVertical: 0,
+  blocksHorizontal: 33,
+  blocksVertical: 11,
   verticalOffset: 0,
   blockSize: 0,
 }
@@ -75,3 +77,42 @@ export function updateState(
     })
   }
 }
+
+type BattleStateType = {
+  selectedMove: number
+  enemyId: number
+  turns: number
+}
+
+const defaultBattleStateValues: BattleStateType = {
+  selectedMove: 1,
+  enemyId: 0,
+  turns: 0,
+}
+
+export class BattleState {
+  state: BattleStateType
+  constructor() {
+    this.state = defaultBattleStateValues
+  }
+
+  public updateValues(stateValues: Partial<BattleStateType>) {
+    Object.assign(this.state, stateValues)
+  }
+}
+
+export function updateBattleState(
+  newValues:
+    | Partial<BattleStateType>
+    | ((state: BattleStateType) => Partial<BattleStateType>)
+) {
+  if (typeof newValues === 'function') {
+    return battleState.updateValues({ ...newValues(battleState.state) })
+  } else {
+    battleState.updateValues({
+      ...newValues,
+    })
+  }
+}
+
+export const battleState = new BattleState()

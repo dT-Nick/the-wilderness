@@ -1,6 +1,7 @@
 import { generateBackgroundGrid } from './background.js'
+import { generateBattle } from './battle.js'
 import { startListeners, stopListeners } from './event-listeners.js'
-import { handleInput } from './input.js'
+import { handleBattleInput, handleInput } from './input.js'
 import {
   generateExitMenu,
   generateStartMenu,
@@ -8,6 +9,7 @@ import {
 } from './menus.js'
 import { Player, generatePlayer } from './player.js'
 import { gameState, updateState } from './state.js'
+import { generateWorld } from './world.js'
 
 document.addEventListener('DOMContentLoaded', function () {
   const { state } = gameState
@@ -56,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('Could not get canvas context')
 
-    const blockSize = 1919 / 37
+    const blockSize = 1919 / state.blocksHorizontal
     const verticalOffset = state.height - 11 * (blockSize * state.scale)
 
     updateState({
@@ -68,8 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
         (1920 * ((state.height - verticalOffset) / state.width)) / 2 - 10,
         20
       ),
-      blocksHorizontal: 37,
-      blocksVertical: 15,
       verticalOffset,
       blockSize,
     })
@@ -113,9 +113,10 @@ export function runGameLoop() {
         lastFrameTime: now,
       })
       const endGame = handleInput()
+      // handleBattleInput()
       ctx.clearRect(0, 0, state.width, state.height)
-      generateBackgroundGrid()
-      generatePlayer()
+      generateWorld()
+      // generateBattle()
       generateExitMenu()
 
       if (endGame) return stopGameLoop()

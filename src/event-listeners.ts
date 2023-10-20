@@ -21,6 +21,7 @@ export function stopListeners() {
 function handleKeyDown(e: KeyboardEvent) {
   const key = e.key.toLowerCase()
   updateState((currentState) => ({
+    prevKeysDown: currentState.keysDown,
     keysDown: currentState.keysDown.includes(key)
       ? currentState.keysDown
       : [...currentState.keysDown, key],
@@ -31,6 +32,7 @@ function handleKeyUp(e: KeyboardEvent) {
   const key = e.key.toLowerCase()
   updateState((currentState) => {
     return {
+      prevKeysDown: currentState.keysDown,
       keysDown: currentState.keysDown.filter((k) => k !== key),
     }
   })
