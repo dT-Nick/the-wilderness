@@ -19,12 +19,14 @@ type State =
   | ({
       status: 'inactive'
       lastFrameTime: null
+      deltaTime: null
       ctx: null
       player: null
     } & WindowState)
   | ({
       status: 'active' | 'paused'
       lastFrameTime: number
+      deltaTime: number
       ctx: CanvasRenderingContext2D
       player: Player
     } & WindowState)
@@ -32,6 +34,7 @@ type State =
 const defaultStateValues: State = {
   status: 'inactive',
   lastFrameTime: null,
+  deltaTime: null,
   ctx: null,
   height: window.innerHeight,
   width: window.innerWidth,

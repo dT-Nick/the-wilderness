@@ -15,6 +15,7 @@ export function handleInput() {
     keysDown,
     prevMouseDown,
     blockSize,
+    deltaTime,
   } = state
 
   if (mouseDown && !prevMouseDown) {
@@ -39,6 +40,8 @@ export function handleInput() {
   }
 
   if (status === 'active') {
+    const deltaFrames = state.deltaTime / (1000 / 60)
+
     const lastMovementKeyIndex = Math.max(
       keysDown.indexOf('arrowup'),
       keysDown.indexOf('arrowdown'),
@@ -79,7 +82,7 @@ export function handleInput() {
 
     if (player.movementStatus === 'up') {
       const destinationY = player.prevY - blockSize
-      const newY = player.y - blockSize / 8
+      const newY = player.y - (blockSize / 16) * deltaFrames
       const isOnDestination = newY < destinationY
 
       player.updatePosition(player.x, isOnDestination ? destinationY : newY)
@@ -93,7 +96,7 @@ export function handleInput() {
     }
     if (player.movementStatus === 'down') {
       const destinationY = player.prevY + blockSize
-      const newY = player.y + blockSize / 8
+      const newY = player.y + (blockSize / 16) * deltaFrames
       const isOnDestination = newY > destinationY
 
       player.updatePosition(player.x, isOnDestination ? destinationY : newY)
@@ -107,7 +110,7 @@ export function handleInput() {
     }
     if (player.movementStatus === 'left') {
       const destinationX = player.prevX - blockSize
-      const newX = player.x - blockSize / 8
+      const newX = player.x - (blockSize / 16) * deltaFrames
       const isOnDestination = newX < destinationX
 
       player.updatePosition(isOnDestination ? destinationX : newX, player.y)
@@ -121,7 +124,7 @@ export function handleInput() {
     }
     if (player.movementStatus === 'right') {
       const destinationX = player.prevX + blockSize
-      const newX = player.x + blockSize / 8
+      const newX = player.x + (blockSize / 16) * deltaFrames
       const isOnDestination = newX > destinationX
 
       player.updatePosition(isOnDestination ? destinationX : newX, player.y)

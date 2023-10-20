@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('Could not get canvas context')
 
-    const blockSize = 1919 / 33
+    const blockSize = 1919 / 37
     const verticalOffset = state.height - 11 * (blockSize * state.scale)
 
     updateState({
@@ -68,8 +68,8 @@ document.addEventListener('DOMContentLoaded', function () {
         (1920 * ((state.height - verticalOffset) / state.width)) / 2 - 10,
         20
       ),
-      blocksHorizontal: 33,
-      blocksVertical: 11,
+      blocksHorizontal: 37,
+      blocksVertical: 15,
       verticalOffset,
       blockSize,
     })
@@ -105,21 +105,19 @@ export function runGameLoop() {
   if (status === 'active') {
     const now = Date.now()
     const deltaTime = now - lastFrameTime
-    if (deltaTime > 1000 / 60 && state.status === 'active') {
-      ctx.clearRect(0, 0, state.width, state.height)
-      generateBackgroundGrid()
-      generatePlayer()
-      if (state.player.coordinates[0] === 1) {
-        console.log('LEFT SIDE')
-      }
-      if (state.player.coordinates[1] === 1) {
-        console.log('TOP SIDE')
-      }
-      generateExitMenu()
-      const endGame = handleInput()
+    updateState({
+      deltaTime,
+    })
+    if (state.status === 'active') {
       updateState({
         lastFrameTime: now,
       })
+      const endGame = handleInput()
+      ctx.clearRect(0, 0, state.width, state.height)
+      generateBackgroundGrid()
+      generatePlayer()
+      generateExitMenu()
+
       if (endGame) return stopGameLoop()
     }
     return requestAnimationFrame(runGameLoop)

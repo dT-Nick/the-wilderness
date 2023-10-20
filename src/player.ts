@@ -111,13 +111,19 @@ export class Player {
   }
 
   public updateFaceCount(direction: 'up' | 'down' | 'left' | 'right') {
-    if (this.faceCount[direction] < 8) {
-      this.faceCount = {
-        up: 0,
-        down: 0,
-        left: 0,
-        right: 0,
-        [direction]: this.faceCount[direction] + 1,
+    const { state } = gameState
+    const { deltaTime, status } = state
+    if (status !== 'inactive') {
+      const deltaFrames = deltaTime / (1000 / 60)
+
+      if (this.faceCount[direction] < 8) {
+        this.faceCount = {
+          up: 0,
+          down: 0,
+          left: 0,
+          right: 0,
+          [direction]: this.faceCount[direction] + 1 * deltaFrames,
+        }
       }
     }
   }
@@ -134,7 +140,9 @@ export function generatePlayer() {
 
   if (status !== 'inactive') {
     // top to bottom gradient
-    player.updateFaceCount(player.faceDirection)
+    if (player.movementStatus === 'idle') {
+      player.updateFaceCount(player.faceDirection)
+    }
 
     const gradient = ctx.createLinearGradient(
       player.x * scale,
@@ -150,35 +158,35 @@ export function generatePlayer() {
     ctx.save()
     if (player.faceDirection === 'up') {
       ctx.translate(
-        player.x + player.size / 2,
-        player.y + player.size / 2 + verticalOffset / 2
+        (player.x + player.size / 2) * scale,
+        (player.y + player.size / 2) * scale + verticalOffset / 2
       )
       ctx.rotate(Math.PI)
       ctx.translate(
-        -player.x - player.size / 2,
-        -player.y - player.size / 2 - verticalOffset / 2
+        (-player.x - player.size / 2) * scale,
+        (-player.y - player.size / 2) * scale - verticalOffset / 2
       )
     }
     if (player.faceDirection === 'left') {
       ctx.translate(
-        player.x + player.size / 2,
-        player.y + player.size / 2 + verticalOffset / 2
+        (player.x + player.size / 2) * scale,
+        (player.y + player.size / 2) * scale + verticalOffset / 2
       )
       ctx.rotate(Math.PI / 2)
       ctx.translate(
-        -player.x - player.size / 2,
-        -player.y - player.size / 2 - verticalOffset / 2
+        (-player.x - player.size / 2) * scale,
+        (-player.y - player.size / 2) * scale - verticalOffset / 2
       )
     }
     if (player.faceDirection === 'right') {
       ctx.translate(
-        player.x + player.size / 2,
-        player.y + player.size / 2 + verticalOffset / 2
+        (player.x + player.size / 2) * scale,
+        (player.y + player.size / 2) * scale + verticalOffset / 2
       )
       ctx.rotate(Math.PI * 1.5)
       ctx.translate(
-        -player.x - player.size / 2,
-        -player.y - player.size / 2 - verticalOffset / 2
+        (-player.x - player.size / 2) * scale,
+        (-player.y - player.size / 2) * scale - verticalOffset / 2
       )
     }
     ctx.fillRect(
