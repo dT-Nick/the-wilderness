@@ -1,5 +1,6 @@
 import { generateBackgroundGrid } from './background.js'
 import { generateBattle } from './battle.js'
+import { Enemy } from './enemy.js'
 import { startListeners, stopListeners } from './event-listeners.js'
 import { handleBattleInput, handleInput } from './input.js'
 import {
@@ -70,6 +71,13 @@ document.addEventListener('DOMContentLoaded', function () {
         (1920 * ((state.height - verticalOffset) / state.width)) / 2 - 10,
         20
       ),
+      enemy: new Enemy(
+        1,
+        'Kaurismaki Daemon',
+        100,
+        1920 / 2 - 10,
+        (1920 * ((state.height - verticalOffset) / state.width)) / 2 - 10
+      ),
       verticalOffset,
       blockSize,
     })
@@ -113,11 +121,11 @@ export function runGameLoop() {
         lastFrameTime: now,
       })
       const endGame = handleInput()
-      // handleBattleInput()
+      handleBattleInput()
       ctx.clearRect(0, 0, state.width, state.height)
-      generateWorld()
-      // generateBattle()
-      generateExitMenu()
+      // generateWorld()
+      generateBattle()
+      // generateExitMenu()
 
       if (endGame) return stopGameLoop()
     }

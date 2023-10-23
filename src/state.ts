@@ -1,3 +1,4 @@
+import { Enemy } from './enemy.js'
 import { Player } from './player.js'
 
 type WindowState = {
@@ -23,6 +24,7 @@ type State =
       deltaTime: null
       ctx: null
       player: null
+      enemy: null
     } & WindowState)
   | ({
       status: 'active' | 'paused'
@@ -30,6 +32,7 @@ type State =
       deltaTime: number
       ctx: CanvasRenderingContext2D
       player: Player
+      enemy: Enemy
     } & WindowState)
 
 const defaultStateValues: State = {
@@ -45,6 +48,7 @@ const defaultStateValues: State = {
   prevMouseDown: false,
   mouseDown: false,
   player: null,
+  enemy: null,
   mouseX: 0,
   mouseY: 0,
   blocksHorizontal: 33,
@@ -82,12 +86,20 @@ type BattleStateType = {
   selectedMove: number
   enemyId: number
   turns: number
+  lastMove: null | 'player' | 'enemy'
+  status: 'play' | 'wait'
+  waitStart: null | number
+  waitLengthMs: number
 }
 
 const defaultBattleStateValues: BattleStateType = {
   selectedMove: 1,
-  enemyId: 0,
+  enemyId: 1,
   turns: 0,
+  lastMove: null,
+  status: 'play',
+  waitStart: null,
+  waitLengthMs: 0,
 }
 
 export class BattleState {
@@ -98,6 +110,16 @@ export class BattleState {
 
   public updateValues(stateValues: Partial<BattleStateType>) {
     Object.assign(this.state, stateValues)
+  }
+
+  get isWaiting() {
+    if (
+      this.state.waitStart &&
+      this.state.waitStart + this.state.waitLengthMs < Date.now()
+    ) {
+      this.state.status = 'play'
+    }
+    return this.state.status === 'wait'
   }
 }
 

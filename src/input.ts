@@ -150,45 +150,61 @@ export function handleBattleInput() {
   const { state } = gameState
   const { state: bState } = battleState
   const { keysDown, prevKeysDown } = state
+  const isWaiting = battleState.isWaiting
+  if (state.status !== 'inactive' && !isWaiting) {
+    if (isKeyPressed(['arrowup', 'w'])) {
+      if (bState.selectedMove !== 1 && bState.selectedMove !== 2) {
+        updateBattleState({
+          selectedMove: bState.selectedMove === 3 ? 1 : 2,
+        })
+      }
+    }
+    if (isKeyPressed(['arrowdown', 's'])) {
+      if (bState.selectedMove !== 3 && bState.selectedMove !== 4) {
+        updateBattleState({
+          selectedMove: bState.selectedMove === 1 ? 3 : 4,
+        })
+      }
+    }
+    if (isKeyPressed(['arrowleft', 'a'])) {
+      if (bState.selectedMove !== 1 && bState.selectedMove !== 3) {
+        updateBattleState({
+          selectedMove: bState.selectedMove === 2 ? 1 : 3,
+        })
+      }
+    }
+    if (isKeyPressed(['arrowright', 'd'])) {
+      if (bState.selectedMove !== 2 && bState.selectedMove !== 4) {
+        updateBattleState({
+          selectedMove: bState.selectedMove === 1 ? 2 : 4,
+        })
+      }
+    }
 
-  if (
-    (!prevKeysDown.includes('arrowup') && keysDown.includes('arrowup')) ||
-    (!prevKeysDown.includes('w') && keysDown.includes('w'))
-  ) {
-    if (bState.selectedMove !== 1 && bState.selectedMove !== 2) {
-      updateBattleState({
-        selectedMove: bState.selectedMove === 3 ? 1 : 2,
-      })
+    if (isKeyPressed('enter')) {
+      if (bState.selectedMove === 1) {
+        state.enemy.takeHit(10)
+      }
+      if (bState.selectedMove === 2) {
+        state.enemy.takeHit(20)
+      }
+      if (bState.selectedMove === 3) {
+        state.enemy.takeHit(30)
+      }
+      if (bState.selectedMove === 4) {
+        state.enemy.takeHit(40)
+      }
     }
   }
-  if (
-    (!prevKeysDown.includes('arrowdown') && keysDown.includes('arrowdown')) ||
-    (!prevKeysDown.includes('s') && keysDown.includes('s'))
-  ) {
-    if (bState.selectedMove !== 3 && bState.selectedMove !== 4) {
-      updateBattleState({
-        selectedMove: bState.selectedMove === 1 ? 3 : 4,
-      })
-    }
+}
+
+function isKeyPressed(key: string | Array<string>) {
+  const { state } = gameState
+  const { prevKeysDown, keysDown } = state
+
+  if (Array.isArray(key)) {
+    return key.some((k) => !prevKeysDown.includes(k) && keysDown.includes(k))
   }
-  if (
-    (!prevKeysDown.includes('arrowleft') && keysDown.includes('arrowleft')) ||
-    (!prevKeysDown.includes('a') && keysDown.includes('a'))
-  ) {
-    if (bState.selectedMove !== 1 && bState.selectedMove !== 3) {
-      updateBattleState({
-        selectedMove: bState.selectedMove === 2 ? 1 : 3,
-      })
-    }
-  }
-  if (
-    (!prevKeysDown.includes('arrowright') && keysDown.includes('arrowright')) ||
-    (!prevKeysDown.includes('d') && keysDown.includes('d'))
-  ) {
-    if (bState.selectedMove !== 2 && bState.selectedMove !== 4) {
-      updateBattleState({
-        selectedMove: bState.selectedMove === 1 ? 2 : 4,
-      })
-    }
-  }
+
+  return !prevKeysDown.includes(key) && keysDown.includes(key)
 }

@@ -1,4 +1,4 @@
-import { gameState } from './state.js'
+import { gameState, updateBattleState } from './state.js'
 
 export class Player {
   x: number
@@ -6,7 +6,10 @@ export class Player {
   size: number
   prevX: number
   prevY: number
-  health: number
+  prevHealth: number
+  currentHealth: number
+  maxHealth: number
+  currentDamage: number
   movementStatus:
     | 'idle'
     | 'up'
@@ -30,7 +33,10 @@ export class Player {
     this.size = startSize
     this.prevX = startX
     this.prevY = startY
-    this.health = 100
+    this.currentHealth = 100
+    this.maxHealth = 100
+    this.prevHealth = 100
+    this.currentDamage = 0
     this.faceDirection = 'down'
     this.faceCount = {
       up: 0,
@@ -144,6 +150,31 @@ export class Player {
   public updatePosition(x: number, y: number) {
     this.x = x
     this.y = y
+  }
+
+  public takeDamage() {
+    const { state } = gameState
+    const { deltaTime, status } = state
+    if (!this.currentDamage) return
+
+    if (status !== 'inactive') {
+      const deltaFrames = deltaTime / (1000 / 60)
+      if (this.currentHealth <= this.prevHealth - this.currentDamage) {
+        const newHealth = this.prevHealth - this.currentDamage
+        this.currentHealth = newHealth
+        this.prevHealth = newHealth
+        this.currentDamage = 0
+        updateBattleState({
+          lastMove: 'enemy',
+        })
+      } else {
+        this.currentHealth -= 0.5 * deltaFrames
+      }
+    }
+  }
+
+  public takeHit(damage: number) {
+    this.currentDamage = damage
   }
 }
 
