@@ -1,4 +1,4 @@
-import { updateState } from './state.js'
+import { updateInputState } from './state.js'
 
 export function startListeners() {
   document.addEventListener('keydown', handleKeyDown)
@@ -20,38 +20,46 @@ export function stopListeners() {
 
 function handleKeyDown(e: KeyboardEvent) {
   const key = e.key.toLowerCase()
-  updateState((currentState) => ({
-    prevKeysDown: currentState.keysDown,
-    keysDown: currentState.keysDown.includes(key)
-      ? currentState.keysDown
-      : [...currentState.keysDown, key],
+
+  updateInputState((prevInputState) => ({
+    keysDown: [
+      ...prevInputState.keysDown.filter((k) => k.key !== key),
+      {
+        key,
+        time: 0,
+      },
+    ],
   }))
 }
 
 function handleKeyUp(e: KeyboardEvent) {
   const key = e.key.toLowerCase()
-  updateState((currentState) => {
-    return {
-      prevKeysDown: currentState.keysDown,
-      keysDown: currentState.keysDown.filter((k) => k !== key),
-    }
-  })
+
+  updateInputState((prevInputState) => ({
+    keysDown: prevInputState.keysDown.filter((k) => k.key !== key),
+  }))
 }
 
 function handleMouseDown(e: MouseEvent) {
-  updateState({
-    mouseDown: true,
+  updateInputState({
+    mouse: {
+      isDown: true,
+      time: 0,
+    },
   })
 }
 
 function handleMouseUp(e: MouseEvent) {
-  updateState({
-    mouseDown: false,
+  updateInputState({
+    mouse: {
+      isDown: false,
+      time: 0,
+    },
   })
 }
 
 function handleMouseMove(e: MouseEvent) {
-  updateState({
+  updateInputState({
     mouseX: e.clientX,
     mouseY: e.clientY,
   })

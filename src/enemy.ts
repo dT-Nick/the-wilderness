@@ -1,4 +1,4 @@
-import { battleState, gameState, updateBattleState } from './state.js'
+import { getDeltaFrames, getGameState } from './state.js'
 
 export class Enemy {
   id: number
@@ -28,27 +28,22 @@ export class Enemy {
   }
 
   public takeDamage() {
-    const { state } = gameState
-    const { state: bState } = battleState
-    const { deltaTime, status } = state
     if (!this.currentDamage) return
 
-    if (status !== 'inactive') {
-      const deltaFrames = deltaTime / (1000 / 60)
-      if (this.currentHealth <= this.prevHealth - this.currentDamage) {
-        const newHealth = this.prevHealth - this.currentDamage
-        this.currentHealth = newHealth
-        this.prevHealth = newHealth
-        this.currentDamage = 0
-        updateBattleState({
-          lastMove: 'player',
-          status: 'wait',
-          waitLengthMs: 1000,
-          waitStart: Date.now(),
-        })
-      } else {
-        this.currentHealth -= 0.5 * deltaFrames
-      }
+    const deltaFrames = getDeltaFrames()
+    if (this.currentHealth <= this.prevHealth - this.currentDamage) {
+      const newHealth = this.prevHealth - this.currentDamage
+      this.currentHealth = newHealth
+      this.prevHealth = newHealth
+      this.currentDamage = 0
+      // updateBattleState({
+      //   lastMove: 'player',
+      //   status: 'wait',
+      //   waitLengthMs: 1000,
+      //   waitStart: Date.now(),
+      // })
+    } else {
+      this.currentHealth -= 0.5 * deltaFrames
     }
   }
 
@@ -56,23 +51,22 @@ export class Enemy {
     this.currentDamage = damage
   }
 
-  public hitPlayer(damage: number) {
-    const { state } = gameState
-    const { state: bState } = battleState
-    if (
-      state.status !== 'inactive' &&
-      !battleState.isWaiting &&
-      bState.lastMove === 'player' &&
-      bState.status === 'play' &&
-      state.player.currentDamage === 0
-    ) {
-      state.player.takeHit(damage)
-    }
-  }
+  // public hitPlayer(damage: number) {
+  //   const { state } = gameState
+  //   const { state: bState } = battleState
+  //   if (
+  //     state.status !== 'inactive' &&
+  //     !battleState.isWaiting &&
+  //     bState.lastMove === 'player' &&
+  //     bState.status === 'play' &&
+  //     state.player.currentDamage === 0
+  //   ) {
+  //     state.player.takeHit(damage)
+  //   }
+  // }
 
   get coordinates() {
-    const { state } = gameState
-    const { blockSize } = state
+    const { blockSize } = getGameState()
 
     return [Math.ceil(this.x / blockSize), Math.ceil(this.y / blockSize)]
   }

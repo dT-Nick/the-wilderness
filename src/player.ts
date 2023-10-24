@@ -1,4 +1,9 @@
-import { gameState, updateBattleState } from './state.js'
+import {
+  getCanvasState,
+  getDeltaFrames,
+  getGameState,
+  isInitialised,
+} from './state.js'
 
 export class Player {
   x: number
@@ -48,12 +53,15 @@ export class Player {
   }
 
   get coordinates() {
-    const { state } = gameState
-    const { blockSize } = state
+    const { blockSize } = getGameState()
     return [
       Math.ceil(this.prevX / blockSize),
       Math.ceil(this.prevY / blockSize),
     ]
+  }
+
+  public interruptMovement(value: boolean) {
+    this.movementStatus = value ? 'interrupted' : 'stable'
   }
 
   public moveUp() {
@@ -67,8 +75,9 @@ export class Player {
     }
   }
 
-  public interruptMovement(value: boolean) {
-    this.movementStatus = value ? 'interrupted' : 'stable'
+  public lookUp() {
+    this.faceDirection = 'up'
+    this.stopMoving()
   }
 
   public moveDown() {
@@ -82,6 +91,11 @@ export class Player {
     }
   }
 
+  public lookDown() {
+    this.faceDirection = 'down'
+    this.stopMoving()
+  }
+
   public moveLeft() {
     if (this.faceDirection === 'left') {
       if (this.faceCount.left >= 8) {
@@ -93,6 +107,11 @@ export class Player {
     }
   }
 
+  public lookLeft() {
+    this.faceDirection = 'left'
+    this.stopMoving()
+  }
+
   public moveRight() {
     if (this.faceDirection === 'right') {
       if (this.faceCount.right >= 8) {
@@ -102,6 +121,11 @@ export class Player {
     } else {
       this.faceDirection = 'right'
     }
+  }
+
+  public lookRight() {
+    this.faceDirection = 'right'
+    this.stopMoving()
   }
 
   public keepMoving() {
@@ -130,19 +154,15 @@ export class Player {
   }
 
   public updateFaceCount(direction: 'up' | 'down' | 'left' | 'right') {
-    const { state } = gameState
-    const { deltaTime, status } = state
-    if (status !== 'inactive') {
-      const deltaFrames = deltaTime / (1000 / 60)
+    const deltaFrames = getDeltaFrames()
 
-      if (this.faceCount[direction] < 8) {
-        this.faceCount = {
-          up: 0,
-          down: 0,
-          left: 0,
-          right: 0,
-          [direction]: this.faceCount[direction] + 1 * deltaFrames,
-        }
+    if (this.faceCount[direction] < 8) {
+      this.faceCount = {
+        up: 0,
+        down: 0,
+        left: 0,
+        right: 0,
+        [direction]: this.faceCount[direction] + 1 * deltaFrames,
       }
     }
   }
@@ -153,23 +173,19 @@ export class Player {
   }
 
   public takeDamage() {
-    const { state } = gameState
-    const { deltaTime, status } = state
     if (!this.currentDamage) return
 
-    if (status !== 'inactive') {
-      const deltaFrames = deltaTime / (1000 / 60)
-      if (this.currentHealth <= this.prevHealth - this.currentDamage) {
-        const newHealth = this.prevHealth - this.currentDamage
-        this.currentHealth = newHealth
-        this.prevHealth = newHealth
-        this.currentDamage = 0
-        updateBattleState({
-          lastMove: 'enemy',
-        })
-      } else {
-        this.currentHealth -= 0.5 * deltaFrames
-      }
+    const deltaFrames = getDeltaFrames()
+    if (this.currentHealth <= this.prevHealth - this.currentDamage) {
+      const newHealth = this.prevHealth - this.currentDamage
+      this.currentHealth = newHealth
+      this.prevHealth = newHealth
+      this.currentDamage = 0
+      // updateBattleState({
+      //   lastMove: 'enemy',
+      // })
+    } else {
+      this.currentHealth -= 0.5 * deltaFrames
     }
   }
 
@@ -178,12 +194,11 @@ export class Player {
   }
 }
 
-export function generatePlayer() {
-  const { state } = gameState
-  const { ctx, status, player, scale, verticalOffset } = state
+export function drawPlayer() {
+  const { player } = getGameState()
+  const { ctx, scale, verticalOffset } = getCanvasState()
 
-  if (status !== 'inactive') {
-    // top to bottom gradient
+  if (isInitialised(ctx)) {
     if (player.movementStatus === 'idle') {
       player.updateFaceCount(player.faceDirection)
     }
@@ -246,3 +261,72 @@ export function generatePlayer() {
     ctx.restore()
   }
 }
+
+// export function generatePlayer() {
+//   const { state } = gameState
+//   const { ctx, status, player, scale, verticalOffset } = state
+
+//   if (status !== 'inactive') {
+//     // top to bottom gradient
+//     if (player.movementStatus === 'idle') {
+//       player.updateFaceCount(player.faceDirection)
+//     }
+
+//     const gradient = ctx.createLinearGradient(
+//       player.x * scale,
+//       player.y * scale + verticalOffset / 2,
+//       player.x * scale,
+//       player.y * scale + player.size * scale + verticalOffset / 2
+//     )
+
+//     gradient.addColorStop(0, 'orangered')
+//     if (player.movementStatus === 'interrupted') {
+//       gradient.addColorStop(0.5, 'red')
+//     } else {
+//       gradient.addColorStop(1, 'white')
+//     }
+//     ctx.fillStyle = gradient
+
+//     ctx.save()
+//     if (player.faceDirection === 'up') {
+//       ctx.translate(
+//         (player.x + player.size / 2) * scale,
+//         (player.y + player.size / 2) * scale + verticalOffset / 2
+//       )
+//       ctx.rotate(Math.PI)
+//       ctx.translate(
+//         (-player.x - player.size / 2) * scale,
+//         (-player.y - player.size / 2) * scale - verticalOffset / 2
+//       )
+//     }
+//     if (player.faceDirection === 'left') {
+//       ctx.translate(
+//         (player.x + player.size / 2) * scale,
+//         (player.y + player.size / 2) * scale + verticalOffset / 2
+//       )
+//       ctx.rotate(Math.PI / 2)
+//       ctx.translate(
+//         (-player.x - player.size / 2) * scale,
+//         (-player.y - player.size / 2) * scale - verticalOffset / 2
+//       )
+//     }
+//     if (player.faceDirection === 'right') {
+//       ctx.translate(
+//         (player.x + player.size / 2) * scale,
+//         (player.y + player.size / 2) * scale + verticalOffset / 2
+//       )
+//       ctx.rotate(Math.PI * 1.5)
+//       ctx.translate(
+//         (-player.x - player.size / 2) * scale,
+//         (-player.y - player.size / 2) * scale - verticalOffset / 2
+//       )
+//     }
+//     ctx.fillRect(
+//       player.x * scale,
+//       player.y * scale + verticalOffset / 2,
+//       player.size * scale,
+//       player.size * scale
+//     )
+//     ctx.restore()
+//   }
+// }
