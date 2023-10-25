@@ -1,4 +1,5 @@
 import { Enemy } from './enemy.js'
+import { FloorItem } from './item.js'
 import { Player } from './player.js'
 
 export const constants = {
@@ -136,6 +137,11 @@ interface GameState {
   playTime: number
   player: Player
   enemies: Array<Enemy>
+  inventory: Array<{
+    id: number
+    itemId: number
+  }>
+  floorItems: Array<FloorItem>
   blocksHorizontal: number
   blocksVertical: number
   blockSize: number
@@ -146,8 +152,10 @@ const gameState: GameState = {
   playTime: 0,
   player: new Player(0, 0, constants.playerSize),
   enemies: [],
-  blocksHorizontal: 165,
-  blocksVertical: 55,
+  inventory: [],
+  floorItems: [],
+  blocksHorizontal: 83,
+  blocksVertical: 27,
   blockSize: 0,
 }
 
@@ -231,6 +239,98 @@ export function updateWildernessState(
     Object.assign(wildernessState, changes(wildernessState))
   } else {
     Object.assign(wildernessState, changes)
+  }
+}
+
+// ##############################
+
+interface BlockTypeState {
+  blockTypes: Array<{
+    name: 'grass' | 'water' | 'mountain' | 'forest' | 'hill'
+    color: string
+    isPassable: boolean
+  }>
+}
+
+const blockTypeState: BlockTypeState = {
+  blockTypes: [
+    {
+      name: 'grass',
+      color: '#009900',
+      isPassable: true,
+    },
+    {
+      name: 'water',
+      color: '#0000ff',
+      isPassable: false,
+    },
+    {
+      name: 'mountain',
+      color: '#ffffff',
+      isPassable: false,
+    },
+    {
+      name: 'forest',
+      color: '#006600',
+      isPassable: true,
+    },
+    {
+      name: 'hill',
+      color: '#223300',
+      isPassable: false,
+    },
+  ],
+}
+
+export function getBlockPropertiesFromName(name: string) {
+  const blockType = blockTypeState.blockTypes.find(
+    (block) => block.name === name
+  )
+  if (!blockType) {
+    throw new Error(`Unknown block name: ${name}`)
+  }
+  return blockType
+}
+
+// ##############################
+
+interface BattleState {
+  enemyId: number | null
+  lastMove: null | 'player' | 'enemy'
+  turns: number
+  status: 'play' | 'wait'
+  playerMenu: 'main' | 'moves'
+  waitStart: null | number
+  waitLengthMs: number
+  selectedMove: number
+  selectedOption: number
+}
+
+const battleState: BattleState = {
+  enemyId: null,
+  lastMove: null,
+  turns: 0,
+  status: 'play',
+  playerMenu: 'main',
+  waitStart: null,
+  waitLengthMs: 0,
+  selectedMove: 1,
+  selectedOption: 1,
+}
+
+export function getBattleState() {
+  return battleState
+}
+
+export function updateBattleState(
+  changes:
+    | Partial<typeof battleState>
+    | ((state: typeof battleState) => Partial<typeof battleState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(battleState, changes(battleState))
+  } else {
+    Object.assign(battleState, changes)
   }
 }
 

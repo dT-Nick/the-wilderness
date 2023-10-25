@@ -1,9 +1,13 @@
 import {
   constants,
+  getBattleState,
   getCanvasState,
+  getGameState,
   getInputState,
   getPrevInputState,
   getWildernessState,
+  isInitialised,
+  updateBattleState,
   updateGameState,
 } from './state.js'
 import { handleMapZeroInput } from './wilderness-maps/map-0.js'
@@ -42,98 +46,101 @@ export function handleWildernessInput() {
   }
 }
 
-// export function handleInput() {
-//   const { state } = gameState
-//   const {
-//     status,
-//     mouseDown,
-//     mouseX,
-//     mouseY,
-//     width,
-//     verticalOffset,
-//     scale,
-//     player,
-//     keysDown,
-//     prevMouseDown,
-//     blockSize,
-//     deltaTime,
-//   } = state
+export function handleBattleInput() {
+  const { ctx } = getCanvasState()
+  const { enemies, player } = getGameState()
+  const {
+    status,
+    enemyId,
+    selectedMove,
+    selectedOption,
+    lastMove,
+    playerMenu,
+  } = getBattleState()
 
-//   if (mouseDown && !prevMouseDown) {
-//     if (mouseX > width - 54 * scale && mouseX < width - 5 * scale) {
-//       if (
-//         mouseY > 5 * scale + verticalOffset / 2 &&
-//         mouseY < 54 * scale + verticalOffset / 2
-//       ) {
-//         return true
-//       }
-//     }
+  if (isInitialised(ctx)) {
+    const enemy = enemies.find((enemy) => enemy.id === enemyId)
+    if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
 
-//     updateState({
-//       prevMouseDown: true,
-//     })
-//   }
+    const isWaitingForPlayerInput = lastMove !== 'player' && status !== 'wait'
 
-//   if (!mouseDown && prevMouseDown) {
-//     updateState({
-//       prevMouseDown: false,
-//     })
-//   }
+    if (isKeyDownEvent(['arrowup', 'w']) && isWaitingForPlayerInput) {
+      if (playerMenu === 'moves' && selectedMove !== 1 && selectedMove !== 2) {
+        updateBattleState({
+          selectedMove: selectedMove === 3 ? 1 : 2,
+        })
+      }
+    }
+    if (isKeyDownEvent(['arrowdown', 's']) && isWaitingForPlayerInput) {
+      if (playerMenu === 'moves' && selectedMove !== 3 && selectedMove !== 4) {
+        updateBattleState({
+          selectedMove: selectedMove === 1 ? 3 : 4,
+        })
+      }
+    }
+    if (isKeyDownEvent(['arrowleft', 'a']) && isWaitingForPlayerInput) {
+      if (playerMenu === 'main') {
+        updateBattleState({
+          selectedOption: selectedOption === 1 ? 2 : 1,
+        })
+      }
+      if (playerMenu === 'moves' && selectedMove !== 1 && selectedMove !== 3) {
+        updateBattleState({
+          selectedMove: selectedMove === 2 ? 1 : 3,
+        })
+      }
+    }
+    if (isKeyDownEvent(['arrowright', 'd']) && isWaitingForPlayerInput) {
+      if (playerMenu === 'main') {
+        updateBattleState({
+          selectedOption: selectedOption === 1 ? 2 : 1,
+        })
+      }
+      if (selectedMove !== 2 && selectedMove !== 4) {
+        updateBattleState({
+          selectedMove: selectedMove === 1 ? 2 : 4,
+        })
+      }
+    }
 
-//   return false
-// }
+    if (isKeyDownEvent('enter') && isWaitingForPlayerInput) {
+      if (playerMenu === 'main') {
+        if (selectedOption === 1) {
+          updateBattleState({
+            playerMenu: 'moves',
+          })
+        }
+        if (selectedOption === 2) {
+          // TODO: Items...
+        }
+      }
+      if (playerMenu === 'moves') {
+        if (selectedMove === 1) {
+          enemy.takeHit(10)
+        }
+        if (selectedMove === 2) {
+          enemy.takeHit(20)
+        }
+        if (selectedMove === 3) {
+          enemy.takeHit(30)
+        }
+        if (selectedMove === 4) {
+          enemy.takeHit(40)
+        }
+      }
+    }
+  }
+}
 
-// export function handleBattleInput() {
-//   const { state } = gameState
-//   const { state: bState } = battleState
-//   const { keysDown, prevKeysDown } = state
-//   const isWaiting = battleState.isWaiting
-//   if (state.status !== 'inactive' && !isWaiting) {
-//     if (isKeyPressed(['arrowup', 'w'])) {
-//       if (bState.selectedMove !== 1 && bState.selectedMove !== 2) {
-//         updateBattleState({
-//           selectedMove: bState.selectedMove === 3 ? 1 : 2,
-//         })
-//       }
-//     }
-//     if (isKeyPressed(['arrowdown', 's'])) {
-//       if (bState.selectedMove !== 3 && bState.selectedMove !== 4) {
-//         updateBattleState({
-//           selectedMove: bState.selectedMove === 1 ? 3 : 4,
-//         })
-//       }
-//     }
-//     if (isKeyPressed(['arrowleft', 'a'])) {
-//       if (bState.selectedMove !== 1 && bState.selectedMove !== 3) {
-//         updateBattleState({
-//           selectedMove: bState.selectedMove === 2 ? 1 : 3,
-//         })
-//       }
-//     }
-//     if (isKeyPressed(['arrowright', 'd'])) {
-//       if (bState.selectedMove !== 2 && bState.selectedMove !== 4) {
-//         updateBattleState({
-//           selectedMove: bState.selectedMove === 1 ? 2 : 4,
-//         })
-//       }
-//     }
+export function isKeyCurrentlyDown(key: string | Array<string>) {
+  const { keysDown } = getInputState()
 
-//     if (isKeyPressed('enter')) {
-//       if (bState.selectedMove === 1) {
-//         state.enemy.takeHit(10)
-//       }
-//       if (bState.selectedMove === 2) {
-//         state.enemy.takeHit(20)
-//       }
-//       if (bState.selectedMove === 3) {
-//         state.enemy.takeHit(30)
-//       }
-//       if (bState.selectedMove === 4) {
-//         state.enemy.takeHit(40)
-//       }
-//     }
-//   }
-// }
+  if (Array.isArray(key)) {
+    return key.some((k) => keysDown.some((kD) => kD.key === k))
+  }
+
+  return keysDown.some((kD) => kD.key === key)
+}
 
 export function isKeyDownEvent(key: string | Array<string>) {
   const { keysDown } = getInputState()

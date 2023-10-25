@@ -1,136 +1,86 @@
+import { handleItemPickup } from '../item.js'
+import { handlePlayerMovement } from '../player.js'
 import { getDeltaFrames, getGameState, getInputState } from '../state.js'
+import {
+  MapState,
+  deriveRestrictedCoordsFromMap,
+  drawBackgroundFromMap,
+} from '../wilderness.js'
 
-const mapZeroState = {}
+export function generateMapZeroState(): MapState {
+  const { blocksVertical, blocksHorizontal } = getGameState()
 
-export function drawMapZero() {}
+  return {
+    map: [
+      {
+        type: 'mountain',
+        fromCoords: [10, 3],
+        toCoords: [18, 9],
+      },
+      {
+        type: 'forest',
+        fromCoords: [19, 10],
+        toCoords: [27, 16],
+      },
+      {
+        type: 'water',
+        fromCoords: [28, 17],
+        toCoords: [36, 23],
+      },
+      {
+        type: 'mountain',
+        fromCoords: [37, 24],
+        toCoords: [45, 27],
+      },
+      {
+        type: 'forest',
+        fromCoords: [46, 1],
+        toCoords: [54, 7],
+      },
+      {
+        type: 'water',
+        fromCoords: [55, 8],
+        toCoords: [63, 14],
+      },
+      {
+        type: 'mountain',
+        fromCoords: [64, 15],
+        toCoords: [72, 21],
+      },
+      {
+        type: 'forest',
+        fromCoords: [73, 22],
+        toCoords: [81, 27],
+      },
+    ],
+  }
+}
+
+const mapZeroState: MapState = {
+  map: [],
+}
+
+export function updateMapZeroState(
+  changes:
+    | Partial<typeof mapZeroState>
+    | ((state: typeof mapZeroState) => Partial<typeof mapZeroState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(mapZeroState, changes(mapZeroState))
+  } else {
+    Object.assign(mapZeroState, changes)
+  }
+}
+
+export function drawMapZero() {
+  const { map } = mapZeroState
+  drawBackgroundFromMap(map)
+}
 
 export function handleMapZeroInput() {
-  const { keysDown } = getInputState()
-  const { player, blockSize, blocksVertical, blocksHorizontal } = getGameState()
+  const { map } = mapZeroState
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
 
-  const deltaFrames = getDeltaFrames()
-
-  const lastMovementKeyIndex = Math.max(
-    keysDown.findIndex((kD) => kD.key === 'arrowup'),
-    keysDown.findIndex((kD) => kD.key === 'arrowdown'),
-    keysDown.findIndex((kD) => kD.key === 'arrowleft'),
-    keysDown.findIndex((kD) => kD.key === 'arrowright'),
-    keysDown.findIndex((kD) => kD.key === 'w'),
-    keysDown.findIndex((kD) => kD.key === 's'),
-    keysDown.findIndex((kD) => kD.key === 'a'),
-    keysDown.findIndex((kD) => kD.key === 'd')
-  )
-
-  const lastMovementKey =
-    lastMovementKeyIndex >= 0 ? keysDown[lastMovementKeyIndex] : null
-
-  if (
-    (player.movementStatus === 'idle' || player.movementStatus === 'stable') &&
-    lastMovementKey
-  ) {
-    switch (lastMovementKey.key) {
-      case 'arrowup':
-      case 'w': {
-        const [x, y] = player.coordinates
-
-        if (y > 1) {
-          player.moveUp()
-          break
-        }
-        player.lookUp()
-        break
-      }
-      case 'arrowdown':
-      case 's': {
-        const [x, y] = player.coordinates
-
-        if (y < blocksVertical) {
-          player.moveDown()
-          break
-        }
-        player.lookDown()
-        break
-      }
-      case 'arrowleft':
-      case 'a': {
-        const [x] = player.coordinates
-
-        if (x > 1) {
-          player.moveLeft()
-          break
-        }
-        player.lookLeft()
-        break
-      }
-      case 'arrowright':
-      case 'd': {
-        const [x] = player.coordinates
-        if (x < blocksHorizontal) {
-          player.moveRight()
-          break
-        }
-        player.lookRight()
-        break
-      }
-      default:
-        break
-    }
-  }
-
-  if (player.movementStatus === 'up') {
-    const destinationY = player.prevY - blockSize
-    const newY = player.y - (blockSize / 4) * deltaFrames
-    const isOnDestination = newY < destinationY
-
-    player.updatePosition(player.x, isOnDestination ? destinationY : newY)
-    if (isOnDestination) {
-      if (lastMovementKey) {
-        player.keepMoving()
-      } else {
-        player.stopMoving()
-      }
-    }
-  }
-  if (player.movementStatus === 'down') {
-    const destinationY = player.prevY + blockSize
-    const newY = player.y + (blockSize / 4) * deltaFrames
-    const isOnDestination = newY > destinationY
-
-    player.updatePosition(player.x, isOnDestination ? destinationY : newY)
-    if (isOnDestination) {
-      if (lastMovementKey) {
-        player.keepMoving()
-      } else {
-        player.stopMoving()
-      }
-    }
-  }
-  if (player.movementStatus === 'left') {
-    const destinationX = player.prevX - blockSize
-    const newX = player.x - (blockSize / 4) * deltaFrames
-    const isOnDestination = newX < destinationX
-
-    player.updatePosition(isOnDestination ? destinationX : newX, player.y)
-    if (isOnDestination) {
-      if (lastMovementKey) {
-        player.keepMoving()
-      } else {
-        player.stopMoving()
-      }
-    }
-  }
-  if (player.movementStatus === 'right') {
-    const destinationX = player.prevX + blockSize
-    const newX = player.x + (blockSize / 4) * deltaFrames
-    const isOnDestination = newX > destinationX
-
-    player.updatePosition(isOnDestination ? destinationX : newX, player.y)
-    if (isOnDestination) {
-      if (lastMovementKey) {
-        player.keepMoving()
-      } else {
-        player.stopMoving()
-      }
-    }
-  }
+  handlePlayerMovement(restrictedCoords)
+  handleItemPickup()
 }

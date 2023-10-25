@@ -1,48 +1,32 @@
+import { isKeyCurrentlyDown } from './input.js'
+import { LivingBeing } from './living-being.js'
 import {
+  getBattleState,
   getCanvasState,
   getDeltaFrames,
   getGameState,
+  getInputState,
   isInitialised,
+  updateBattleState,
+  updateGameState,
 } from './state.js'
 
-export class Player {
-  x: number
-  y: number
-  size: number
+export class Player extends LivingBeing {
   prevX: number
   prevY: number
-  prevHealth: number
-  currentHealth: number
-  maxHealth: number
-  currentDamage: number
-  movementStatus:
-    | 'idle'
-    | 'up'
-    | 'down'
-    | 'left'
-    | 'right'
-    | 'stable'
-    | 'interrupted'
-  faceDirection: 'up' | 'down' | 'left' | 'right'
+  movementStatus: 'idle' | 'up' | 'down' | 'left' | 'right' | 'stable'
   faceCount: {
     up: number
     down: number
     left: number
     right: number
   }
-  id: string
 
-  constructor(startX: number, startY: number, startSize: number) {
-    this.x = startX
-    this.y = startY
-    this.size = startSize
+  constructor(startX: number, startY: number, size: number) {
+    super(startX, startY, size, 100, 'down')
+
     this.prevX = startX
     this.prevY = startY
-    this.currentHealth = 100
-    this.maxHealth = 100
-    this.prevHealth = 100
-    this.currentDamage = 0
-    this.faceDirection = 'down'
     this.faceCount = {
       up: 0,
       down: 8,
@@ -54,14 +38,20 @@ export class Player {
 
   get coordinates() {
     const { blockSize } = getGameState()
-    return [
-      Math.ceil(this.prevX / blockSize),
-      Math.ceil(this.prevY / blockSize),
+
+    const coords: [number, number] = [
+      Math.round(this.prevX / blockSize),
+      Math.round(this.prevY / blockSize),
     ]
+
+    return coords
   }
 
-  public interruptMovement(value: boolean) {
-    this.movementStatus = value ? 'interrupted' : 'stable'
+  get speed() {
+    const { blockSize } = getGameState()
+    const isShiftDown = isKeyCurrentlyDown('shift')
+
+    return blockSize / (isShiftDown ? 8 : 12)
   }
 
   public moveUp() {
@@ -71,12 +61,12 @@ export class Player {
         this.movementStatus = 'up'
       }
     } else {
-      this.faceDirection = 'up'
+      super.lookUp()
     }
   }
 
   public lookUp() {
-    this.faceDirection = 'up'
+    super.lookUp
     this.stopMoving()
   }
 
@@ -87,12 +77,12 @@ export class Player {
         this.movementStatus = 'down'
       }
     } else {
-      this.faceDirection = 'down'
+      super.lookDown()
     }
   }
 
   public lookDown() {
-    this.faceDirection = 'down'
+    super.lookDown()
     this.stopMoving()
   }
 
@@ -103,12 +93,12 @@ export class Player {
         this.movementStatus = 'left'
       }
     } else {
-      this.faceDirection = 'left'
+      super.lookLeft()
     }
   }
 
   public lookLeft() {
-    this.faceDirection = 'left'
+    super.lookLeft()
     this.stopMoving()
   }
 
@@ -119,12 +109,12 @@ export class Player {
         this.movementStatus = 'right'
       }
     } else {
-      this.faceDirection = 'right'
+      super.lookRight()
     }
   }
 
   public lookRight() {
-    this.faceDirection = 'right'
+    super.lookRight()
     this.stopMoving()
   }
 
@@ -167,35 +157,20 @@ export class Player {
     }
   }
 
-  public updatePosition(x: number, y: number) {
-    this.x = x
-    this.y = y
-  }
-
   public takeDamage() {
     if (!this.currentDamage) return
-
-    const deltaFrames = getDeltaFrames()
+    super.takeDamage()
     if (this.currentHealth <= this.prevHealth - this.currentDamage) {
-      const newHealth = this.prevHealth - this.currentDamage
-      this.currentHealth = newHealth
-      this.prevHealth = newHealth
-      this.currentDamage = 0
-      // updateBattleState({
-      //   lastMove: 'enemy',
-      // })
-    } else {
-      this.currentHealth -= 0.5 * deltaFrames
+      updateBattleState({
+        lastMove: 'enemy',
+        playerMenu: 'main',
+      })
     }
-  }
-
-  public takeHit(damage: number) {
-    this.currentDamage = damage
   }
 }
 
 export function drawPlayer() {
-  const { player } = getGameState()
+  const { player, blockSize } = getGameState()
   const { ctx, scale, verticalOffset } = getCanvasState()
 
   if (isInitialised(ctx)) {
@@ -210,55 +185,203 @@ export function drawPlayer() {
       player.y * scale + player.size * scale + verticalOffset / 2
     )
 
-    gradient.addColorStop(0, 'orangered')
-    if (player.movementStatus === 'interrupted') {
-      gradient.addColorStop(0.5, 'red')
-    } else {
-      gradient.addColorStop(1, 'white')
-    }
+    gradient.addColorStop(0, 'blue')
+    gradient.addColorStop(1, 'lightblue')
     ctx.fillStyle = gradient
 
     ctx.save()
     if (player.faceDirection === 'up') {
       ctx.translate(
-        (player.x + player.size / 2) * scale,
-        (player.y + player.size / 2) * scale + verticalOffset / 2
+        (player.x + blockSize / 2) * scale,
+        (player.y + blockSize / 2) * scale + verticalOffset / 2
       )
       ctx.rotate(Math.PI)
       ctx.translate(
-        (-player.x - player.size / 2) * scale,
-        (-player.y - player.size / 2) * scale - verticalOffset / 2
+        (-player.x - blockSize / 2) * scale,
+        (-player.y - blockSize / 2) * scale - verticalOffset / 2
       )
     }
     if (player.faceDirection === 'left') {
       ctx.translate(
-        (player.x + player.size / 2) * scale,
-        (player.y + player.size / 2) * scale + verticalOffset / 2
+        (player.x + blockSize / 2) * scale,
+        (player.y + blockSize / 2) * scale + verticalOffset / 2
       )
       ctx.rotate(Math.PI / 2)
       ctx.translate(
-        (-player.x - player.size / 2) * scale,
-        (-player.y - player.size / 2) * scale - verticalOffset / 2
+        (-player.x - blockSize / 2) * scale,
+        (-player.y - blockSize / 2) * scale - verticalOffset / 2
       )
     }
     if (player.faceDirection === 'right') {
       ctx.translate(
-        (player.x + player.size / 2) * scale,
-        (player.y + player.size / 2) * scale + verticalOffset / 2
+        (player.x + blockSize / 2) * scale,
+        (player.y + blockSize / 2) * scale + verticalOffset / 2
       )
       ctx.rotate(Math.PI * 1.5)
       ctx.translate(
-        (-player.x - player.size / 2) * scale,
-        (-player.y - player.size / 2) * scale - verticalOffset / 2
+        (-player.x - blockSize / 2) * scale,
+        (-player.y - blockSize / 2) * scale - verticalOffset / 2
       )
     }
     ctx.fillRect(
-      player.x * scale,
-      player.y * scale + verticalOffset / 2,
+      (player.x + blockSize / 2 - player.size / 2) * scale,
+      (player.y + blockSize / 2 - player.size / 2) * scale + verticalOffset / 2,
       player.size * scale,
       player.size * scale
     )
     ctx.restore()
+
+    // draw player coords in top left corner
+    ctx.fillStyle = 'white'
+    ctx.font = '16px serif'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'top'
+    ctx.fillText(`[${player.coordinates[0]}, ${player.coordinates[1]}]`, 10, 20)
+  }
+}
+
+export function handlePlayerMovement(
+  restrictedCoords: Array<[number, number]>
+) {
+  const { keysDown } = getInputState()
+  const { player, blockSize, blocksVertical, blocksHorizontal } = getGameState()
+
+  const deltaFrames = getDeltaFrames()
+
+  const lastMovementKeyIndex = Math.max(
+    keysDown.findIndex((kD) => kD.key === 'arrowup'),
+    keysDown.findIndex((kD) => kD.key === 'arrowdown'),
+    keysDown.findIndex((kD) => kD.key === 'arrowleft'),
+    keysDown.findIndex((kD) => kD.key === 'arrowright'),
+    keysDown.findIndex((kD) => kD.key === 'w'),
+    keysDown.findIndex((kD) => kD.key === 's'),
+    keysDown.findIndex((kD) => kD.key === 'a'),
+    keysDown.findIndex((kD) => kD.key === 'd')
+  )
+
+  const lastMovementKey =
+    lastMovementKeyIndex >= 0 ? keysDown[lastMovementKeyIndex] : null
+
+  if (
+    (player.movementStatus === 'idle' || player.movementStatus === 'stable') &&
+    lastMovementKey
+  ) {
+    switch (lastMovementKey.key) {
+      case 'arrowup':
+      case 'w': {
+        const [x, y] = player.coordinates
+
+        if (
+          y > 0 &&
+          !restrictedCoords.some((rc) => rc[0] === x && rc[1] === y - 1)
+        ) {
+          player.moveUp()
+          break
+        }
+        player.lookUp()
+        break
+      }
+      case 'arrowdown':
+      case 's': {
+        const [x, y] = player.coordinates
+
+        if (
+          y < blocksVertical - 1 &&
+          !restrictedCoords.some((rc) => rc[0] === x && rc[1] === y + 1)
+        ) {
+          player.moveDown()
+          break
+        }
+        player.lookDown()
+        break
+      }
+      case 'arrowleft':
+      case 'a': {
+        const [x, y] = player.coordinates
+
+        if (
+          x > 0 &&
+          !restrictedCoords.some((rc) => rc[0] === x - 1 && rc[1] === y)
+        ) {
+          player.moveLeft()
+          break
+        }
+        player.lookLeft()
+        break
+      }
+      case 'arrowright':
+      case 'd': {
+        const [x, y] = player.coordinates
+        if (
+          x < blocksHorizontal - 1 &&
+          !restrictedCoords.some((rc) => rc[0] === x + 1 && rc[1] === y)
+        ) {
+          player.moveRight()
+          break
+        }
+        player.lookRight()
+        break
+      }
+      default:
+        break
+    }
+  }
+
+  if (player.movementStatus === 'up') {
+    const destinationY = player.prevY - blockSize
+    const newY = player.y - player.speed * deltaFrames
+    const isOnDestination = newY < destinationY
+
+    player.updatePosition(player.x, isOnDestination ? destinationY : newY)
+    if (isOnDestination) {
+      if (lastMovementKey) {
+        player.keepMoving()
+      } else {
+        player.stopMoving()
+      }
+    }
+  }
+  if (player.movementStatus === 'down') {
+    const destinationY = player.prevY + blockSize
+    const newY = player.y + player.speed * deltaFrames
+    const isOnDestination = newY > destinationY
+
+    player.updatePosition(player.x, isOnDestination ? destinationY : newY)
+    if (isOnDestination) {
+      if (lastMovementKey) {
+        player.keepMoving()
+      } else {
+        player.stopMoving()
+      }
+    }
+  }
+  if (player.movementStatus === 'left') {
+    const destinationX = player.prevX - blockSize
+    const newX = player.x - player.speed * deltaFrames
+    const isOnDestination = newX < destinationX
+
+    player.updatePosition(isOnDestination ? destinationX : newX, player.y)
+    if (isOnDestination) {
+      if (lastMovementKey) {
+        player.keepMoving()
+      } else {
+        player.stopMoving()
+      }
+    }
+  }
+  if (player.movementStatus === 'right') {
+    const destinationX = player.prevX + blockSize
+    const newX = player.x + player.speed * deltaFrames
+    const isOnDestination = newX > destinationX
+
+    player.updatePosition(isOnDestination ? destinationX : newX, player.y)
+    if (isOnDestination) {
+      if (lastMovementKey) {
+        player.keepMoving()
+      } else {
+        player.stopMoving()
+      }
+    }
   }
 }
 

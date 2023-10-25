@@ -1,6 +1,14 @@
-import { Enemy } from './enemy.js'
+import { drawBattle, handleBattleScenarios } from './battle.js'
+import { Enemy, drawEnemies } from './enemy.js'
 import { startListeners } from './event-listeners.js'
-import { handleStartMenuInput, handleWildernessInput } from './input.js'
+import { getXAndYValuesFromCoords } from './helpers/coordinates.js'
+import { generateMeasurementsTool } from './helpers/tools.js'
+import {
+  handleBattleInput,
+  handleStartMenuInput,
+  handleWildernessInput,
+} from './input.js'
+import { FloorItem, drawFloorItems } from './item.js'
 import { drawStartMenu } from './menus.js'
 import { Player, drawPlayer } from './player.js'
 import {
@@ -14,7 +22,8 @@ import {
   updateLoopState,
   updatePrevInputState,
 } from './state.js'
-import { drawWilderness } from './wilderness.js'
+import { generateMaps } from './wilderness-maps/index.js'
+import { drawWilderness, handleWildernessScenarios } from './wilderness.js'
 
 document.addEventListener('DOMContentLoaded', function () {
   const canvasState = getCanvasState()
@@ -68,10 +77,10 @@ document.addEventListener('DOMContentLoaded', function () {
     canvas.width = width
     canvas.height = height
     root.appendChild(canvas)
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { alpha: false })
     if (!ctx) throw new Error('Could not get canvas context')
 
-    const blockSize = 1919 / blocksHorizontal
+    const blockSize = 1920 / blocksHorizontal
     const verticalOffset = height - blocksVertical * (blockSize * scale)
 
     updateCanvasState({
@@ -79,25 +88,50 @@ document.addEventListener('DOMContentLoaded', function () {
       ctx,
     })
 
-    const playerStartingX = 1920 / 2 - constants.playerSize / 2
-    const playerStartingY =
-      (1920 * ((height - verticalOffset) / width)) / 2 -
-      constants.playerSize / 2
+    generateMaps()
+
+    const [playerStartingX, playerStartingY] = getXAndYValuesFromCoords(
+      11,
+      11,
+      blockSize
+    )
+    const [enemyStartingX, enemyStartingY] = getXAndYValuesFromCoords(
+      10,
+      10,
+      blockSize
+    )
 
     updateGameState({
       blockSize,
-      player: new Player(
-        playerStartingX,
-        playerStartingY,
-        constants.playerSize
-      ),
+      player: new Player(playerStartingX, playerStartingY, blockSize * (3 / 4)),
+      floorItems: [
+        new FloorItem(
+          getXAndYValuesFromCoords(12, 12, blockSize)[0],
+          getXAndYValuesFromCoords(12, 12, blockSize)[1],
+          blockSize * (3 / 4),
+          0
+        ),
+        new FloorItem(
+          getXAndYValuesFromCoords(13, 13, blockSize)[0],
+          getXAndYValuesFromCoords(13, 13, blockSize)[1],
+          blockSize * (3 / 4),
+          1
+        ),
+      ],
       enemies: [
         new Enemy(
-          0,
           'Kaurismaki Daemon',
           100,
-          playerStartingX,
-          playerStartingY
+          enemyStartingX,
+          enemyStartingY,
+          blockSize * (3 / 4)
+        ),
+        new Enemy(
+          'Kaurismaki Daemon',
+          100,
+          getXAndYValuesFromCoords(37, 5, blockSize)[0],
+          getXAndYValuesFromCoords(37, 5, blockSize)[1],
+          blockSize * (3 / 4)
         ),
       ],
     })
@@ -134,8 +168,8 @@ export function runGameLoop() {
 
   switch (status) {
     case 'start-menu': {
-      drawStartMenu()
       handleStartMenuInput()
+      drawStartMenu()
 
       break
     }
@@ -143,13 +177,24 @@ export function runGameLoop() {
       break
     }
     case 'wilderness': {
-      drawWilderness()
-      drawPlayer()
       handleWildernessInput()
+
+      drawWilderness()
+      drawFloorItems()
+      drawEnemies()
+      drawPlayer()
+
+      handleWildernessScenarios()
 
       break
     }
     case 'battle': {
+      handleBattleInput()
+
+      drawBattle()
+
+      handleBattleScenarios()
+
       break
     }
     default: {
@@ -158,6 +203,7 @@ export function runGameLoop() {
   }
 
   updatePrevInputState()
+  generateMeasurementsTool()
   return requestAnimationFrame(runGameLoop)
 }
 

@@ -1,73 +1,131 @@
-import { getDeltaFrames, getGameState } from './state.js'
+import { LivingBeing } from './living-being.js'
+import {
+  getBattleState,
+  getCanvasState,
+  getDeltaFrames,
+  getGameState,
+  isInitialised,
+  updateBattleState,
+  updateGameState,
+} from './state.js'
 
-export class Enemy {
-  id: number
+export class Enemy extends LivingBeing {
   name: string
-  maxHealth: number
-  prevHealth: number
-  currentHealth: number
-  currentDamage: number
-  x: number
-  y: number
 
   constructor(
-    id: number,
     name: string,
-    maxHealth: number,
-    x: number,
-    y: number
+    health: number,
+    startX: number,
+    startY: number,
+    size: number
   ) {
-    this.id = id
+    const directionRng = Math.random()
+    let faceDirection: 'left' | 'up' | 'right' | 'down' = 'left'
+    if (directionRng < 0.25) {
+      faceDirection = 'up'
+    } else if (directionRng < 0.5) {
+      faceDirection = 'right'
+    } else if (directionRng < 0.75) {
+      faceDirection = 'down'
+    }
+    super(startX, startY, size, health, faceDirection)
     this.name = name
-    this.prevHealth = maxHealth
-    this.maxHealth = maxHealth
-    this.currentHealth = maxHealth
-    this.currentDamage = 0
-    this.x = x
-    this.y = y
   }
 
   public takeDamage() {
     if (!this.currentDamage) return
+    super.takeDamage()
 
-    const deltaFrames = getDeltaFrames()
+    if (this.currentHealth <= 0) {
+      this.currentHealth = 0
+      updateGameState((c) => ({
+        enemies: [...c.enemies.filter((e) => e.id !== this.id)],
+        status: 'wilderness',
+      }))
+
+      return
+    }
     if (this.currentHealth <= this.prevHealth - this.currentDamage) {
-      const newHealth = this.prevHealth - this.currentDamage
-      this.currentHealth = newHealth
-      this.prevHealth = newHealth
-      this.currentDamage = 0
-      // updateBattleState({
-      //   lastMove: 'player',
-      //   status: 'wait',
-      //   waitLengthMs: 1000,
-      //   waitStart: Date.now(),
-      // })
-    } else {
-      this.currentHealth -= 0.5 * deltaFrames
+      updateBattleState({
+        lastMove: 'player',
+        status: 'wait',
+        waitLengthMs: 1000,
+        waitStart: Date.now(),
+      })
     }
   }
 
-  public takeHit(damage: number) {
-    this.currentDamage = damage
+  public hitPlayer(damage: number) {
+    const { player } = getGameState()
+    const { lastMove, status } = getBattleState()
+    if (
+      lastMove === 'player' &&
+      status === 'play' &&
+      player.currentDamage === 0
+    ) {
+      player.takeHit(damage)
+    }
   }
+}
 
-  // public hitPlayer(damage: number) {
-  //   const { state } = gameState
-  //   const { state: bState } = battleState
-  //   if (
-  //     state.status !== 'inactive' &&
-  //     !battleState.isWaiting &&
-  //     bState.lastMove === 'player' &&
-  //     bState.status === 'play' &&
-  //     state.player.currentDamage === 0
-  //   ) {
-  //     state.player.takeHit(damage)
-  //   }
-  // }
+export function drawEnemies() {
+  const { enemies, blockSize } = getGameState()
+  const { ctx, scale, verticalOffset } = getCanvasState()
 
-  get coordinates() {
-    const { blockSize } = getGameState()
+  if (isInitialised(ctx)) {
+    for (const enemy of enemies) {
+      const gradient = ctx.createLinearGradient(
+        enemy.x * scale,
+        enemy.y * scale + verticalOffset / 2,
+        enemy.x * scale,
+        enemy.y * scale + enemy.size * scale + verticalOffset / 2
+      )
 
-    return [Math.ceil(this.x / blockSize), Math.ceil(this.y / blockSize)]
+      gradient.addColorStop(0, 'orangered')
+      gradient.addColorStop(1, 'white')
+      ctx.fillStyle = gradient
+
+      ctx.save()
+      if (enemy.faceDirection === 'up') {
+        ctx.translate(
+          (enemy.x + blockSize / 2) * scale,
+          (enemy.y + blockSize / 2) * scale + verticalOffset / 2
+        )
+        ctx.rotate(Math.PI)
+        ctx.translate(
+          (-enemy.x - blockSize / 2) * scale,
+          (-enemy.y - blockSize / 2) * scale - verticalOffset / 2
+        )
+      }
+      if (enemy.faceDirection === 'left') {
+        ctx.translate(
+          (enemy.x + blockSize / 2) * scale,
+          (enemy.y + blockSize / 2) * scale + verticalOffset / 2
+        )
+        ctx.rotate(Math.PI / 2)
+        ctx.translate(
+          (-enemy.x - blockSize / 2) * scale,
+          (-enemy.y - blockSize / 2) * scale - verticalOffset / 2
+        )
+      }
+      if (enemy.faceDirection === 'right') {
+        ctx.translate(
+          (enemy.x + blockSize / 2) * scale,
+          (enemy.y + blockSize / 2) * scale + verticalOffset / 2
+        )
+        ctx.rotate(Math.PI * 1.5)
+        ctx.translate(
+          (-enemy.x - blockSize / 2) * scale,
+          (-enemy.y - blockSize / 2) * scale - verticalOffset / 2
+        )
+      }
+      ctx.fillRect(
+        (enemy.x + blockSize / 2 - enemy.size / 2) * scale,
+        (enemy.y + blockSize / 2 - enemy.size / 2) * scale + verticalOffset / 2,
+        enemy.size * scale,
+        enemy.size * scale
+      )
+      ctx.restore()
+    }
   }
 }
