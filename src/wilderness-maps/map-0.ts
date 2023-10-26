@@ -1,6 +1,14 @@
+import { handleEnemyInteraction } from '../enemy.js'
+import { isKeyCurrentlyDown } from '../input.js'
 import { handleItemPickup } from '../item.js'
 import { handlePlayerMovement } from '../player.js'
-import { getDeltaFrames, getGameState, getInputState } from '../state.js'
+import {
+  getDeltaFrames,
+  getGameState,
+  getInputState,
+  isPlayerInitialised,
+  updateGameState,
+} from '../state.js'
 import {
   MapState,
   deriveRestrictedCoordsFromMap,
@@ -13,11 +21,6 @@ export function generateMapZeroState(): MapState {
   return {
     map: [
       {
-        type: 'mountain',
-        fromCoords: [10, 3],
-        toCoords: [18, 9],
-      },
-      {
         type: 'forest',
         fromCoords: [19, 10],
         toCoords: [27, 16],
@@ -26,11 +29,6 @@ export function generateMapZeroState(): MapState {
         type: 'water',
         fromCoords: [28, 17],
         toCoords: [36, 23],
-      },
-      {
-        type: 'mountain',
-        fromCoords: [37, 24],
-        toCoords: [45, 27],
       },
       {
         type: 'forest',
@@ -43,14 +41,14 @@ export function generateMapZeroState(): MapState {
         toCoords: [63, 14],
       },
       {
-        type: 'mountain',
-        fromCoords: [64, 15],
-        toCoords: [72, 21],
-      },
-      {
         type: 'forest',
         fromCoords: [73, 22],
         toCoords: [81, 27],
+      },
+      {
+        type: 'forest',
+        fromCoords: [Math.floor(blocksHorizontal / 2), blocksVertical - 1],
+        toCoords: [Math.floor(blocksHorizontal / 2) + 1, blocksVertical],
       },
     ],
   }
@@ -82,5 +80,27 @@ export function handleMapZeroInput() {
   const restrictedCoords = deriveRestrictedCoordsFromMap(map)
 
   handlePlayerMovement(restrictedCoords)
-  handleItemPickup()
+  handleMapZeroExit()
+}
+
+export function handleMapZeroExit() {
+  const { player, blocksHorizontal, blocksVertical } = getGameState()
+  if (!isPlayerInitialised(player)) return
+
+  const [pCoordsX, pCoordsY] = player.coordinates
+  if (
+    pCoordsX === Math.floor(blocksHorizontal / 2) &&
+    pCoordsY === blocksVertical - 1
+  ) {
+    if (
+      isKeyCurrentlyDown(['s', 'arrowdown']) &&
+      player.faceDirection === 'down'
+    ) {
+      updateGameState({
+        status: 'settlement',
+      })
+      player.goToCoordinates(Math.floor(blocksHorizontal / 2), 0)
+      player.stopMoving()
+    }
+  }
 }

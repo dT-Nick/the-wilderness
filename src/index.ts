@@ -1,5 +1,6 @@
+import { Enemy, FloorItem, Player } from './classes.js'
 import { drawBattle, handleBattleScenarios } from './battle.js'
-import { Enemy, drawEnemies } from './enemy.js'
+import { drawEnemies } from './enemy.js'
 import { startListeners } from './event-listeners.js'
 import { getXAndYValuesFromCoords } from './helpers/coordinates.js'
 import { generateMeasurementsTool } from './helpers/tools.js'
@@ -8,9 +9,9 @@ import {
   handleStartMenuInput,
   handleWildernessInput,
 } from './input.js'
-import { FloorItem, drawFloorItems } from './item.js'
+import { drawFloorItems, generateGameItems } from './item.js'
 import { drawStartMenu } from './menus.js'
-import { Player, drawPlayer } from './player.js'
+import { drawPlayer } from './player.js'
 import {
   constants,
   getCanvasState,
@@ -24,6 +25,7 @@ import {
 } from './state.js'
 import { generateMaps } from './wilderness-maps/index.js'
 import { drawWilderness, handleWildernessScenarios } from './wilderness.js'
+import { drawSettlementMap, handleSettlementInput } from './settlement.js'
 
 document.addEventListener('DOMContentLoaded', function () {
   const canvasState = getCanvasState()
@@ -91,8 +93,8 @@ document.addEventListener('DOMContentLoaded', function () {
     generateMaps()
 
     const [playerStartingX, playerStartingY] = getXAndYValuesFromCoords(
-      11,
-      11,
+      41,
+      1,
       blockSize
     )
     const [enemyStartingX, enemyStartingY] = getXAndYValuesFromCoords(
@@ -104,18 +106,25 @@ document.addEventListener('DOMContentLoaded', function () {
     updateGameState({
       blockSize,
       player: new Player(playerStartingX, playerStartingY, blockSize * (3 / 4)),
+      items: generateGameItems(),
       floorItems: [
         new FloorItem(
           getXAndYValuesFromCoords(12, 12, blockSize)[0],
           getXAndYValuesFromCoords(12, 12, blockSize)[1],
           blockSize * (3 / 4),
-          0
+          'small-potion'
         ),
         new FloorItem(
           getXAndYValuesFromCoords(13, 13, blockSize)[0],
           getXAndYValuesFromCoords(13, 13, blockSize)[1],
           blockSize * (3 / 4),
-          1
+          'large-potion'
+        ),
+        new FloorItem(
+          getXAndYValuesFromCoords(35, 6, blockSize)[0],
+          getXAndYValuesFromCoords(35, 6, blockSize)[1],
+          blockSize * (3 / 4),
+          'small-potion'
         ),
       ],
       enemies: [
@@ -174,6 +183,12 @@ export function runGameLoop() {
       break
     }
     case 'settlement': {
+      handleSettlementInput()
+
+      drawSettlementMap()
+      drawPlayer()
+
+      // handleSettlementScenarios()
       break
     }
     case 'wilderness': {
@@ -203,49 +218,6 @@ export function runGameLoop() {
   }
 
   updatePrevInputState()
-  generateMeasurementsTool()
+  // generateMeasurementsTool()
   return requestAnimationFrame(runGameLoop)
 }
-
-//   const { state } = gameState
-//   const { lastFrameTime, status, ctx } = state
-//   if (status === 'active') {
-//     const now = Date.now()
-//     const deltaTime = now - lastFrameTime
-//     updateState({
-//       deltaTime,
-//     })
-//     if (state.status === 'active') {
-//       updateState({
-//         lastFrameTime: now,
-//       })
-//       const endGame = handleInput()
-//       handleBattleInput()
-//       ctx.clearRect(0, 0, state.width, state.height)
-//       // generateWorld()
-//       generateBattle()
-//       // generateExitMenu()
-
-//       if (endGame) return stopGameLoop()
-//     }
-//     return requestAnimationFrame(runGameLoop)
-//   }
-// }
-
-// export function stopGameLoop() {
-//   const { state } = gameState
-//   const { status, width, height } = state
-//   if (status === 'inactive') return
-
-//   state.ctx.clearRect(0, 0, width, height)
-
-//   updateState({
-//     status: 'paused',
-//     mouseDown: false,
-//     mouseX: 0,
-//     mouseY: 0,
-//     keysDown: [],
-//   })
-
-//   startMenuLoop()
-// }

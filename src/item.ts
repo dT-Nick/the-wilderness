@@ -1,33 +1,14 @@
-import { Entity } from './entity.js'
+import { ConsumableItem, EquipableItem, type Item } from './classes.js'
+import { generateSlug } from './helpers/functions.js'
 import { isKeyDownEvent } from './input.js'
 import {
   getCanvasState,
   getGameState,
   isInitialised,
+  isPlayerInitialised,
+  updateBattleState,
   updateGameState,
 } from './state.js'
-
-export class FloorItem extends Entity {
-  itemId: number
-
-  constructor(startX, startY, size, itemId) {
-    super(startX, startY, size)
-    this.itemId = itemId
-  }
-
-  public pickUpItem() {
-    updateGameState((c) => ({
-      inventory: [
-        ...c.inventory,
-        {
-          id: this.id,
-          itemId: this.itemId,
-        },
-      ],
-      floorItems: [...c.floorItems.filter((i) => i.id !== this.id)],
-    }))
-  }
-}
 
 export function drawFloorItems() {
   const { floorItems, blockSize } = getGameState()
@@ -50,6 +31,7 @@ export function drawFloorItems() {
 
 export function handleItemPickup() {
   const { player, floorItems } = getGameState()
+  if (!isPlayerInitialised(player)) return
 
   if (isKeyDownEvent('e')) {
     for (const floorItem of floorItems) {
@@ -80,4 +62,57 @@ export function handleItemPickup() {
       }
     }
   }
+}
+
+// ###########################
+
+export function generateGameItems() {
+  return [
+    new ConsumableItem('Small Potion', () => {
+      const { player } = getGameState()
+      if (!isPlayerInitialised(player)) return
+
+      player.heal(20)
+    }),
+    new ConsumableItem('Medium Potion', () => {
+      const { player } = getGameState()
+      if (!isPlayerInitialised(player)) return
+
+      player.heal(50)
+    }),
+    new ConsumableItem('Large Potion', () => {
+      const { player } = getGameState()
+      if (!isPlayerInitialised(player)) return
+
+      player.heal(100)
+    }),
+  ]
+}
+
+export function getItemViaId(id: string) {
+  const { items } = getGameState()
+  const item = items.find((i) => i.id === id)
+  if (!item) throw new Error(`Item with id ${id} not found`)
+  return item
+}
+
+export function activateConsumable(id: string, entityId: number) {
+  const item = getItemViaId(id)
+  if (!isConsumable(item)) return
+
+  item.effect()
+  updateBattleState({
+    playerMenu: 'main',
+  })
+  updateGameState((c) => ({
+    inventory: [...c.inventory.filter((i) => i.id !== entityId)],
+  }))
+}
+
+export function isConsumable(item: Item): item is ConsumableItem {
+  return item.isConsumable
+}
+
+export function isEquipable(item: Item): item is EquipableItem {
+  return item.isEquipable
 }

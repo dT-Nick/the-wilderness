@@ -1,6 +1,10 @@
-import { Enemy } from './enemy.js'
-import { FloorItem } from './item.js'
-import { Player } from './player.js'
+import {
+  type ConsumableItem,
+  type EquipableItem,
+  type Enemy,
+  type FloorItem,
+  type Player,
+} from './classes.js'
 
 export const constants = {
   playerSize: 20,
@@ -135,13 +139,14 @@ export function updateLoopState(
 interface GameState {
   status: 'start-menu' | 'settlement' | 'wilderness' | 'battle'
   playTime: number
-  player: Player
+  player: Player | null
   enemies: Array<Enemy>
   inventory: Array<{
     id: number
-    itemId: number
+    itemId: string
   }>
   floorItems: Array<FloorItem>
+  items: Array<ConsumableItem | EquipableItem>
   blocksHorizontal: number
   blocksVertical: number
   blockSize: number
@@ -150,10 +155,11 @@ interface GameState {
 const gameState: GameState = {
   status: 'start-menu',
   playTime: 0,
-  player: new Player(0, 0, constants.playerSize),
+  player: null,
   enemies: [],
   inventory: [],
   floorItems: [],
+  items: [],
   blocksHorizontal: 83,
   blocksVertical: 27,
   blockSize: 0,
@@ -177,7 +183,7 @@ export function updateGameState(
 
 // ##############################
 
-interface HomeState {
+interface SettlementState {
   status: 'building' | 'relocating' | 'exploring'
   buildings: Array<{}>
   inventory: Array<{}>
@@ -193,26 +199,26 @@ function getBuildingId() {
   return buildingId++
 }
 
-const homeState: HomeState = {
+const settlementState: SettlementState = {
   status: 'building',
   buildings: [],
   inventory: [],
   selected: null,
 }
 
-export function getHomeState() {
-  return homeState
+export function getSettlementState() {
+  return settlementState
 }
 
-export function updateHomeState(
+export function updateSettlementState(
   changes:
-    | Partial<typeof homeState>
-    | ((state: typeof homeState) => Partial<typeof homeState>)
+    | Partial<typeof settlementState>
+    | ((state: typeof settlementState) => Partial<typeof settlementState>)
 ) {
   if (typeof changes === 'function') {
-    Object.assign(homeState, changes(homeState))
+    Object.assign(settlementState, changes(settlementState))
   } else {
-    Object.assign(homeState, changes)
+    Object.assign(settlementState, changes)
   }
 }
 
@@ -299,11 +305,12 @@ interface BattleState {
   lastMove: null | 'player' | 'enemy'
   turns: number
   status: 'play' | 'wait'
-  playerMenu: 'main' | 'moves'
+  playerMenu: 'main' | 'moves' | 'items'
   waitStart: null | number
   waitLengthMs: number
   selectedMove: number
   selectedOption: number
+  selectedItem: number
 }
 
 const battleState: BattleState = {
@@ -316,6 +323,7 @@ const battleState: BattleState = {
   waitLengthMs: 0,
   selectedMove: 1,
   selectedOption: 1,
+  selectedItem: 1,
 }
 
 export function getBattleState() {
@@ -340,6 +348,10 @@ export function isInitialised(
   ctx: CanvasRenderingContext2D | null
 ): ctx is CanvasRenderingContext2D {
   return ctx !== null
+}
+
+export function isPlayerInitialised(player: Player | null): player is Player {
+  return player !== null
 }
 
 // type WindowState = {

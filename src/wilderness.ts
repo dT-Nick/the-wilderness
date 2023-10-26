@@ -5,6 +5,7 @@ import {
   getGameState,
   getWildernessState,
   isInitialised,
+  isPlayerInitialised,
   updateBattleState,
   updateGameState,
 } from './state.js'
@@ -94,6 +95,8 @@ export function drawBackgroundFromMap(map: MapState['map']) {
 
 export function handleWildernessScenarios() {
   const { player, enemies } = getGameState()
+  if (!isPlayerInitialised(player)) return
+
   for (const enemy of enemies) {
     const {
       faceDirection: eFaceDirection,
@@ -122,6 +125,7 @@ export function handleWildernessScenarios() {
         lastMove: null,
         enemyId: enemy.id,
         status: 'play',
+        playerMenu: 'main',
         turns: 0,
         waitLengthMs: 0,
         waitStart: null,

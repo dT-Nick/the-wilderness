@@ -19,6 +19,7 @@ export function stopListeners() {
 }
 
 function handleKeyDown(e: KeyboardEvent) {
+  e.preventDefault()
   const key = e.key.toLowerCase()
 
   updateInputState((prevInputState) => ({

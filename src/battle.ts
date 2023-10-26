@@ -1,10 +1,12 @@
 // import { battleState, gameState } from './state.js'
 
+import { getItemViaId } from './item.js'
 import {
   getBattleState,
   getCanvasState,
   getGameState,
   isInitialised,
+  isPlayerInitialised,
   updateBattleState,
 } from './state.js'
 
@@ -19,7 +21,7 @@ export function drawPlayerInfo() {
   const { ctx, scale, verticalOffset } = getCanvasState()
   const { player } = getGameState()
 
-  if (isInitialised(ctx)) {
+  if (isInitialised(ctx) && isPlayerInitialised(player)) {
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
     ctx.fillStyle = 'white'
@@ -65,10 +67,30 @@ function drawOptions() {
       drawMoves()
       break
     }
+    case 'items': {
+      drawInventory()
+      break
+    }
     default: {
       throw new Error(`Unknown playerMenu: ${playerMenu}`)
     }
   }
+}
+
+function getOptionsColour(
+  lastMove: 'player' | 'enemy' | null,
+  isDamageApplying: boolean,
+  isWaiting: boolean,
+  selectedOption: number,
+  optionIndex: number
+) {
+  if (lastMove === 'player' || isDamageApplying || isWaiting) {
+    return 'darkgrey'
+  }
+  if (selectedOption === optionIndex) {
+    return 'orangered'
+  }
+  return 'white'
 }
 
 function drawMainOptions() {
@@ -108,22 +130,6 @@ function drawMainOptions() {
       height - 65 - verticalOffset / 2
     )
   }
-}
-
-function getOptionsColour(
-  lastMove: 'player' | 'enemy' | null,
-  isDamageApplying: boolean,
-  isWaiting: boolean,
-  selectedMove: number,
-  move: number
-) {
-  if (lastMove === 'player' || isDamageApplying || isWaiting) {
-    return 'darkgrey'
-  }
-  if (selectedMove === move) {
-    return 'orangered'
-  }
-  return 'white'
 }
 
 export function drawMoves() {
@@ -221,8 +227,31 @@ export function drawMoves() {
   }
 }
 
+export function drawInventory() {
+  const { ctx, scale, verticalOffset, height, width } = getCanvasState()
+  const { lastMove, selectedItem, enemyId, status } = getBattleState()
+  const { inventory } = getGameState()
+  if (!isInitialised(ctx)) return
+
+  const items = inventory.map((item) => getItemViaId(item.itemId))
+
+  ctx.fillStyle = '#333'
+  ctx.fillRect(0, 0, width, height)
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+
+    const colour = getOptionsColour(lastMove, false, false, selectedItem, i + 1)
+    ctx.fillStyle = colour
+    ctx.strokeStyle = colour
+    ctx.strokeRect(10, 10 + 60 * i, width - 20, 50)
+    ctx.fillText(item.name, 25, 35 + 60 * i)
+  }
+}
+
 export function handleBattleScenarios() {
   const { player, enemies } = getGameState()
+  if (!isPlayerInitialised(player)) return
   const { enemyId, lastMove, status } = getBattleState()
 
   const enemy = enemies.find((e) => e.id === enemyId)
@@ -247,13 +276,15 @@ export function handleBattleScenarios() {
       if (player.currentDamage > 0) {
         player.takeDamage()
       } else {
-        enemy.hitPlayer(5)
+        enemy.hitPlayer(Math.ceil(Math.random() * 30))
       }
     }
 
     if (lastMove !== 'player' && enemy.currentDamage) {
-      // console.log(enemy.currentDamage, lastMove)
       enemy.takeDamage()
+    }
+    if (player.currentHeal > 0) {
+      player.addHealth()
     }
   }
 }

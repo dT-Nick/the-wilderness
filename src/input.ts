@@ -1,3 +1,5 @@
+import { handleEnemyInteraction } from './enemy.js'
+import { activateConsumable, handleItemPickup } from './item.js'
 import {
   constants,
   getBattleState,
@@ -26,7 +28,7 @@ export function handleStartMenuInput() {
       mouseY < height / 2 + startMenuButtonSize / 2
     ) {
       updateGameState({
-        status: 'wilderness',
+        status: 'settlement',
       })
     }
   }
@@ -44,16 +46,20 @@ export function handleWildernessInput() {
       throw new Error(`Unknown mapId: ${mapId}`)
     }
   }
+
+  handleItemPickup()
+  handleEnemyInteraction()
 }
 
 export function handleBattleInput() {
   const { ctx } = getCanvasState()
-  const { enemies, player } = getGameState()
+  const { enemies, player, inventory } = getGameState()
   const {
     status,
     enemyId,
     selectedMove,
     selectedOption,
+    selectedItem,
     lastMove,
     playerMenu,
   } = getBattleState()
@@ -64,10 +70,29 @@ export function handleBattleInput() {
 
     const isWaitingForPlayerInput = lastMove !== 'player' && status !== 'wait'
 
+    if (isKeyDownEvent(['escape', 'tab'])) {
+      if (playerMenu === 'items') {
+        updateBattleState({
+          playerMenu: 'main',
+        })
+      }
+      if (playerMenu === 'moves') {
+        updateBattleState({
+          playerMenu: 'main',
+        })
+      }
+    }
+
     if (isKeyDownEvent(['arrowup', 'w']) && isWaitingForPlayerInput) {
       if (playerMenu === 'moves' && selectedMove !== 1 && selectedMove !== 2) {
         updateBattleState({
           selectedMove: selectedMove === 3 ? 1 : 2,
+        })
+      }
+      if (playerMenu === 'items' && isWaitingForPlayerInput) {
+        updateBattleState({
+          selectedItem:
+            selectedItem === 1 ? inventory.length : selectedItem - 1,
         })
       }
     }
@@ -75,6 +100,12 @@ export function handleBattleInput() {
       if (playerMenu === 'moves' && selectedMove !== 3 && selectedMove !== 4) {
         updateBattleState({
           selectedMove: selectedMove === 1 ? 3 : 4,
+        })
+      }
+      if (playerMenu === 'items' && isWaitingForPlayerInput) {
+        updateBattleState({
+          selectedItem:
+            selectedItem === inventory.length ? 1 : selectedItem + 1,
         })
       }
     }
@@ -96,14 +127,14 @@ export function handleBattleInput() {
           selectedOption: selectedOption === 1 ? 2 : 1,
         })
       }
-      if (selectedMove !== 2 && selectedMove !== 4) {
+      if (playerMenu === 'moves' && selectedMove !== 2 && selectedMove !== 4) {
         updateBattleState({
           selectedMove: selectedMove === 1 ? 2 : 4,
         })
       }
     }
 
-    if (isKeyDownEvent('enter') && isWaitingForPlayerInput) {
+    if (isKeyDownEvent(['enter', 'e']) && isWaitingForPlayerInput) {
       if (playerMenu === 'main') {
         if (selectedOption === 1) {
           updateBattleState({
@@ -111,7 +142,9 @@ export function handleBattleInput() {
           })
         }
         if (selectedOption === 2) {
-          // TODO: Items...
+          updateBattleState({
+            playerMenu: 'items',
+          })
         }
       }
       if (playerMenu === 'moves') {
@@ -119,13 +152,21 @@ export function handleBattleInput() {
           enemy.takeHit(10)
         }
         if (selectedMove === 2) {
-          enemy.takeHit(20)
+          enemy.takeHit(5 + Math.round(Math.random() * 10))
         }
         if (selectedMove === 3) {
-          enemy.takeHit(30)
+          enemy.takeHit(2 + Math.round(Math.random() * 20))
         }
         if (selectedMove === 4) {
-          enemy.takeHit(40)
+          enemy.takeHit(0 + Math.round(Math.random() * 30))
+        }
+      }
+      if (playerMenu === 'items') {
+        if (inventory.length > 0) {
+          const item = inventory[selectedItem - 1]
+          if (!item)
+            throw new Error(`No item found at index: ${selectedItem - 1}`)
+          activateConsumable(item.itemId, item.id)
         }
       }
     }

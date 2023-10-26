@@ -1,72 +1,14 @@
-import { LivingBeing } from './living-being.js'
+import { isKeyDownEvent } from './input.js'
 import {
   getBattleState,
   getCanvasState,
   getDeltaFrames,
   getGameState,
   isInitialised,
+  isPlayerInitialised,
   updateBattleState,
   updateGameState,
 } from './state.js'
-
-export class Enemy extends LivingBeing {
-  name: string
-
-  constructor(
-    name: string,
-    health: number,
-    startX: number,
-    startY: number,
-    size: number
-  ) {
-    const directionRng = Math.random()
-    let faceDirection: 'left' | 'up' | 'right' | 'down' = 'left'
-    if (directionRng < 0.25) {
-      faceDirection = 'up'
-    } else if (directionRng < 0.5) {
-      faceDirection = 'right'
-    } else if (directionRng < 0.75) {
-      faceDirection = 'down'
-    }
-    super(startX, startY, size, health, faceDirection)
-    this.name = name
-  }
-
-  public takeDamage() {
-    if (!this.currentDamage) return
-    super.takeDamage()
-
-    if (this.currentHealth <= 0) {
-      this.currentHealth = 0
-      updateGameState((c) => ({
-        enemies: [...c.enemies.filter((e) => e.id !== this.id)],
-        status: 'wilderness',
-      }))
-
-      return
-    }
-    if (this.currentHealth <= this.prevHealth - this.currentDamage) {
-      updateBattleState({
-        lastMove: 'player',
-        status: 'wait',
-        waitLengthMs: 1000,
-        waitStart: Date.now(),
-      })
-    }
-  }
-
-  public hitPlayer(damage: number) {
-    const { player } = getGameState()
-    const { lastMove, status } = getBattleState()
-    if (
-      lastMove === 'player' &&
-      status === 'play' &&
-      player.currentDamage === 0
-    ) {
-      player.takeHit(damage)
-    }
-  }
-}
 
 export function drawEnemies() {
   const { enemies, blockSize } = getGameState()
@@ -126,6 +68,52 @@ export function drawEnemies() {
         enemy.size * scale
       )
       ctx.restore()
+    }
+  }
+}
+
+export function handleEnemyInteraction() {
+  const { player, enemies } = getGameState()
+  if (!isPlayerInitialised(player)) return
+
+  if (isKeyDownEvent('e')) {
+    for (const enemy of enemies) {
+      const {
+        faceDirection,
+        coordinates: [pCoordsX, pCoordsY],
+      } = player
+      const {
+        coordinates: [eCoordsX, eCoordsY],
+      } = enemy
+
+      const isOnPickupBlock =
+        (faceDirection === 'up' &&
+          eCoordsX === pCoordsX &&
+          eCoordsY === pCoordsY - 1) ||
+        (faceDirection === 'down' &&
+          eCoordsX === pCoordsX &&
+          eCoordsY === pCoordsY + 1) ||
+        (faceDirection === 'left' &&
+          eCoordsX === pCoordsX - 1 &&
+          eCoordsY === pCoordsY) ||
+        (faceDirection === 'right' &&
+          eCoordsX === pCoordsX + 1 &&
+          eCoordsY === pCoordsY)
+
+      if (isOnPickupBlock) {
+        updateBattleState({
+          lastMove: null,
+          enemyId: enemy.id,
+          status: 'play',
+          playerMenu: 'main',
+          turns: 0,
+          waitLengthMs: 0,
+          waitStart: null,
+        })
+        updateGameState({
+          status: 'battle',
+        })
+      }
     }
   }
 }
