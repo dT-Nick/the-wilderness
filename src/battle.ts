@@ -276,7 +276,7 @@ export function handleBattleScenarios() {
       if (player.currentDamage > 0) {
         player.takeDamage()
       } else {
-        enemy.hitPlayer(Math.ceil(Math.random() * 30))
+        enemy.hitPlayer(Math.ceil(Math.random() * 25))
       }
     }
 

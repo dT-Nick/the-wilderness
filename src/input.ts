@@ -13,6 +13,11 @@ import {
   updateGameState,
 } from './state.js'
 import { handleMapZeroInput } from './wilderness-maps/map-0.js'
+import { handleMapMinusOneZeroInput } from './wilderness-maps/map-[-1,0].js'
+import { handleMapMinusOneOneInput } from './wilderness-maps/map-[-1,1].js'
+import { handleMapZeroOneInput } from './wilderness-maps/map-[0,1].js'
+import { handleMapOneZeroInput } from './wilderness-maps/map-[1,0].js'
+import { handleMapOneOneInput } from './wilderness-maps/map-[1,1].js'
 
 export function handleStartMenuInput() {
   const { width, height } = getCanvasState()
@@ -28,7 +33,7 @@ export function handleStartMenuInput() {
       mouseY < height / 2 + startMenuButtonSize / 2
     ) {
       updateGameState({
-        status: 'settlement',
+        status: constants.startingScene,
       })
     }
   }
@@ -40,6 +45,26 @@ export function handleWildernessInput() {
   switch (mapId) {
     case 0: {
       handleMapZeroInput()
+      break
+    }
+    case '[-1,0]': {
+      handleMapMinusOneZeroInput()
+      break
+    }
+    case '[0,1]': {
+      handleMapZeroOneInput()
+      break
+    }
+    case '[1,0]': {
+      handleMapOneZeroInput()
+      break
+    }
+    case '[1,1]': {
+      handleMapOneOneInput()
+      break
+    }
+    case '[-1,1]': {
+      handleMapMinusOneOneInput()
       break
     }
     default: {

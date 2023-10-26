@@ -4,6 +4,7 @@ import {
   getCanvasState,
   getDeltaFrames,
   getGameState,
+  getWildernessState,
   isInitialised,
   isPlayerInitialised,
   updateBattleState,
@@ -11,11 +12,14 @@ import {
 } from './state.js'
 
 export function drawEnemies() {
-  const { enemies, blockSize } = getGameState()
+  const { enemies, blockSize, status } = getGameState()
   const { ctx, scale, verticalOffset } = getCanvasState()
+  const { mapId } = getWildernessState()
 
   if (isInitialised(ctx)) {
-    for (const enemy of enemies) {
+    for (const enemy of enemies.filter(
+      (e) => e.mapId === mapId && status === 'wilderness'
+    )) {
       const gradient = ctx.createLinearGradient(
         enemy.x * scale,
         enemy.y * scale + verticalOffset / 2,
@@ -74,10 +78,11 @@ export function drawEnemies() {
 
 export function handleEnemyInteraction() {
   const { player, enemies } = getGameState()
+  const { mapId } = getWildernessState()
   if (!isPlayerInitialised(player)) return
 
   if (isKeyDownEvent('e')) {
-    for (const enemy of enemies) {
+    for (const enemy of enemies.filter((e) => e.mapId === mapId)) {
       const {
         faceDirection,
         coordinates: [pCoordsX, pCoordsY],

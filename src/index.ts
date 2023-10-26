@@ -2,8 +2,11 @@ import { Enemy, FloorItem, Player } from './classes.js'
 import { drawBattle, handleBattleScenarios } from './battle.js'
 import { drawEnemies } from './enemy.js'
 import { startListeners } from './event-listeners.js'
-import { getXAndYValuesFromCoords } from './helpers/coordinates.js'
-import { generateMeasurementsTool } from './helpers/tools.js'
+import { getEntityXAndYValuesFromCoords } from './helpers/coordinates.js'
+import {
+  generateFixedMeasurementsTool,
+  generateMeasurementsTool,
+} from './helpers/tools.js'
 import {
   handleBattleInput,
   handleStartMenuInput,
@@ -26,6 +29,11 @@ import {
 import { generateMaps } from './wilderness-maps/index.js'
 import { drawWilderness, handleWildernessScenarios } from './wilderness.js'
 import { drawSettlementMap, handleSettlementInput } from './settlement.js'
+import {
+  drawMapCreator,
+  handleMapCreatorInput,
+} from './map-creator/map-creator.js'
+import { generateBackgroundGrid } from './background.js'
 
 document.addEventListener('DOMContentLoaded', function () {
   const canvasState = getCanvasState()
@@ -92,12 +100,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     generateMaps()
 
-    const [playerStartingX, playerStartingY] = getXAndYValuesFromCoords(
+    const [playerStartingX, playerStartingY] = getEntityXAndYValuesFromCoords(
       41,
       1,
       blockSize
     )
-    const [enemyStartingX, enemyStartingY] = getXAndYValuesFromCoords(
+    const [enemyStartingX, enemyStartingY] = getEntityXAndYValuesFromCoords(
       10,
       10,
       blockSize
@@ -109,22 +117,32 @@ document.addEventListener('DOMContentLoaded', function () {
       items: generateGameItems(),
       floorItems: [
         new FloorItem(
-          getXAndYValuesFromCoords(12, 12, blockSize)[0],
-          getXAndYValuesFromCoords(12, 12, blockSize)[1],
+          getEntityXAndYValuesFromCoords(12, 12, blockSize)[0],
+          getEntityXAndYValuesFromCoords(12, 12, blockSize)[1],
           blockSize * (3 / 4),
-          'small-potion'
+          'small-potion',
+          0
         ),
         new FloorItem(
-          getXAndYValuesFromCoords(13, 13, blockSize)[0],
-          getXAndYValuesFromCoords(13, 13, blockSize)[1],
+          getEntityXAndYValuesFromCoords(13, 13, blockSize)[0],
+          getEntityXAndYValuesFromCoords(13, 13, blockSize)[1],
           blockSize * (3 / 4),
-          'large-potion'
+          'large-potion',
+          0
         ),
         new FloorItem(
-          getXAndYValuesFromCoords(35, 6, blockSize)[0],
-          getXAndYValuesFromCoords(35, 6, blockSize)[1],
+          getEntityXAndYValuesFromCoords(35, 6, blockSize)[0],
+          getEntityXAndYValuesFromCoords(35, 6, blockSize)[1],
           blockSize * (3 / 4),
-          'small-potion'
+          'medium-potion',
+          0
+        ),
+        new FloorItem(
+          getEntityXAndYValuesFromCoords(66, 18, blockSize)[0],
+          getEntityXAndYValuesFromCoords(66, 18, blockSize)[1],
+          blockSize * (3 / 4),
+          'large-potion',
+          '[-1,0]'
         ),
       ],
       enemies: [
@@ -133,14 +151,48 @@ document.addEventListener('DOMContentLoaded', function () {
           100,
           enemyStartingX,
           enemyStartingY,
-          blockSize * (3 / 4)
+          blockSize * (3 / 4),
+          0
         ),
         new Enemy(
           'Kaurismaki Daemon',
           100,
-          getXAndYValuesFromCoords(37, 5, blockSize)[0],
-          getXAndYValuesFromCoords(37, 5, blockSize)[1],
-          blockSize * (3 / 4)
+          getEntityXAndYValuesFromCoords(37, 5, blockSize)[0],
+          getEntityXAndYValuesFromCoords(37, 5, blockSize)[1],
+          blockSize * (3 / 4),
+          0
+        ),
+        new Enemy(
+          'Kaurismaki Daemon',
+          100,
+          getEntityXAndYValuesFromCoords(65, 17, blockSize)[0],
+          getEntityXAndYValuesFromCoords(65, 17, blockSize)[1],
+          blockSize * (3 / 4),
+          '[-1,0]'
+        ),
+        new Enemy(
+          'Kaurismaki Daemon',
+          100,
+          getEntityXAndYValuesFromCoords(65, 19, blockSize)[0],
+          getEntityXAndYValuesFromCoords(65, 19, blockSize)[1],
+          blockSize * (3 / 4),
+          '[-1,0]'
+        ),
+        new Enemy(
+          'Kaurismaki Daemon',
+          100,
+          getEntityXAndYValuesFromCoords(67, 17, blockSize)[0],
+          getEntityXAndYValuesFromCoords(67, 17, blockSize)[1],
+          blockSize * (3 / 4),
+          '[-1,0]'
+        ),
+        new Enemy(
+          'Kaurismaki Daemon',
+          100,
+          getEntityXAndYValuesFromCoords(67, 19, blockSize)[0],
+          getEntityXAndYValuesFromCoords(67, 19, blockSize)[1],
+          blockSize * (3 / 4),
+          '[-1,0]'
         ),
       ],
     })
@@ -212,12 +264,23 @@ export function runGameLoop() {
 
       break
     }
+    case 'map-creator': {
+      handleMapCreatorInput()
+
+      drawMapCreator()
+      generateFixedMeasurementsTool()
+      generateBackgroundGrid()
+
+      break
+    }
     default: {
       throw new Error('Unknown game state')
     }
   }
 
   updatePrevInputState()
+  // generateBackgroundGrid()
   // generateMeasurementsTool()
+  // generateFixedMeasurementsTool()
   return requestAnimationFrame(runGameLoop)
 }

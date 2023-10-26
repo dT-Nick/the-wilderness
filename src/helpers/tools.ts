@@ -57,3 +57,54 @@ export function generateMeasurementsTool() {
     }
   }
 }
+
+export function generateFixedMeasurementsTool() {
+  // same as generateMeasurementsTool, but fixed in the center of the canvas
+  const { ctx, verticalOffset } = getCanvasState()
+
+  if (!isInitialised(ctx)) return
+
+  ctx.fillStyle = 'white'
+  ctx.font = '10px Arial'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  // draw rulers up, down, left and right from center location with ticks every 60 pixels from the center point and smaller unlabelled ticks every 10 pixels
+  ctx.fillRect(ctx.canvas.width / 2, 0, 1, ctx.canvas.height)
+  ctx.fillRect(0, ctx.canvas.height / 2, ctx.canvas.width, 1)
+  for (let i = 0; i < ctx.canvas.width / 2; i += 50) {
+    ctx.fillRect(ctx.canvas.width / 2 + i, ctx.canvas.height / 2 - 5, 1, 10)
+    if (i !== 0) {
+      ctx.fillText(`${i}`, ctx.canvas.width / 2 + i, ctx.canvas.height / 2 - 10)
+    }
+  }
+  for (let i = 0; i < ctx.canvas.width / 2; i += 50) {
+    ctx.fillRect(ctx.canvas.width / 2 - i, ctx.canvas.height / 2 - 5, 1, 10)
+    if (i !== 0) {
+      ctx.fillText(`${i}`, ctx.canvas.width / 2 - i, ctx.canvas.height / 2 - 10)
+    }
+  }
+  for (let i = 0; i < ctx.canvas.height / 2; i += 50) {
+    ctx.fillRect(ctx.canvas.width / 2 - 5, ctx.canvas.height / 2 + i, 10, 1)
+    if (i !== 0) {
+      ctx.fillText(`${i}`, ctx.canvas.width / 2 - 10, ctx.canvas.height / 2 + i)
+    }
+  }
+  for (let i = 0; i < ctx.canvas.height / 2; i += 50) {
+    ctx.fillRect(ctx.canvas.width / 2 - 5, ctx.canvas.height / 2 - i, 10, 1)
+    if (i !== 0) {
+      ctx.fillText(`${i}`, ctx.canvas.width / 2 - 10, ctx.canvas.height / 2 - i)
+    }
+  }
+  for (let i = 0; i < ctx.canvas.width / 2; i += 5) {
+    ctx.fillRect(ctx.canvas.width / 2 + i, ctx.canvas.height / 2 - 2, 1, 4)
+  }
+  for (let i = 0; i < ctx.canvas.width / 2; i += 5) {
+    ctx.fillRect(ctx.canvas.width / 2 - i, ctx.canvas.height / 2 - 2, 1, 4)
+  }
+  for (let i = 0; i < ctx.canvas.height / 2; i += 5) {
+    ctx.fillRect(ctx.canvas.width / 2 - 2, ctx.canvas.height / 2 + i, 4, 1)
+  }
+  for (let i = 0; i < ctx.canvas.height / 2; i += 5) {
+    ctx.fillRect(ctx.canvas.width / 2 - 2, ctx.canvas.height / 2 - i, 4, 1)
+  }
+}

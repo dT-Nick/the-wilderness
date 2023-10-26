@@ -4,6 +4,7 @@ import { isKeyDownEvent } from './input.js'
 import {
   getCanvasState,
   getGameState,
+  getWildernessState,
   isInitialised,
   isPlayerInitialised,
   updateBattleState,
@@ -13,10 +14,11 @@ import {
 export function drawFloorItems() {
   const { floorItems, blockSize } = getGameState()
   const { ctx, scale, verticalOffset } = getCanvasState()
+  const { mapId } = getWildernessState()
 
   if (isInitialised(ctx)) {
-    for (const floorItem of floorItems) {
-      ctx.fillStyle = 'orange'
+    for (const floorItem of floorItems.filter((fI) => fI.mapId === mapId)) {
+      ctx.fillStyle = 'yellow'
 
       ctx.fillRect(
         (floorItem.x + blockSize / 2 - floorItem.size / 2) * scale,
@@ -31,10 +33,11 @@ export function drawFloorItems() {
 
 export function handleItemPickup() {
   const { player, floorItems } = getGameState()
+  const { mapId } = getWildernessState()
   if (!isPlayerInitialised(player)) return
 
   if (isKeyDownEvent('e')) {
-    for (const floorItem of floorItems) {
+    for (const floorItem of floorItems.filter((fI) => fI.mapId === mapId)) {
       const {
         faceDirection,
         coordinates: [pCoordsX, pCoordsY],
@@ -101,9 +104,10 @@ export function activateConsumable(id: string, entityId: number) {
   if (!isConsumable(item)) return
 
   item.effect()
-  updateBattleState({
+  updateBattleState((c) => ({
     playerMenu: 'main',
-  })
+    selectedItem: c.selectedItem - 1 < 0 ? 0 : c.selectedItem - 1,
+  }))
   updateGameState((c) => ({
     inventory: [...c.inventory.filter((i) => i.id !== entityId)],
   }))

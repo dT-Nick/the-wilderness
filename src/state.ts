@@ -6,9 +6,14 @@ import {
   type Player,
 } from './classes.js'
 
-export const constants = {
+export const constants: {
+  playerSize: number
+  startMenuButtonSize: number
+  startingScene: 'settlement' | 'map-creator'
+} = {
   playerSize: 20,
   startMenuButtonSize: 200,
+  startingScene: 'settlement',
 }
 
 // ##############################
@@ -137,7 +142,7 @@ export function updateLoopState(
 // ##############################
 
 interface GameState {
-  status: 'start-menu' | 'settlement' | 'wilderness' | 'battle'
+  status: 'start-menu' | 'settlement' | 'wilderness' | 'battle' | 'map-creator'
   playTime: number
   player: Player | null
   enemies: Array<Enemy>
@@ -225,7 +230,7 @@ export function updateSettlementState(
 // ##############################
 
 interface WildernessState {
-  mapId: number
+  mapId: number | string
 }
 
 const wildernessState: WildernessState = {
@@ -250,12 +255,14 @@ export function updateWildernessState(
 
 // ##############################
 
+export interface BlockType {
+  name: 'grass' | 'water' | 'mountain' | 'forest' | 'hill' | 'wood' | 'wall'
+  color: string
+  isPassable: boolean
+}
+
 interface BlockTypeState {
-  blockTypes: Array<{
-    name: 'grass' | 'water' | 'mountain' | 'forest' | 'hill'
-    color: string
-    isPassable: boolean
-  }>
+  blockTypes: Array<BlockType>
 }
 
 const blockTypeState: BlockTypeState = {
@@ -285,7 +292,21 @@ const blockTypeState: BlockTypeState = {
       color: '#223300',
       isPassable: false,
     },
+    {
+      name: 'wood',
+      color: '#A1662F',
+      isPassable: true,
+    },
+    {
+      name: 'wall',
+      color: '#444455',
+      isPassable: false,
+    },
   ],
+}
+
+export function getBlockTypeState() {
+  return blockTypeState
 }
 
 export function getBlockPropertiesFromName(name: string) {

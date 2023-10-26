@@ -134,7 +134,6 @@ export function handlePlayerMovement(
       case 'arrowleft':
       case 'a': {
         const [x, y] = player.coordinates
-
         if (
           x > 0 &&
           !restrictedCoords.some((rc) => rc[0] === x - 1 && rc[1] === y)

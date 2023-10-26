@@ -1,5 +1,6 @@
 import { generateBackgroundGrid } from './background.js'
 import {
+  BlockType,
   getBlockPropertiesFromName,
   getCanvasState,
   getGameState,
@@ -10,10 +11,15 @@ import {
   updateGameState,
 } from './state.js'
 import { drawMapZero } from './wilderness-maps/map-0.js'
+import { drawMapMinusOneZero } from './wilderness-maps/map-[-1,0].js'
+import { drawMapMinusOneOne } from './wilderness-maps/map-[-1,1].js'
+import { drawMapZeroOne } from './wilderness-maps/map-[0,1].js'
+import { drawMapOneZero } from './wilderness-maps/map-[1,0].js'
+import { drawMapOneOne } from './wilderness-maps/map-[1,1].js'
 
 export interface MapState {
   map: Array<{
-    type: 'grass' | 'water' | 'mountain' | 'forest' | 'hill'
+    type: BlockType['name']
     fromCoords: [number, number]
     toCoords: [number, number]
   }>
@@ -27,6 +33,26 @@ export function drawWilderness() {
       drawMapZero()
       break
     }
+    case '[-1,0]': {
+      drawMapMinusOneZero()
+      break
+    }
+    case '[0,1]': {
+      drawMapZeroOne()
+      break
+    }
+    case '[1,0]': {
+      drawMapOneZero()
+      break
+    }
+    case '[1,1]': {
+      drawMapOneOne()
+      break
+    }
+    case '[-1,1]': {
+      drawMapMinusOneOne()
+      break
+    }
     default: {
       throw new Error(`Unknown mapId: ${mapId}`)
     }
@@ -34,7 +60,8 @@ export function drawWilderness() {
 }
 
 export function deriveRestrictedCoordsFromMap(map: MapState['map']) {
-  const { enemies } = getGameState()
+  const { enemies, status } = getGameState()
+  const { mapId } = getWildernessState()
   const restrictedCoords: Array<[number, number]> = []
 
   for (
@@ -55,7 +82,9 @@ export function deriveRestrictedCoordsFromMap(map: MapState['map']) {
     }
   }
 
-  for (const enemy of enemies) {
+  for (const enemy of enemies.filter(
+    (e) => e.mapId === mapId && status === 'wilderness'
+  )) {
     restrictedCoords.push(enemy.coordinates)
   }
 
@@ -95,9 +124,10 @@ export function drawBackgroundFromMap(map: MapState['map']) {
 
 export function handleWildernessScenarios() {
   const { player, enemies } = getGameState()
+  const { mapId } = getWildernessState()
   if (!isPlayerInitialised(player)) return
 
-  for (const enemy of enemies) {
+  for (const enemy of enemies.filter((e) => e.mapId === mapId)) {
     const {
       faceDirection: eFaceDirection,
       coordinates: [eCoordsX, eCoordsY],

@@ -157,7 +157,7 @@ export class Player extends LivingBeing {
     const { blockSize } = getGameState()
     const isShiftDown = isKeyCurrentlyDown('shift')
 
-    return blockSize / (isShiftDown ? 8 : 12)
+    return blockSize / (isShiftDown ? 3 : 4)
   }
 
   public moveUp() {
@@ -307,13 +307,15 @@ export class Player extends LivingBeing {
 
 export class Enemy extends LivingBeing {
   name: string
+  mapId: number | string
 
   constructor(
     name: string,
     health: number,
     startX: number,
     startY: number,
-    size: number
+    size: number,
+    mapId: number | string
   ) {
     const directionRng = Math.random()
     let faceDirection: 'left' | 'up' | 'right' | 'down' = 'left'
@@ -326,6 +328,7 @@ export class Enemy extends LivingBeing {
     }
     super(startX, startY, size, health, faceDirection)
     this.name = name
+    this.mapId = mapId
   }
 
   public takeDamage() {
@@ -370,10 +373,18 @@ export class Enemy extends LivingBeing {
 
 export class FloorItem extends Entity {
   itemId: string
+  mapId: number | string
 
-  constructor(startX: number, startY: number, size: number, itemId: string) {
+  constructor(
+    startX: number,
+    startY: number,
+    size: number,
+    itemId: string,
+    mapId: number | string
+  ) {
     super(startX, startY, size)
     this.itemId = itemId
+    this.mapId = mapId
   }
 
   public pickUpItem() {
