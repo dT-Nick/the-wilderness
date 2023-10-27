@@ -15,6 +15,8 @@ import {
   deriveRestrictedCoordsFromMap,
   drawBackgroundFromMap,
 } from '../wilderness.js'
+import { getMapZeroState, updateMapZeroState } from './map-0.js'
+import { getMapOneOneState, updateMapOneOneState } from './map-[1,1].js'
 
 export function generateMapOneZeroState(): MapState {
   const { blocksVertical, blocksHorizontal } = getGameState()
@@ -307,11 +309,17 @@ export function generateMapOneZeroState(): MapState {
         toCoords: [57, 10],
       },
     ],
+    discovered: false,
   }
 }
 
 const mapOneZeroState: MapState = {
   map: [],
+  discovered: false,
+}
+
+export function getMapOneZeroState() {
+  return mapOneZeroState
 }
 
 export function updateMapOneZeroState(
@@ -352,6 +360,12 @@ export function handleMapOneZeroExit() {
       updateWildernessState({
         mapId: 0,
       })
+      const { discovered } = getMapZeroState()
+      if (!discovered) {
+        updateMapZeroState({
+          discovered: true,
+        })
+      }
       player.goToCoordinates(blocksHorizontal - 1, pCoordsY)
       player.stopMoving()
     }
@@ -362,6 +376,12 @@ export function handleMapOneZeroExit() {
       updateWildernessState({
         mapId: '[1,1]',
       })
+      const { discovered } = getMapOneOneState()
+      if (!discovered) {
+        updateMapOneOneState({
+          discovered: true,
+        })
+      }
       player.goToCoordinates(pCoordsX, blocksVertical - 1)
       player.stopMoving()
     }

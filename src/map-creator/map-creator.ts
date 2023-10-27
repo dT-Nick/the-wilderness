@@ -35,6 +35,7 @@ interface BuilderState extends MapState {
 
 const builderState: BuilderState = {
   map: generateSettlementMapState().map,
+  discovered: true,
   currentType: 'water',
   fillFromCoords: null,
   fillToCoords: null,

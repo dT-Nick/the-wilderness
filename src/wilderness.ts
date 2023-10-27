@@ -23,6 +23,7 @@ export interface MapState {
     fromCoords: [number, number]
     toCoords: [number, number]
   }>
+  discovered: boolean
 }
 
 export function drawWilderness() {

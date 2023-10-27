@@ -72,6 +72,7 @@ export function handleWildernessInput() {
     }
   }
 
+  handleSettingsTriggerInputs()
   handleItemPickup()
   handleEnemyInteraction()
 }
@@ -195,6 +196,15 @@ export function handleBattleInput() {
         }
       }
     }
+  }
+}
+
+export function handleSettingsTriggerInputs() {
+  if (isKeyDownEvent(['m'])) {
+    updateGameState((c) => ({
+      status: 'world-map',
+      prevStatus: c.status,
+    }))
   }
 }
 

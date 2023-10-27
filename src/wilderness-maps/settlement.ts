@@ -552,11 +552,13 @@ export function generateSettlementMapState(): MapState {
         toCoords: [3, 26],
       },
     ],
+    discovered: true,
   }
 }
 
 const settlementMapState: MapState = {
   map: [],
+  discovered: true,
 }
 
 export function getSettlementMapState() {

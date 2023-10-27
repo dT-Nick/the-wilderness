@@ -142,7 +142,23 @@ export function updateLoopState(
 // ##############################
 
 interface GameState {
-  status: 'start-menu' | 'settlement' | 'wilderness' | 'battle' | 'map-creator'
+  status:
+    | 'start-menu'
+    | 'settlement'
+    | 'wilderness'
+    | 'battle'
+    | 'map-creator'
+    | 'world-map'
+
+  prevStatus:
+    | null
+    | 'start-menu'
+    | 'settlement'
+    | 'wilderness'
+    | 'battle'
+    | 'world-map'
+    | 'map-creator'
+
   playTime: number
   player: Player | null
   enemies: Array<Enemy>
@@ -159,6 +175,7 @@ interface GameState {
 
 const gameState: GameState = {
   status: 'start-menu',
+  prevStatus: null,
   playTime: 0,
   player: null,
   enemies: [],

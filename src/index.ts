@@ -34,6 +34,7 @@ import {
   handleMapCreatorInput,
 } from './map-creator/map-creator.js'
 import { generateBackgroundGrid } from './background.js'
+import { drawWorldMap, handleWorldMapInput } from './world-map.js'
 
 document.addEventListener('DOMContentLoaded', function () {
   const canvasState = getCanvasState()
@@ -271,6 +272,11 @@ export function runGameLoop() {
       generateFixedMeasurementsTool()
       generateBackgroundGrid()
 
+      break
+    }
+    case 'world-map': {
+      drawWorldMap()
+      handleWorldMapInput()
       break
     }
     default: {

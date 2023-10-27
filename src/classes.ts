@@ -157,7 +157,7 @@ export class Player extends LivingBeing {
     const { blockSize } = getGameState()
     const isShiftDown = isKeyCurrentlyDown('shift')
 
-    return blockSize / (isShiftDown ? 3 : 4)
+    return blockSize / (isShiftDown ? 8 : 12)
   }
 
   public moveUp() {

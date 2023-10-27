@@ -5,7 +5,8 @@ import {
 } from './wilderness.js'
 import { getSettlementMapState } from './wilderness-maps/settlement.js'
 import { getGameState, isPlayerInitialised, updateGameState } from './state.js'
-import { isKeyCurrentlyDown } from './input.js'
+import { handleSettingsTriggerInputs, isKeyCurrentlyDown } from './input.js'
+import { getMapZeroState, updateMapZeroState } from './wilderness-maps/map-0.js'
 
 export function drawSettlementMap() {
   const { map } = getSettlementMapState()
@@ -17,6 +18,7 @@ export function handleSettlementInput() {
   const restrictedCoords = deriveRestrictedCoordsFromMap(map)
 
   handlePlayerMovement(restrictedCoords)
+  handleSettingsTriggerInputs()
   handleSettlementExit()
 }
 
@@ -30,6 +32,12 @@ export function handleSettlementExit() {
       updateGameState({
         status: 'wilderness',
       })
+      const { discovered } = getMapZeroState()
+      if (!discovered) {
+        updateMapZeroState({
+          discovered: true,
+        })
+      }
       player.goToCoordinates(
         Math.floor(blocksHorizontal / 2),
         blocksVertical - 1
