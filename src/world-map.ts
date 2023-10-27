@@ -1,4 +1,4 @@
-import { isKeyDownEvent } from './input.js'
+import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import {
   getBlockPropertiesFromName,
   getCanvasState,
@@ -245,7 +245,10 @@ export function drawMiniBackgroundFromMap(
 }
 
 export function handleWorldMapInput() {
-  if (isKeyDownEvent(['m', 'escape', 'tab'])) {
+  if (
+    isKeyDownEvent(['m', 'escape', 'tab']) ||
+    isButtonDownEvent(['buttonB', 'buttonY'])
+  ) {
     updateGameState((c) => ({
       status: c.prevStatus ?? 'settlement',
     }))

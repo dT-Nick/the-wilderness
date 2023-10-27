@@ -25,11 +25,11 @@ export function drawPlayerInfo() {
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
     ctx.fillStyle = 'white'
-    ctx.font = `${Math.floor(22 * scale)}px monospace`
+    ctx.font = `${Math.floor(25 * scale)}px monospace`
     ctx.fillText(
       `Health: ${Math.ceil(player.currentHealth)}`,
-      10,
-      20 + verticalOffset / 2
+      10 * scale,
+      20 * scale + verticalOffset / 2
     )
   }
 }
@@ -43,14 +43,14 @@ export function drawEnemyInfo() {
     const enemy = enemies.find((e) => e.id === enemyId)
     if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
 
-    ctx.textAlign = 'left'
+    ctx.textAlign = 'right'
     ctx.textBaseline = 'middle'
     ctx.fillStyle = 'white'
-    ctx.font = `${Math.floor(22 * scale)}px monospace`
+    ctx.font = `${Math.floor(25 * scale)}px monospace`
     ctx.fillText(
       `Health: ${Math.ceil(enemy.currentHealth)}`,
-      width - 10 - 150 * scale,
-      20 + verticalOffset / 2
+      width - 10 * scale,
+      20 * scale + verticalOffset / 2
     )
   }
 }
@@ -99,35 +99,41 @@ function drawMainOptions() {
 
   if (isInitialised(ctx)) {
     ctx.lineWidth = 1
-    ctx.font = `${Math.floor(22 * scale)}px monospace`
+    ctx.font = `${Math.floor(25 * scale)}px monospace`
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'center'
 
-    const widthOfBox = (width - 30) / 2
+    const widthOfBox = (width - 30 * scale) / 2
 
     let colour = getOptionsColour(lastMove, false, false, selectedOption, 1)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
-    ctx.strokeRect(10, height - 120 - verticalOffset / 2, widthOfBox, 110)
+    console.log(scale)
+    ctx.strokeRect(
+      10 * scale,
+      height - 120 * scale - verticalOffset / 2,
+      widthOfBox,
+      110 * scale
+    )
     ctx.fillText(
       'Attack',
       widthOfBox / 2 + 10,
-      height - 65 - verticalOffset / 2
+      height - 65 * scale - verticalOffset / 2
     )
 
     colour = getOptionsColour(lastMove, false, false, selectedOption, 2)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
-      widthOfBox + 20,
-      height - 120 - verticalOffset / 2,
+      widthOfBox + 20 * scale,
+      height - 120 * scale - verticalOffset / 2,
       widthOfBox,
-      110
+      110 * scale
     )
     ctx.fillText(
       'Items',
       widthOfBox + widthOfBox / 2 + 20,
-      height - 65 - verticalOffset / 2
+      height - 65 * scale - verticalOffset / 2
     )
   }
 }
@@ -145,7 +151,7 @@ export function drawMoves() {
     const isWaiting = status === 'wait'
 
     ctx.lineWidth = 1
-    ctx.font = `${Math.floor(22 * scale)}px monospace`
+    ctx.font = `${Math.floor(25 * scale)}px monospace`
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
 
@@ -159,12 +165,16 @@ export function drawMoves() {
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
-      10,
-      height - 120 - verticalOffset / 2,
-      (width - 20) / 2 - 5,
-      50
+      10 * scale,
+      height - 120 * scale - verticalOffset / 2,
+      (width - 20 * scale) / 2 - 5 * scale,
+      50 * scale
     )
-    ctx.fillText('Attack one', 25, height - 95 - verticalOffset / 2)
+    ctx.fillText(
+      'Attack one',
+      25 * scale,
+      height - 95 * scale - verticalOffset / 2
+    )
 
     colour = getOptionsColour(
       lastMove,
@@ -176,15 +186,15 @@ export function drawMoves() {
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
-      15 + (width - 20) / 2,
-      height - 120 - verticalOffset / 2,
-      (width - 20) / 2 - 5,
-      50
+      15 * scale + (width - 20 * scale) / 2,
+      height - 120 * scale - verticalOffset / 2,
+      (width - 20 * scale) / 2 - 5 * scale,
+      50 * scale
     )
     ctx.fillText(
       'Attack two',
-      30 + (width - 20) / 2,
-      height - 95 - verticalOffset / 2
+      30 * scale + (width - 20 * scale) / 2,
+      height - 95 * scale - verticalOffset / 2
     )
 
     colour = getOptionsColour(
@@ -197,12 +207,16 @@ export function drawMoves() {
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
-      10,
-      height - 60 - verticalOffset / 2,
-      (width - 20) / 2 - 5,
-      50
+      10 * scale,
+      height - 60 * scale - verticalOffset / 2,
+      (width - 20 * scale) / 2 - 5 * scale,
+      50 * scale
     )
-    ctx.fillText('Attack three', 25, height - 35 - verticalOffset / 2)
+    ctx.fillText(
+      'Attack three',
+      25 * scale,
+      height - 35 * scale - verticalOffset / 2
+    )
 
     colour = getOptionsColour(
       lastMove,
@@ -214,15 +228,15 @@ export function drawMoves() {
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
-      15 + (width - 20) / 2,
-      height - 60 - verticalOffset / 2,
-      (width - 20) / 2 - 5,
-      50
+      15 * scale + (width - 20 * scale) / 2,
+      height - 60 * scale - verticalOffset / 2,
+      (width - 20 * scale) / 2 - 5 * scale,
+      50 * scale
     )
     ctx.fillText(
       'Attack four',
-      30 + (width - 20) / 2,
-      height - 35 - verticalOffset / 2
+      30 * scale + (width - 20 * scale) / 2,
+      height - 35 * scale - verticalOffset / 2
     )
   }
 }
@@ -235,8 +249,9 @@ export function drawInventory() {
 
   const items = inventory.map((item) => getItemViaId(item.itemId))
 
+  ctx.textAlign = 'left'
   ctx.fillStyle = '#333'
-  ctx.fillRect(0, 0, width, height)
+  ctx.fillRect(0, verticalOffset / 2, width, height - verticalOffset)
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i]
@@ -244,8 +259,17 @@ export function drawInventory() {
     const colour = getOptionsColour(lastMove, false, false, selectedItem, i + 1)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
-    ctx.strokeRect(10, 10 + 60 * i, width - 20, 50)
-    ctx.fillText(item.name, 25, 35 + 60 * i)
+    ctx.strokeRect(
+      10 * scale,
+      10 * scale + 60 * scale * i + verticalOffset / 2,
+      width - 20 * scale,
+      50 * scale
+    )
+    ctx.fillText(
+      item.name,
+      25 * scale,
+      35 * scale + 60 * scale * i + verticalOffset / 2
+    )
   }
 }
 

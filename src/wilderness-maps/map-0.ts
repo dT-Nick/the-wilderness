@@ -1,5 +1,5 @@
 import { handleEnemyInteraction } from '../enemy.js'
-import { isKeyCurrentlyDown } from '../input.js'
+import { isButtonCurrentlyDown, isKeyCurrentlyDown } from '../input.js'
 import { handleItemPickup } from '../item.js'
 import { handlePlayerMovement } from '../player.js'
 import {
@@ -346,7 +346,8 @@ export function handleMapZeroExit() {
     pCoordsY === blocksVertical - 1
   ) {
     if (
-      isKeyCurrentlyDown(['s', 'arrowdown']) &&
+      (isKeyCurrentlyDown(['s', 'arrowdown']) ||
+        isButtonCurrentlyDown('dpadDown')) &&
       player.faceDirection === 'down'
     ) {
       updateGameState({
@@ -359,7 +360,8 @@ export function handleMapZeroExit() {
 
   if (pCoordsX === 0) {
     if (
-      isKeyCurrentlyDown(['a', 'arrowleft']) &&
+      (isKeyCurrentlyDown(['a', 'arrowleft']) ||
+        isButtonCurrentlyDown('dpadLeft')) &&
       player.faceDirection === 'left'
     ) {
       updateWildernessState({
@@ -377,7 +379,11 @@ export function handleMapZeroExit() {
   }
 
   if (pCoordsY === 0) {
-    if (isKeyCurrentlyDown(['w', 'arrowup']) && player.faceDirection === 'up') {
+    if (
+      (isKeyCurrentlyDown(['w', 'arrowup']) ||
+        isButtonCurrentlyDown('dpadUp')) &&
+      player.faceDirection === 'up'
+    ) {
       updateWildernessState({
         mapId: '[0,1]',
       })
@@ -394,7 +400,8 @@ export function handleMapZeroExit() {
 
   if (pCoordsX === blocksHorizontal - 1) {
     if (
-      isKeyCurrentlyDown(['d', 'arrowright']) &&
+      (isKeyCurrentlyDown(['d', 'arrowright']) ||
+        isButtonCurrentlyDown('dpadRight')) &&
       player.faceDirection === 'right'
     ) {
       updateWildernessState({

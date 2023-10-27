@@ -1,6 +1,6 @@
 import { ConsumableItem, EquipableItem, type Item } from './classes.js'
 import { generateSlug } from './helpers/functions.js'
-import { isKeyDownEvent } from './input.js'
+import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import {
   getCanvasState,
   getGameState,
@@ -36,7 +36,7 @@ export function handleItemPickup() {
   const { mapId } = getWildernessState()
   if (!isPlayerInitialised(player)) return
 
-  if (isKeyDownEvent('e')) {
+  if (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) {
     for (const floorItem of floorItems.filter((fI) => fI.mapId === mapId)) {
       const {
         faceDirection,

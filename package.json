@@ -1,11 +1,26 @@
 {
   "scripts": {
-    "dev": "http-server . -p 3000",
-    "build": "tsc -p ./tsconfig.json --watch"
+    "dev:build": "tsc -p ./tsconfig.json --watch",
+    "dev:server": "nodemon .",
+    "dev": "run-p dev:*",
+    "start": "node .",
+    "build": "tsc -p ./tsconfig.json",
+    "lint": "eslint .",
+    "typecheck": "tsc"
   },
   "devDependencies": {
-    "eslint": "^8.51.0",
+    "eslint": "^8.52.0",
     "http-server": "^14.1.1",
+    "nodemon": "^3.0.1",
+    "npm-run-all": "^4.1.5",
     "typescript": "^5.2.2"
+  },
+  "type": "module",
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "morgan": "^1.10.0"
   }
 }

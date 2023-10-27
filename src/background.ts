@@ -8,13 +8,7 @@ export function generateBackgroundGrid() {
   if (!isInitialised(ctx)) return
 
   for (let i = 0; i < blocksHorizontal + 1; i++) {
-    ctx.fillStyle = 'white'
-    if (
-      i === Math.floor(blocksHorizontal / 2) ||
-      i === Math.ceil(blocksHorizontal / 2)
-    ) {
-      ctx.fillStyle = 'black'
-    }
+    ctx.fillStyle = 'cyan'
     if (blocksHorizontal % 2 === 0) {
       ctx.fillRect(
         i * (blockSize * scale) + (blockSize * scale) / 2,
@@ -32,13 +26,7 @@ export function generateBackgroundGrid() {
     }
   }
   for (let j = 0; j < blocksVertical + 1; j++) {
-    ctx.fillStyle = 'white'
-    if (
-      j === Math.floor(blocksVertical / 2) ||
-      j === Math.ceil(blocksVertical / 2)
-    ) {
-      ctx.fillStyle = 'black'
-    }
+    ctx.fillStyle = 'cyan'
     if (blocksVertical % 2 === 0) {
       ctx.fillRect(
         0,

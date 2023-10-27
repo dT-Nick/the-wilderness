@@ -1,5 +1,5 @@
 import { generateSlug } from './helpers/functions.js'
-import { isKeyCurrentlyDown } from './input.js'
+import { isButtonCurrentlyDown, isKeyCurrentlyDown } from './input.js'
 import {
   getGameState,
   getDeltaFrames,
@@ -155,9 +155,10 @@ export class Player extends LivingBeing {
 
   get speed() {
     const { blockSize } = getGameState()
-    const isShiftDown = isKeyCurrentlyDown('shift')
+    const isSprintDown =
+      isKeyCurrentlyDown('shift') || isButtonCurrentlyDown('buttonB')
 
-    return blockSize / (isShiftDown ? 8 : 12)
+    return blockSize / (isSprintDown ? 3 : 4)
   }
 
   public moveUp() {

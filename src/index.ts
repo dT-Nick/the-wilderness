@@ -35,6 +35,25 @@ import {
 } from './map-creator/map-creator.js'
 import { generateBackgroundGrid } from './background.js'
 import { drawWorldMap, handleWorldMapInput } from './world-map.js'
+import { drawController } from './controller/controller.js'
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('service-worker.js')
+      .then((registration) => {
+        const data = {
+          type: 'CACHE_URLS',
+          payload: [
+            location.href,
+            ...performance.getEntriesByType('resource').map((r) => r.name),
+          ],
+        }
+        registration.installing?.postMessage(data)
+      })
+      .catch((err) => console.log('Service worker registration failed: ', err))
+  })
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   const canvasState = getCanvasState()
@@ -269,8 +288,8 @@ export function runGameLoop() {
       handleMapCreatorInput()
 
       drawMapCreator()
-      generateFixedMeasurementsTool()
       generateBackgroundGrid()
+      generateFixedMeasurementsTool()
 
       break
     }
@@ -288,5 +307,6 @@ export function runGameLoop() {
   // generateBackgroundGrid()
   // generateMeasurementsTool()
   // generateFixedMeasurementsTool()
+  drawController()
   return requestAnimationFrame(runGameLoop)
 }

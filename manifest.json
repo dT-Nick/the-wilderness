@@ -1,0 +1,9 @@
+{
+  "name": "The Wilderness",
+  "short_name": "Wilderness",
+  "description": "A web-based adventure game",
+  "start_url": "/",
+  "display": "fullscreen",
+  "theme_color": "#333333",
+  "background_color": "#333333"
+}

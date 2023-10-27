@@ -78,7 +78,7 @@ export function drawPlayer() {
 export function handlePlayerMovement(
   restrictedCoords: Array<[number, number]>
 ) {
-  const { keysDown } = getInputState()
+  const { keysDown, touches } = getInputState()
   const { player, blockSize, blocksVertical, blocksHorizontal } = getGameState()
   if (!isPlayerInitialised(player)) return
 
@@ -146,6 +146,76 @@ export function handlePlayerMovement(
       }
       case 'arrowright':
       case 'd': {
+        const [x, y] = player.coordinates
+        if (
+          x < blocksHorizontal - 1 &&
+          !restrictedCoords.some((rc) => rc[0] === x + 1 && rc[1] === y)
+        ) {
+          player.moveRight()
+          break
+        }
+        player.lookRight()
+        break
+      }
+      default:
+        break
+    }
+  }
+
+  const lastMovementButtonIndex = Math.max(
+    touches.findIndex((t) => t.type === 'dpadUp'),
+    touches.findIndex((t) => t.type === 'dpadDown'),
+    touches.findIndex((t) => t.type === 'dpadLeft'),
+    touches.findIndex((t) => t.type === 'dpadRight')
+  )
+
+  const lastMovementButton =
+    lastMovementButtonIndex >= 0 ? touches[lastMovementButtonIndex] : null
+
+  if (
+    (player.movementStatus === 'idle' || player.movementStatus === 'stable') &&
+    lastMovementButton
+  ) {
+    switch (lastMovementButton.type) {
+      case 'dpadUp': {
+        const [x, y] = player.coordinates
+
+        if (
+          y > 0 &&
+          !restrictedCoords.some((rc) => rc[0] === x && rc[1] === y - 1)
+        ) {
+          player.moveUp()
+          break
+        }
+        player.lookUp()
+        break
+      }
+      case 'dpadDown': {
+        const [x, y] = player.coordinates
+
+        if (
+          y < blocksVertical - 1 &&
+          !restrictedCoords.some((rc) => rc[0] === x && rc[1] === y + 1)
+        ) {
+          player.moveDown()
+          break
+        }
+        player.lookDown()
+        break
+      }
+      case 'dpadLeft': {
+        const [x, y] = player.coordinates
+        if (
+          x > 0 &&
+          !restrictedCoords.some((rc) => rc[0] === x - 1 && rc[1] === y)
+        ) {
+          player.moveLeft()
+          break
+        }
+        player.lookLeft()
+        break
+      }
+      case 'dpadRight': {
         const [x, y] = player.coordinates
         if (
           x < blocksHorizontal - 1 &&

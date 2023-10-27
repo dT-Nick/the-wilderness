@@ -5,7 +5,11 @@ import {
 } from './wilderness.js'
 import { getSettlementMapState } from './wilderness-maps/settlement.js'
 import { getGameState, isPlayerInitialised, updateGameState } from './state.js'
-import { handleSettingsTriggerInputs, isKeyCurrentlyDown } from './input.js'
+import {
+  handleSettingsTriggerInputs,
+  isButtonCurrentlyDown,
+  isKeyCurrentlyDown,
+} from './input.js'
 import { getMapZeroState, updateMapZeroState } from './wilderness-maps/map-0.js'
 
 export function drawSettlementMap() {
@@ -28,7 +32,11 @@ export function handleSettlementExit() {
 
   const [pCoordsX, pCoordsY] = player.coordinates
   if (pCoordsX === Math.floor(blocksHorizontal / 2) && pCoordsY === 0) {
-    if (isKeyCurrentlyDown(['w', 'arrowup']) && player.faceDirection === 'up') {
+    if (
+      (isKeyCurrentlyDown(['w', 'arrowup']) ||
+        isButtonCurrentlyDown('dpadUp')) &&
+      player.faceDirection === 'up'
+    ) {
       updateGameState({
         status: 'wilderness',
       })

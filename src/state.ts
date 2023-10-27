@@ -55,6 +55,19 @@ interface InputState {
     key: string
     time: number
   }>
+  touches: Array<{
+    identifier: number
+    type:
+      | 'buttonA'
+      | 'buttonB'
+      | 'buttonY'
+      | 'buttonX'
+      | 'dpadLeft'
+      | 'dpadRight'
+      | 'dpadUp'
+      | 'dpadDown'
+      | 'start'
+  }>
   mouse: {
     isDown: boolean
     time: number
@@ -65,6 +78,7 @@ interface InputState {
 
 const inputState: InputState = {
   keysDown: [],
+  touches: [],
   mouse: {
     isDown: false,
     time: 0,
@@ -91,6 +105,7 @@ export function updateInputState(
 
 const previousInputState: InputState = {
   keysDown: [],
+  touches: [],
   mouse: {
     isDown: false,
     time: 0,

@@ -205,9 +205,12 @@ export function handleMapCreatorInput() {
     }
   }
 
-  if (isKeyDownEvent('enter')) {
-    console.log('LENGTH: ', map.length)
-    console.log(map)
+  if (isKeyDownEvent('c')) {
+    if (isKeyCurrentlyDown(['control', 'command'])) {
+      if (window.navigator) {
+        navigator.clipboard.writeText(JSON.stringify(map))
+      }
+    }
   }
 }
 
@@ -227,7 +230,7 @@ export function drawMapCreator() {
 function drawCurrentPaintedBlock() {
   const { ctx, scale, verticalOffset } = getCanvasState()
   if (!isInitialised(ctx)) return
-  const { currentType } = getBuilderState()
+  const { currentType, isDragging } = getBuilderState()
 
   const { blockSize } = getGameState()
   const { mouseX, mouseY } = getInputState()
@@ -249,19 +252,21 @@ function drawCurrentPaintedBlock() {
 
   ctx.fillStyle = color
   ctx.strokeStyle = 'white'
-  ctx.lineWidth = 1
-  ctx.fillRect(
-    xValue,
-    yValue + verticalOffset / 2,
-    blockSize * scale,
-    blockSize * scale
-  )
-  ctx.strokeRect(
-    xValue,
-    yValue + verticalOffset / 2,
-    blockSize * scale,
-    blockSize * scale
-  )
+  ctx.lineWidth = 3
+  if (!isDragging) {
+    ctx.fillRect(
+      xValue,
+      yValue + verticalOffset / 2,
+      blockSize * scale,
+      blockSize * scale
+    )
+    ctx.strokeRect(
+      xValue,
+      yValue + verticalOffset / 2,
+      blockSize * scale,
+      blockSize * scale
+    )
+  }
 
   const { fillFromCoords, fillToCoords } = getBuilderState()
 
@@ -279,6 +284,7 @@ function drawCurrentPaintedBlock() {
       scale
     )
     ctx.fillRect(x1, y1 + verticalOffset / 2, x2 - x1, y2 - y1)
+    ctx.strokeRect(x1, y1 + verticalOffset / 2, x2 - x1, y2 - y1)
   }
 
   ctx.fillStyle = 'white'

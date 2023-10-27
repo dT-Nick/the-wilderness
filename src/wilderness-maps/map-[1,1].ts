@@ -1,5 +1,5 @@
 import { handleEnemyInteraction } from '../enemy.js'
-import { isKeyCurrentlyDown } from '../input.js'
+import { isButtonCurrentlyDown, isKeyCurrentlyDown } from '../input.js'
 import { handleItemPickup } from '../item.js'
 import { handlePlayerMovement } from '../player.js'
 import {
@@ -319,7 +319,8 @@ export function handleMapOneOneExit() {
   const [pCoordsX, pCoordsY] = player.coordinates
   if (pCoordsX === 0) {
     if (
-      isKeyCurrentlyDown(['a', 'arrowleft']) &&
+      (isKeyCurrentlyDown(['a', 'arrowleft']) ||
+        isButtonCurrentlyDown('dpadLeft')) &&
       player.faceDirection === 'left'
     ) {
       updateWildernessState({
@@ -337,7 +338,8 @@ export function handleMapOneOneExit() {
   }
   if (pCoordsY === blocksVertical - 1) {
     if (
-      isKeyCurrentlyDown(['s', 'arrowdown']) &&
+      (isKeyCurrentlyDown(['s', 'arrowdown']) ||
+        isButtonCurrentlyDown('dpadDown')) &&
       player.faceDirection === 'down'
     ) {
       updateWildernessState({

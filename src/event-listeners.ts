@@ -1,3 +1,4 @@
+import { isControllerButtonCoords } from './controller/controller.js'
 import { updateInputState } from './state.js'
 
 export function startListeners() {
@@ -7,6 +8,10 @@ export function startListeners() {
   document.addEventListener('mousedown', handleMouseDown)
   document.addEventListener('mouseup', handleMouseUp)
   document.addEventListener('mousemove', handleMouseMove)
+
+  document.addEventListener('touchstart', handleTouchStart)
+  document.addEventListener('touchend', handleTouchEnd)
+  document.addEventListener('touchmove', handleTouchMove)
 }
 
 export function stopListeners() {
@@ -16,6 +21,10 @@ export function stopListeners() {
   document.removeEventListener('mousedown', handleMouseDown)
   document.removeEventListener('mouseup', handleMouseUp)
   document.removeEventListener('mousemove', handleMouseMove)
+
+  document.removeEventListener('touchstart', handleTouchStart)
+  document.removeEventListener('touchend', handleTouchEnd)
+  document.removeEventListener('touchmove', handleTouchMove)
 }
 
 function handleKeyDown(e: KeyboardEvent) {
@@ -42,6 +51,7 @@ function handleKeyUp(e: KeyboardEvent) {
 }
 
 function handleMouseDown(e: MouseEvent) {
+  e.preventDefault()
   updateInputState({
     mouse: {
       isDown: true,
@@ -63,5 +73,45 @@ function handleMouseMove(e: MouseEvent) {
   updateInputState({
     mouseX: e.clientX,
     mouseY: e.clientY,
+  })
+}
+
+function handleTouchStart(e: TouchEvent) {
+  e.preventDefault()
+
+  const { changedTouches } = e
+
+  for (let i = 0; i < changedTouches.length; i++) {
+    const touch = changedTouches[i]
+    const button = isControllerButtonCoords(touch.clientX, touch.clientY)
+    if (!button) continue
+    updateInputState((c) => ({
+      touches: [
+        ...c.touches,
+        {
+          identifier: touch.identifier,
+          type: button,
+        },
+      ],
+    }))
+  }
+}
+
+function handleTouchEnd(e: TouchEvent) {
+  const { changedTouches } = e
+
+  for (let i = 0; i < changedTouches.length; i++) {
+    const touch = changedTouches[i]
+    updateInputState((c) => ({
+      touches: c.touches.filter((t) => t.identifier !== touch.identifier),
+    }))
+  }
+}
+
+function handleTouchMove(e: TouchEvent) {
+  console.log('move touch')
+  updateInputState({
+    mouseX: e.touches[0].clientX,
+    mouseY: e.touches[0].clientY,
   })
 }

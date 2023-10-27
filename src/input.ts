@@ -37,6 +37,12 @@ export function handleStartMenuInput() {
       })
     }
   }
+
+  if (isButtonDownEvent('buttonA')) {
+    updateGameState({
+      status: constants.startingScene,
+    })
+  }
 }
 
 export function handleWildernessInput() {
@@ -109,7 +115,10 @@ export function handleBattleInput() {
       }
     }
 
-    if (isKeyDownEvent(['arrowup', 'w']) && isWaitingForPlayerInput) {
+    if (
+      (isKeyDownEvent(['arrowup', 'w']) || isButtonDownEvent('dpadUp')) &&
+      isWaitingForPlayerInput
+    ) {
       if (playerMenu === 'moves' && selectedMove !== 1 && selectedMove !== 2) {
         updateBattleState({
           selectedMove: selectedMove === 3 ? 1 : 2,
@@ -122,7 +131,10 @@ export function handleBattleInput() {
         })
       }
     }
-    if (isKeyDownEvent(['arrowdown', 's']) && isWaitingForPlayerInput) {
+    if (
+      (isKeyDownEvent(['arrowdown', 's']) || isButtonDownEvent('dpadDown')) &&
+      isWaitingForPlayerInput
+    ) {
       if (playerMenu === 'moves' && selectedMove !== 3 && selectedMove !== 4) {
         updateBattleState({
           selectedMove: selectedMove === 1 ? 3 : 4,
@@ -135,7 +147,10 @@ export function handleBattleInput() {
         })
       }
     }
-    if (isKeyDownEvent(['arrowleft', 'a']) && isWaitingForPlayerInput) {
+    if (
+      (isKeyDownEvent(['arrowleft', 'a']) || isButtonDownEvent('dpadLeft')) &&
+      isWaitingForPlayerInput
+    ) {
       if (playerMenu === 'main') {
         updateBattleState({
           selectedOption: selectedOption === 1 ? 2 : 1,
@@ -147,7 +162,10 @@ export function handleBattleInput() {
         })
       }
     }
-    if (isKeyDownEvent(['arrowright', 'd']) && isWaitingForPlayerInput) {
+    if (
+      (isKeyDownEvent(['arrowright', 'd']) || isButtonDownEvent('dpadRight')) &&
+      isWaitingForPlayerInput
+    ) {
       if (playerMenu === 'main') {
         updateBattleState({
           selectedOption: selectedOption === 1 ? 2 : 1,
@@ -160,7 +178,10 @@ export function handleBattleInput() {
       }
     }
 
-    if (isKeyDownEvent(['enter', 'e']) && isWaitingForPlayerInput) {
+    if (
+      (isKeyDownEvent(['enter', 'e']) || isButtonDownEvent('buttonA')) &&
+      isWaitingForPlayerInput
+    ) {
       if (playerMenu === 'main') {
         if (selectedOption === 1) {
           updateBattleState({
@@ -200,7 +221,7 @@ export function handleBattleInput() {
 }
 
 export function handleSettingsTriggerInputs() {
-  if (isKeyDownEvent(['m'])) {
+  if (isKeyDownEvent(['m']) || isButtonDownEvent('buttonY')) {
     updateGameState((c) => ({
       status: 'world-map',
       prevStatus: c.status,
@@ -251,6 +272,52 @@ export function isKeyUpEvent(key: string | Array<string>) {
   return (
     !keysDown.some((kD) => kD.key === key) &&
     prevKeysDown.some((kD) => kD.key === key)
+  )
+}
+
+export function isButtonCurrentlyDown(buttonType: string | Array<string>) {
+  const { touches } = getInputState()
+
+  if (Array.isArray(buttonType)) {
+    return buttonType.some((b) => touches.some((t) => t.type === b))
+  }
+
+  return touches.some((t) => t.type === buttonType)
+}
+
+export function isButtonDownEvent(buttonType: string | Array<string>) {
+  const { touches } = getInputState()
+  const { touches: prevTouches } = getPrevInputState()
+
+  if (Array.isArray(buttonType)) {
+    return buttonType.some(
+      (b) =>
+        touches.some((t) => t.type === b) &&
+        !prevTouches.some((t) => t.type === b)
+    )
+  }
+
+  return (
+    touches.some((t) => t.type === buttonType) &&
+    !prevTouches.some((t) => t.type === buttonType)
+  )
+}
+
+export function isButtonUpEvent(buttonType: string | Array<string>) {
+  const { touches } = getInputState()
+  const { touches: prevTouches } = getPrevInputState()
+
+  if (Array.isArray(buttonType)) {
+    return buttonType.some(
+      (b) =>
+        !touches.some((t) => t.type === b) &&
+        prevTouches.some((t) => t.type === b)
+    )
+  }
+
+  return (
+    !touches.some((t) => t.type === buttonType) &&
+    prevTouches.some((t) => t.type === buttonType)
   )
 }
 
