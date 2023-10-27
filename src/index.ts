@@ -11,6 +11,7 @@ import {
   handleBattleInput,
   handleStartMenuInput,
   handleWildernessInput,
+  isKeyCurrentlyDown,
 } from './input.js'
 import { drawFloorItems, generateGameItems } from './item.js'
 import { drawStartMenu } from './menus.js'
@@ -30,6 +31,7 @@ import {
 import { generateMaps } from './wilderness-maps/index.js'
 import { drawWilderness, handleWildernessScenarios } from './wilderness.js'
 import {
+  drawBuildingSelectionPanel,
   drawBuildings,
   drawSettlementMap,
   handleSettlementInput,
@@ -41,6 +43,7 @@ import {
 import { generateBackgroundGrid } from './background.js'
 import { drawWorldMap, handleWorldMapInput } from './world-map.js'
 import { drawController } from './controller/controller.js'
+import { drawBuildingInterior, handleBuildingInput } from './building.js'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -226,12 +229,11 @@ document.addEventListener('DOMContentLoaded', function () {
       buildings: [
         new Building(
           'home',
-          getEntityXAndYValuesFromCoords(16, 9, blockSize)[0],
-          getEntityXAndYValuesFromCoords(16, 9, blockSize)[1],
+          getEntityXAndYValuesFromCoords(39, 4, blockSize)[0],
+          getEntityXAndYValuesFromCoords(39, 4, blockSize)[1],
           blockSize * 5,
           blockSize * 3,
-          2,
-          'right'
+          2
         ),
       ],
     })
@@ -253,17 +255,17 @@ export function runGameLoop() {
   const { ctx, height, width } = getCanvasState()
   const { lastFrameTime } = getLoopState()
 
-  const now = Date.now()
-  const deltaTime = now - lastFrameTime
+  const currentFrameTime = Date.now()
+  const deltaTime = currentFrameTime - lastFrameTime
 
   updateLoopState({
-    lastFrameTime: Date.now(),
+    lastFrameTime: currentFrameTime,
     deltaTime,
   })
 
   if (!isInitialised(ctx)) return requestAnimationFrame(runGameLoop)
 
-  const { status } = getGameState()
+  const { status, player } = getGameState()
   ctx.clearRect(0, 0, width, height)
 
   switch (status) {
@@ -279,8 +281,22 @@ export function runGameLoop() {
       drawSettlementMap()
       drawBuildings()
       drawPlayer()
+      drawBuildingSelectionPanel()
 
-      // handleSettlementScenarios()
+      // if (lastExitTime < currentFrameTime - 500) {
+      //   handleSettlementScenarios()
+      // }
+      break
+    }
+    case 'building': {
+      handleBuildingInput()
+
+      drawBuildingInterior()
+      drawPlayer()
+
+      // if (lastExitTime < currentFrameTime - 500) {
+      //   handleBuildingScenarios()
+      // }
       break
     }
     case 'wilderness': {
@@ -308,8 +324,10 @@ export function runGameLoop() {
       handleMapCreatorInput()
 
       drawMapCreator()
-      generateBackgroundGrid()
-      generateFixedMeasurementsTool()
+      if (!isKeyCurrentlyDown('alt')) {
+        generateBackgroundGrid()
+        generateFixedMeasurementsTool()
+      }
 
       break
     }

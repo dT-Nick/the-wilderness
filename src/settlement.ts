@@ -29,50 +29,16 @@ export function drawSettlementMap() {
 
 export function drawBuildings() {
   const { ctx, scale, verticalOffset } = getCanvasState()
+  const { blockSize } = getGameState()
   if (!isInitialised(ctx)) return
   const { buildings, selected } = getSettlementState()
   for (let building of buildings.filter(
     (b) => b.isPlaced && selected !== b.id
   )) {
     ctx.fillStyle = building.colour
-    const { x, y, width, height, faceDirection } = building
+    const { x, y, width, height, faceDirection, id } = building
 
-    if (faceDirection === 'right') {
-      ctx.fillRect(
-        x * scale,
-        y * scale + verticalOffset / 2,
-        height * scale,
-        width * scale
-      )
-      continue
-    }
-    if (faceDirection === 'left') {
-      ctx.fillRect(
-        x * scale + width * scale,
-        y * scale + verticalOffset / 2,
-        height * scale,
-        width * scale
-      )
-      continue
-    }
-    if (faceDirection === 'up') {
-      ctx.fillRect(
-        x * scale,
-        y * scale + verticalOffset / 2 + height * scale,
-        width * scale,
-        height * scale
-      )
-      continue
-    }
-    if (faceDirection === 'down') {
-      ctx.fillRect(
-        x * scale,
-        y * scale + verticalOffset / 2,
-        width * scale,
-        height * scale
-      )
-      continue
-    }
+    drawBuilding(id, x, y, width, height, faceDirection)
   }
 
   const selectedBuilding = buildings.find((b) => b.id === selected)
@@ -80,39 +46,166 @@ export function drawBuildings() {
     ctx.fillStyle = selectedBuilding.isPlaceable
       ? selectedBuilding.colour
       : 'red'
-    const { x, y, width, height, faceDirection } = selectedBuilding
+    ctx.strokeStyle = 'white'
+    const { id, x, y, width, height, faceDirection } = selectedBuilding
 
-    if (faceDirection === 'right') {
-      ctx.fillRect(
+    drawBuilding(id, x, y, width, height, faceDirection)
+  }
+}
+
+export function drawBuilding(
+  id: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  faceDirection: 'up' | 'down' | 'left' | 'right'
+) {
+  const { ctx, scale, verticalOffset } = getCanvasState()
+  const { blockSize } = getGameState()
+  const { selected } = getSettlementState()
+
+  const isBeingPlaced = id === selected
+  if (!isInitialised(ctx)) return
+
+  if (faceDirection === 'right') {
+    ctx.fillRect(
+      x * scale,
+      y * scale + verticalOffset / 2,
+      height * scale,
+      width * scale
+    )
+    if (isBeingPlaced) {
+      ctx.strokeRect(
         x * scale,
         y * scale + verticalOffset / 2,
         height * scale,
         width * scale
       )
     }
-    if (faceDirection === 'left') {
-      ctx.fillRect(
+    ctx.fillStyle = 'saddlebrown'
+    ctx.fillRect(
+      (x + height - blockSize) * scale,
+      (y + (width / 2 - blockSize / 2)) * scale + verticalOffset / 2,
+      blockSize * scale,
+      blockSize * scale
+    )
+  }
+  if (faceDirection === 'left') {
+    ctx.fillRect(
+      x * scale,
+      y * scale + verticalOffset / 2,
+      height * scale,
+      width * scale
+    )
+    if (isBeingPlaced) {
+      ctx.strokeRect(
         x * scale,
         y * scale + verticalOffset / 2,
         height * scale,
         width * scale
       )
     }
-    if (faceDirection === 'up') {
-      ctx.fillRect(
+    ctx.fillStyle = 'saddlebrown'
+    ctx.fillRect(
+      x * scale,
+      (y + (width / 2 - blockSize / 2)) * scale + verticalOffset / 2,
+      blockSize * scale,
+      blockSize * scale
+    )
+  }
+  if (faceDirection === 'up') {
+    ctx.fillRect(
+      x * scale,
+      y * scale + verticalOffset / 2,
+      width * scale,
+      height * scale
+    )
+    if (isBeingPlaced) {
+      ctx.strokeRect(
         x * scale,
         y * scale + verticalOffset / 2,
         width * scale,
         height * scale
       )
     }
-    if (faceDirection === 'down') {
-      ctx.fillRect(
+    ctx.fillStyle = 'saddlebrown'
+    ctx.fillRect(
+      (x + (width / 2 - blockSize / 2)) * scale,
+      y * scale + verticalOffset / 2,
+      blockSize * scale,
+      blockSize * scale
+    )
+  }
+  if (faceDirection === 'down') {
+    ctx.fillRect(
+      x * scale,
+      y * scale + verticalOffset / 2,
+      width * scale,
+      height * scale
+    )
+    if (isBeingPlaced) {
+      ctx.strokeRect(
         x * scale,
         y * scale + verticalOffset / 2,
         width * scale,
         height * scale
       )
+    }
+    ctx.fillStyle = 'saddlebrown'
+    ctx.fillRect(
+      (x + (width / 2 - blockSize / 2)) * scale,
+      (y + height - blockSize) * scale + verticalOffset / 2,
+      blockSize * scale,
+      blockSize * scale
+    )
+  }
+}
+
+export function drawBuildingSelectionPanel() {
+  const { ctx, scale, width, height, verticalOffset } = getCanvasState()
+  if (!isInitialised(ctx)) return
+
+  const { blockSize } = getGameState()
+
+  const { buildings, selectedIndex, selected, status } = getSettlementState()
+  const selectableBuildings = buildings.filter((b) => !b.isPlaced)
+
+  if (selected !== null || status !== 'building') return
+
+  ctx.fillStyle = 'white'
+  ctx.strokeStyle = 'black'
+  ctx.fillRect(
+    20 * scale,
+    20 * scale + verticalOffset / 2,
+    blockSize * scale * 7,
+    height - 40 * scale - verticalOffset
+  )
+  ctx.strokeRect(
+    20 * scale,
+    20 * scale + verticalOffset / 2,
+    blockSize * scale * 7,
+    height - 40 * scale - verticalOffset
+  )
+
+  for (let i = 0; i < selectableBuildings.length; i++) {
+    const { colour, width, height } = selectableBuildings[i]
+    const x = 20 * scale + blockSize * scale
+    const y = 20 * scale + blockSize * scale + i * blockSize * scale * 2
+
+    ctx.fillStyle = colour
+    ctx.fillRect(x, y + verticalOffset / 2, width * scale, height * scale)
+    ctx.fillStyle = 'saddlebrown'
+    ctx.fillRect(
+      x + (width / 2 - blockSize / 2) * scale,
+      y + (height - blockSize) * scale + verticalOffset / 2,
+      blockSize * scale,
+      blockSize * scale
+    )
+
+    if (i === selectedIndex) {
+      ctx.strokeStyle = 'cyan'
+      ctx.strokeRect(x, y + verticalOffset / 2, width * scale, height * scale)
     }
   }
 }
@@ -134,7 +227,8 @@ export function handleSettlementInput() {
 }
 
 export function handleSettlementExit() {
-  const { player, blocksHorizontal, blocksVertical } = getGameState()
+  const { player, blocksHorizontal, blocksVertical, blockSize } = getGameState()
+  const { buildings } = getSettlementState()
   if (!isPlayerInitialised(player)) return
 
   const [pCoordsX, pCoordsY] = player.coordinates
@@ -160,6 +254,98 @@ export function handleSettlementExit() {
       player.stopMoving()
     }
   }
+  const homeBuilding = buildings.find((b) => b.name === 'home')
+  if (homeBuilding) {
+    const {
+      id,
+      width,
+      height,
+      faceDirection,
+      coordinates: { fromCoords: coordinates },
+    } = homeBuilding
+    let homeEntryXCoord = 0
+    let homeEntryYCoord = 0
+    let homeEntryFaceDirection: 'up' | 'down' | 'left' | 'right' = 'up'
+    if (faceDirection === 'up') {
+      homeEntryXCoord = coordinates[0] + Math.floor(width / blockSize / 2)
+      homeEntryYCoord = coordinates[1] - 1
+      homeEntryFaceDirection = 'down'
+    }
+    if (faceDirection === 'down') {
+      homeEntryXCoord = coordinates[0] + Math.floor(width / blockSize / 2)
+      homeEntryYCoord = coordinates[1] + height / blockSize
+      homeEntryFaceDirection = 'up'
+    }
+    if (faceDirection === 'left') {
+      homeEntryXCoord = coordinates[0] - 1
+      homeEntryYCoord = coordinates[1] + Math.floor(width / blockSize / 2)
+      homeEntryFaceDirection = 'right'
+    }
+    if (faceDirection === 'right') {
+      homeEntryXCoord = coordinates[0] + height / blockSize
+      homeEntryYCoord = coordinates[1] + Math.floor(width / blockSize / 2)
+      homeEntryFaceDirection = 'left'
+    }
+
+    if (pCoordsX === homeEntryXCoord && pCoordsY === homeEntryYCoord) {
+      if (homeEntryFaceDirection === 'up') {
+        if (
+          (isKeyCurrentlyDown(['w', 'arrowup']) ||
+            isButtonCurrentlyDown('dpadUp')) &&
+          player.faceDirection === 'up'
+        ) {
+          updateGameState({
+            status: 'building',
+            buildingId: id,
+          })
+          player.goToCoordinates(41, 20)
+          player.stopMoving()
+        }
+      }
+      if (homeEntryFaceDirection === 'down') {
+        if (
+          (isKeyCurrentlyDown(['s', 'arrowdown']) ||
+            isButtonCurrentlyDown('dpadDown')) &&
+          player.faceDirection === 'down'
+        ) {
+          updateGameState({
+            status: 'building',
+            buildingId: id,
+          })
+          player.goToCoordinates(41, 6)
+          player.stopMoving()
+        }
+      }
+      if (homeEntryFaceDirection === 'left') {
+        if (
+          (isKeyCurrentlyDown(['a', 'arrowleft']) ||
+            isButtonCurrentlyDown('dpadLeft')) &&
+          player.faceDirection === 'left'
+        ) {
+          updateGameState({
+            status: 'building',
+            buildingId: id,
+          })
+          player.goToCoordinates(51, 13)
+          player.stopMoving()
+        }
+      }
+      if (homeEntryFaceDirection === 'right') {
+        if (
+          (isKeyCurrentlyDown(['d', 'arrowright']) ||
+            isButtonCurrentlyDown('dpadRight')) &&
+          player.faceDirection === 'right'
+        ) {
+          updateGameState({
+            status: 'building',
+            buildingId: id,
+          })
+          player.goToCoordinates(31, 13)
+          player.stopMoving()
+        }
+      }
+    }
+  }
 }
 
 function handleExploringInput() {
@@ -173,30 +359,37 @@ function handleExploringInput() {
 function handleBuildingInput() {
   const { buildings, selected, selectedIndex } = getSettlementState()
 
+  const selectableBuildings = buildings.filter((b) => !b.isPlaced)
+
   if (selected === null) {
-    if (buildings.length > 1) {
+    if (selectableBuildings.length > 1) {
       if (isKeyDownEvent(['s', 'arrowdown']) || isButtonDownEvent('dpadDown')) {
         updateSettlementState({
-          selectedIndex: (buildings.length + 1) % buildings.length,
+          selectedIndex:
+            (selectableBuildings.length + 1) % selectableBuildings.length,
         })
       }
       if (isKeyDownEvent(['w', 'arrowup']) || isButtonDownEvent('dpadUp')) {
         updateSettlementState({
-          selectedIndex: (buildings.length - 1) % buildings.length,
+          selectedIndex:
+            (selectableBuildings.length - 1) % selectableBuildings.length,
         })
       }
     }
 
-    if (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) {
+    if (
+      (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) &&
+      selectableBuildings.length > 0
+    ) {
       updateSettlementState({
-        selected: buildings[selectedIndex].id,
+        selected: selectableBuildings[selectedIndex].id,
       })
     }
   } else {
     const building = buildings.find((b) => b.id === selected)
     if (!building)
       throw new Error(`Could not find building with id: ${selected}`)
-    if (!isKeyCurrentlyDown('alt')) {
+    if (!isKeyCurrentlyDown('alt') && !isButtonCurrentlyDown('buttonB')) {
       if (isKeyDownEvent(['w', 'arrowup']) || isButtonDownEvent('dpadUp')) {
         building.moveUp()
       }
@@ -237,7 +430,7 @@ function handleBuildingInput() {
         })
       }
     }
-    if (isKeyDownEvent(['tab', 'escape']) || isButtonDownEvent('buttonB')) {
+    if (isKeyDownEvent(['tab', 'escape']) || isButtonDownEvent('buttonX')) {
       building.cancelPlacement()
       updateSettlementState({
         selected: null,
@@ -245,7 +438,10 @@ function handleBuildingInput() {
     }
   }
 
-  if (isKeyDownEvent(['b']) || isButtonDownEvent('buttonX')) {
+  if (
+    (isKeyDownEvent(['escape', 'tab']) || isButtonDownEvent('buttonX')) &&
+    selected === null
+  ) {
     updateSettlementState({
       status: 'exploring',
       selected: null,

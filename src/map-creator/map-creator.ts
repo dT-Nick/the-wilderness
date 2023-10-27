@@ -1,4 +1,5 @@
 import { generateBackgroundGrid } from '../background.js'
+import { generateMapHomeBuildingState } from '../building-maps/home.js'
 import {
   getCoordsFromXAndYValues,
   getXAndYValuesFromCoords,
@@ -34,7 +35,7 @@ interface BuilderState extends MapState {
 }
 
 const builderState: BuilderState = {
-  map: generateSettlementMapState().map,
+  map: generateMapHomeBuildingState('up').map,
   discovered: true,
   currentType: 'water',
   fillFromCoords: null,

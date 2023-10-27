@@ -168,6 +168,7 @@ interface GameState {
     | 'battle'
     | 'map-creator'
     | 'world-map'
+    | 'building'
 
   prevStatus:
     | null
@@ -177,6 +178,7 @@ interface GameState {
     | 'battle'
     | 'world-map'
     | 'map-creator'
+    | 'building'
 
   playTime: number
   player: Player | null
@@ -190,6 +192,7 @@ interface GameState {
   blocksHorizontal: number
   blocksVertical: number
   blockSize: number
+  buildingId: number | null
 }
 
 const gameState: GameState = {
@@ -204,6 +207,7 @@ const gameState: GameState = {
   blocksHorizontal: 83,
   blocksVertical: 27,
   blockSize: 0,
+  buildingId: null,
 }
 
 export function getGameState() {
@@ -283,7 +287,16 @@ export function updateWildernessState(
 // ##############################
 
 export interface BlockType {
-  name: 'grass' | 'water' | 'mountain' | 'forest' | 'hill' | 'wood' | 'wall'
+  name:
+    | 'grass'
+    | 'water'
+    | 'mountain'
+    | 'forest'
+    | 'hill'
+    | 'wood'
+    | 'wall'
+    | 'void'
+    | 'carpet'
   colour: string
   isPassable: boolean
 }
@@ -328,6 +341,16 @@ const blockTypeState: BlockTypeState = {
       name: 'wall',
       colour: '#444455',
       isPassable: false,
+    },
+    {
+      name: 'void',
+      colour: '#000000',
+      isPassable: false,
+    },
+    {
+      name: 'carpet',
+      colour: '#663399',
+      isPassable: true,
     },
   ],
 }

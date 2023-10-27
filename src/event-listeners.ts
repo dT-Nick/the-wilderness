@@ -118,7 +118,6 @@ function handleTouchEnd(e: TouchEvent) {
 }
 
 function handleTouchMove(e: TouchEvent) {
-  console.log('move touch')
   updateInputState({
     mouseX: e.touches[0].clientX,
     mouseY: e.touches[0].clientY,

@@ -1,3 +1,7 @@
+import {
+  generateMapHomeBuildingState,
+  updateMapHomeBuildingState,
+} from './building-maps/home.js'
 import { generateSlug } from './helpers/functions.js'
 import { isButtonCurrentlyDown, isKeyCurrentlyDown } from './input.js'
 import {
@@ -160,7 +164,7 @@ export class Player extends LivingBeing {
     const isSprintDown =
       isKeyCurrentlyDown('shift') || isButtonCurrentlyDown('buttonB')
 
-    return blockSize / (isSprintDown ? 3 : 4)
+    return blockSize / (isSprintDown ? 8 : 12)
   }
 
   public moveUp() {
@@ -475,11 +479,12 @@ export class Building {
     width: number,
     height: number,
     maxHealth: number,
-    faceDirection?: 'up' | 'down' | 'left' | 'right'
+    faceDirection?: 'up' | 'down' | 'left' | 'right',
+    isPlaced?: boolean
   ) {
     this.id = buildingId++
     this.name = name
-    this.isPlaced = false
+    this.isPlaced = isPlaced ?? false
     this.maxHealth = maxHealth
     this.currentHealth = maxHealth
     this.prevX = x
@@ -540,6 +545,11 @@ export class Building {
     this.prevX = this.x
     this.prevY = this.y
     this.isPlaced = true
+    if (this.name === 'home') {
+      updateMapHomeBuildingState(
+        generateMapHomeBuildingState(this.faceDirection)
+      )
+    }
   }
 
   public cancelPlacement() {

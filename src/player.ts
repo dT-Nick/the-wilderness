@@ -120,7 +120,6 @@ export function handlePlayerMovement(
       case 'arrowdown':
       case 's': {
         const [x, y] = player.coordinates
-
         if (
           y < blocksVertical - 1 &&
           !restrictedCoords.some((rc) => rc[0] === x && rc[1] === y + 1)

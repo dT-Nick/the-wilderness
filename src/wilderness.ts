@@ -62,7 +62,7 @@ export function drawWilderness() {
 }
 
 export function deriveRestrictedCoordsFromMap(map: MapState['map']) {
-  const { enemies, status } = getGameState()
+  const { enemies, status, player } = getGameState()
   const { mapId } = getWildernessState()
   const restrictedCoords: Array<[number, number]> = []
 
@@ -103,16 +103,21 @@ export function deriveRestrictedCoordsFromMap(map: MapState['map']) {
     }
   }
 
+  if (isPlayerInitialised(player)) {
+    const { coordinates } = player
+    restrictedCoords.push(coordinates)
+  }
+
   return restrictedCoords
 }
 
 export function drawBackgroundFromMap(map: MapState['map']) {
   const { blockSize, blocksHorizontal, blocksVertical } = getGameState()
-  const { ctx, verticalOffset, scale, width, height } = getCanvasState()
+  const { ctx, verticalOffset, scale } = getCanvasState()
 
   if (!isInitialised(ctx)) return
 
-  const { colour, name } = getBlockPropertiesFromName('grass')
+  const { colour } = getBlockPropertiesFromName('grass')
   ctx.fillStyle = colour
   ctx.fillRect(
     0,

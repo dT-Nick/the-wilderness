@@ -1,3 +1,7 @@
+import {
+  generateMapHomeBuildingState,
+  updateMapHomeBuildingState,
+} from '../building-maps/home.js'
 import { generateMapZeroState, updateMapZeroState } from './map-0.js'
 import {
   generateMapMinusOneZeroState,

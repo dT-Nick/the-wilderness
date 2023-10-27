@@ -108,7 +108,6 @@ function drawMainOptions() {
     let colour = getOptionsColour(lastMove, false, false, selectedOption, 1)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
-    console.log(scale)
     ctx.strokeRect(
       10 * scale,
       height - 120 * scale - verticalOffset / 2,
