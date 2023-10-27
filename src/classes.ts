@@ -8,6 +8,8 @@ import {
   getBattleState,
   isPlayerInitialised,
 } from './state.js'
+import { getSettlementMapState } from './wilderness-maps/settlement.js'
+import { deriveRestrictedCoordsFromMap } from './wilderness.js'
 
 let entityId = 0
 
@@ -444,5 +446,153 @@ export class EquipableItem extends Item {
     super(name, false, true)
     this.slot = slot
     this.stats = stats
+  }
+}
+
+// ########################
+
+let buildingId = 0
+
+export class Building {
+  id: number
+  name: string
+  isPlaced: boolean
+  maxHealth: number
+  currentHealth: number
+  prevX: number
+  prevY: number
+  x: number
+  y: number
+  width: number
+  height: number
+  faceDirection: 'up' | 'down' | 'left' | 'right'
+  colour: string
+
+  constructor(
+    name: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    maxHealth: number,
+    faceDirection?: 'up' | 'down' | 'left' | 'right'
+  ) {
+    this.id = buildingId++
+    this.name = name
+    this.isPlaced = false
+    this.maxHealth = maxHealth
+    this.currentHealth = maxHealth
+    this.prevX = x
+    this.prevY = y
+    this.x = x
+    this.y = y
+    this.width = width
+    this.height = height
+    this.faceDirection = faceDirection ?? 'down'
+    this.colour = 'chocolate'
+  }
+
+  get coordinates() {
+    const { blockSize } = getGameState()
+
+    const fromCoords: [number, number] = [
+      Math.round(this.x / blockSize),
+      Math.round(this.y / blockSize),
+    ]
+
+    const width =
+      this.faceDirection === 'left' || this.faceDirection === 'right'
+        ? this.height
+        : this.width
+    const height =
+      this.faceDirection === 'left' || this.faceDirection === 'right'
+        ? this.width
+        : this.height
+
+    const toCoords: [number, number] = [
+      Math.round((this.x + width) / blockSize),
+      Math.round((this.y + height) / blockSize),
+    ]
+
+    return {
+      fromCoords,
+      toCoords,
+    }
+  }
+
+  get isPlaceable() {
+    const { map } = getSettlementMapState()
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const { fromCoords, toCoords } = this.coordinates
+
+    for (let x = fromCoords[0]; x <= toCoords[0] - 1; x++) {
+      for (let y = fromCoords[1]; y <= toCoords[1] - 1; y++) {
+        if (restrictedCoords.some((c) => c[0] === x && c[1] === y)) {
+          return false
+        }
+      }
+    }
+
+    return true
+  }
+
+  public place() {
+    this.prevX = this.x
+    this.prevY = this.y
+    this.isPlaced = true
+  }
+
+  public cancelPlacement() {
+    this.x = this.prevX
+    this.y = this.prevY
+    this.isPlaced = false
+  }
+
+  public rotateLeft() {
+    if (this.faceDirection === 'up') {
+      this.faceDirection = 'left'
+    } else if (this.faceDirection === 'left') {
+      this.faceDirection = 'down'
+    } else if (this.faceDirection === 'down') {
+      this.faceDirection = 'right'
+    } else if (this.faceDirection === 'right') {
+      this.faceDirection = 'up'
+    }
+  }
+
+  public rotateRight() {
+    if (this.faceDirection === 'up') {
+      this.faceDirection = 'right'
+    } else if (this.faceDirection === 'right') {
+      this.faceDirection = 'down'
+    } else if (this.faceDirection === 'down') {
+      this.faceDirection = 'left'
+    } else if (this.faceDirection === 'left') {
+      this.faceDirection = 'up'
+    }
+  }
+
+  public moveRight() {
+    const { blockSize } = getGameState()
+
+    this.x += blockSize
+  }
+
+  public moveLeft() {
+    const { blockSize } = getGameState()
+
+    this.x -= blockSize
+  }
+
+  public moveUp() {
+    const { blockSize } = getGameState()
+
+    this.y -= blockSize
+  }
+
+  public moveDown() {
+    const { blockSize } = getGameState()
+
+    this.y += blockSize
   }
 }

@@ -4,6 +4,7 @@ import {
   type Enemy,
   type FloorItem,
   type Player,
+  Building,
 } from './classes.js'
 
 export const constants: {
@@ -68,6 +69,7 @@ interface InputState {
       | 'dpadDown'
       | 'start'
   }>
+  showGamepad: boolean
   mouse: {
     isDown: boolean
     time: number
@@ -79,6 +81,7 @@ interface InputState {
 const inputState: InputState = {
   keysDown: [],
   touches: [],
+  showGamepad: false,
   mouse: {
     isDown: false,
     time: 0,
@@ -106,6 +109,7 @@ export function updateInputState(
 const previousInputState: InputState = {
   keysDown: [],
   touches: [],
+  showGamepad: false,
   mouse: {
     isDown: false,
     time: 0,
@@ -221,25 +225,16 @@ export function updateGameState(
 // ##############################
 
 interface SettlementState {
-  status: 'building' | 'relocating' | 'exploring'
-  buildings: Array<{}>
-  inventory: Array<{}>
-  selected: null | {
-    buildingId: number
-    coords: { x: number; y: number }
-  }
-}
-
-let buildingId = 0
-
-function getBuildingId() {
-  return buildingId++
+  status: 'building' | 'placing' | 'relocating' | 'exploring'
+  buildings: Array<Building>
+  selectedIndex: number
+  selected: null | number
 }
 
 const settlementState: SettlementState = {
-  status: 'building',
+  status: 'exploring',
   buildings: [],
-  inventory: [],
+  selectedIndex: 0,
   selected: null,
 }
 
@@ -289,7 +284,7 @@ export function updateWildernessState(
 
 export interface BlockType {
   name: 'grass' | 'water' | 'mountain' | 'forest' | 'hill' | 'wood' | 'wall'
-  color: string
+  colour: string
   isPassable: boolean
 }
 
@@ -301,37 +296,37 @@ const blockTypeState: BlockTypeState = {
   blockTypes: [
     {
       name: 'grass',
-      color: '#009900',
+      colour: '#009900',
       isPassable: true,
     },
     {
       name: 'water',
-      color: '#0000ff',
+      colour: '#0000ff',
       isPassable: false,
     },
     {
       name: 'mountain',
-      color: '#ffffff',
+      colour: '#ffffff',
       isPassable: false,
     },
     {
       name: 'forest',
-      color: '#006600',
+      colour: '#006600',
       isPassable: true,
     },
     {
       name: 'hill',
-      color: '#223300',
+      colour: '#223300',
       isPassable: false,
     },
     {
       name: 'wood',
-      color: '#A1662F',
+      colour: '#A1662F',
       isPassable: true,
     },
     {
       name: 'wall',
-      color: '#444455',
+      colour: '#444455',
       isPassable: false,
     },
   ],

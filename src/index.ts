@@ -1,4 +1,4 @@
-import { Enemy, FloorItem, Player } from './classes.js'
+import { Building, Enemy, FloorItem, Player } from './classes.js'
 import { drawBattle, handleBattleScenarios } from './battle.js'
 import { drawEnemies } from './enemy.js'
 import { startListeners } from './event-listeners.js'
@@ -25,10 +25,15 @@ import {
   updateGameState,
   updateLoopState,
   updatePrevInputState,
+  updateSettlementState,
 } from './state.js'
 import { generateMaps } from './wilderness-maps/index.js'
 import { drawWilderness, handleWildernessScenarios } from './wilderness.js'
-import { drawSettlementMap, handleSettlementInput } from './settlement.js'
+import {
+  drawBuildings,
+  drawSettlementMap,
+  handleSettlementInput,
+} from './settlement.js'
 import {
   drawMapCreator,
   handleMapCreatorInput,
@@ -217,6 +222,20 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
     })
 
+    updateSettlementState({
+      buildings: [
+        new Building(
+          'home',
+          getEntityXAndYValuesFromCoords(16, 9, blockSize)[0],
+          getEntityXAndYValuesFromCoords(16, 9, blockSize)[1],
+          blockSize * 5,
+          blockSize * 3,
+          2,
+          'right'
+        ),
+      ],
+    })
+
     const startingTimeMs = Date.now()
 
     updateLoopState({
@@ -258,6 +277,7 @@ export function runGameLoop() {
       handleSettlementInput()
 
       drawSettlementMap()
+      drawBuildings()
       drawPlayer()
 
       // handleSettlementScenarios()

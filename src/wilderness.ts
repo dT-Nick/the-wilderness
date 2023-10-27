@@ -4,6 +4,7 @@ import {
   getBlockPropertiesFromName,
   getCanvasState,
   getGameState,
+  getSettlementState,
   getWildernessState,
   isInitialised,
   isPlayerInitialised,
@@ -89,6 +90,19 @@ export function deriveRestrictedCoordsFromMap(map: MapState['map']) {
     restrictedCoords.push(enemy.coordinates)
   }
 
+  if (status === 'settlement') {
+    const { buildings } = getSettlementState()
+
+    for (let building of buildings.filter((b) => b.isPlaced)) {
+      const { fromCoords, toCoords } = building.coordinates
+      for (let x = fromCoords[0]; x <= toCoords[0] - 1; x++) {
+        for (let y = fromCoords[1]; y <= toCoords[1] - 1; y++) {
+          restrictedCoords.push([x, y])
+        }
+      }
+    }
+  }
+
   return restrictedCoords
 }
 
@@ -98,8 +112,8 @@ export function drawBackgroundFromMap(map: MapState['map']) {
 
   if (!isInitialised(ctx)) return
 
-  const { color, name } = getBlockPropertiesFromName('grass')
-  ctx.fillStyle = color
+  const { colour, name } = getBlockPropertiesFromName('grass')
+  ctx.fillStyle = colour
   ctx.fillRect(
     0,
     verticalOffset / 2,
@@ -108,9 +122,9 @@ export function drawBackgroundFromMap(map: MapState['map']) {
   )
 
   map.forEach(({ type, fromCoords, toCoords }) => {
-    const { color } = getBlockPropertiesFromName(type)
+    const { colour } = getBlockPropertiesFromName(type)
 
-    ctx.fillStyle = color
+    ctx.fillStyle = colour
     const fromX = fromCoords[0] * (blockSize * scale)
     const fromY = fromCoords[1] * (blockSize * scale) + verticalOffset / 2
 

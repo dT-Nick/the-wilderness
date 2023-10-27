@@ -1,5 +1,5 @@
 import { isControllerButtonCoords } from './controller/controller.js'
-import { updateInputState } from './state.js'
+import { getCanvasState, getInputState, updateInputState } from './state.js'
 
 export function startListeners() {
   document.addEventListener('keydown', handleKeyDown)
@@ -77,23 +77,32 @@ function handleMouseMove(e: MouseEvent) {
 }
 
 function handleTouchStart(e: TouchEvent) {
+  const { height, verticalOffset } = getCanvasState()
+  const { showGamepad } = getInputState()
   e.preventDefault()
 
   const { changedTouches } = e
-
   for (let i = 0; i < changedTouches.length; i++) {
     const touch = changedTouches[i]
-    const button = isControllerButtonCoords(touch.clientX, touch.clientY)
-    if (!button) continue
-    updateInputState((c) => ({
-      touches: [
-        ...c.touches,
-        {
-          identifier: touch.identifier,
-          type: button,
-        },
-      ],
-    }))
+    if (showGamepad) {
+      const button = isControllerButtonCoords(touch.clientX, touch.clientY)
+      if (!button) continue
+      updateInputState((c) => ({
+        touches: [
+          ...c.touches,
+          {
+            identifier: touch.identifier,
+            type: button,
+          },
+        ],
+      }))
+    } else {
+      if (touch.clientY > height - verticalOffset / 2) {
+        updateInputState({
+          showGamepad: true,
+        })
+      }
+    }
   }
 }
 

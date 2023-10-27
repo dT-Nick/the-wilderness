@@ -198,14 +198,14 @@ export function drawMiniBackgroundFromMap(
 
   if (!isInitialised(ctx)) return
 
-  const { color, name } = getBlockPropertiesFromName('grass')
-  ctx.fillStyle = color
+  const { colour, name } = getBlockPropertiesFromName('grass')
+  ctx.fillStyle = colour
   ctx.fillRect(x, y, width, height)
 
   map.forEach(({ type, fromCoords, toCoords }) => {
-    const { color } = getBlockPropertiesFromName(type)
+    const { colour } = getBlockPropertiesFromName(type)
 
-    ctx.fillStyle = color
+    ctx.fillStyle = colour
     const fromX =
       x + fromCoords[0] * (blockSize * canvasScale * horizontalScale)
     const fromY = y + fromCoords[1] * (blockSize * canvasScale * verticalScale)

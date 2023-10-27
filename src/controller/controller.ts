@@ -4,7 +4,8 @@ export function drawController() {
   const { ctx, width, height } = getCanvasState()
   if (!isInitialised(ctx)) return
 
-  const { touches } = getInputState()
+  const { touches, showGamepad } = getInputState()
+  if (!showGamepad) return
 
   // Draw D-pad
   const dpadHeight = 45

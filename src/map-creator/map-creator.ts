@@ -248,9 +248,9 @@ function drawCurrentPaintedBlock() {
     scale
   )
 
-  const { color } = getBlockPropertiesFromName(currentType)
+  const { colour } = getBlockPropertiesFromName(currentType)
 
-  ctx.fillStyle = color
+  ctx.fillStyle = colour
   ctx.strokeStyle = 'white'
   ctx.lineWidth = 3
   if (!isDragging) {
@@ -308,8 +308,8 @@ function drawBlockTypeSelector() {
   ctx.fillRect(10, 10 + verticalOffset / 2, 80, height - verticalOffset - 20)
 
   for (let i = 0; i < blockTypes.length; i++) {
-    const { color } = blockTypes[i]
-    ctx.fillStyle = color
+    const { colour } = blockTypes[i]
+    ctx.fillStyle = colour
     if (
       mouseX >= 20 &&
       mouseX <= 80 &&
