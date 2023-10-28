@@ -9,6 +9,7 @@ import {
 import { handleItemPickup } from '../item.js'
 import { handlePlayerMovement } from '../player.js'
 import {
+  addNotification,
   getCanvasState,
   getDeltaFrames,
   getGameState,
@@ -371,6 +372,7 @@ function handleFirstAidVisit() {
         pFaceDirection === 'down')
     ) {
       player.restoreHealth()
+      addNotification('Your health has been restored')
     }
   }
 }

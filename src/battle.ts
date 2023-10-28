@@ -1,14 +1,25 @@
 // import { battleState, gameState } from './state.js'
 
+import {
+  calculateDamage,
+  calculateExperienceGainedFromBattle,
+} from './helpers/functions.js'
 import { getItemViaId } from './item.js'
 import {
   getBattleState,
   getCanvasState,
   getGameState,
+  getSettlementState,
   isInitialised,
+  isMessageActive,
   isPlayerInitialised,
   updateBattleState,
+  updateGameState,
+  updateMessageState,
+  updateSettlementState,
+  updateWildernessState,
 } from './state.js'
+import { handleEnemyMovementCycle } from './wilderness.js'
 
 export function drawBattle() {
   drawPlayerInfo()
@@ -31,6 +42,16 @@ export function drawPlayerInfo() {
       10 * scale,
       20 * scale + verticalOffset / 2
     )
+    ctx.fillText(
+      `Level: ${player.currentLevel}`,
+      10 * scale,
+      50 * scale + verticalOffset / 2
+    )
+    ctx.fillText(
+      `Experience: ${Math.floor(player.experience)}`,
+      10 * scale,
+      80 * scale + verticalOffset / 2
+    )
   }
 }
 
@@ -51,6 +72,11 @@ export function drawEnemyInfo() {
       `Health: ${Math.ceil(enemy.currentHealth)}`,
       width - 10 * scale,
       20 * scale + verticalOffset / 2
+    )
+    ctx.fillText(
+      `Level: ${enemy.currentLevel}`,
+      width - 10 * scale,
+      50 * scale + verticalOffset / 2
     )
   }
 }
@@ -146,7 +172,7 @@ export function drawMoves() {
     const enemy = enemies.find((e) => e.id === enemyId)
     if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
 
-    const isDamageApplying = enemy.currentDamage > 0
+    const isDamageApplying = enemy.currentDamage !== null
     const isWaiting = status === 'wait'
 
     ctx.lineWidth = 1
@@ -296,18 +322,60 @@ export function handleBattleScenarios() {
   }
   if (status === 'play') {
     if (lastMove === 'player') {
-      if (player.currentDamage > 0) {
+      if (player.currentDamage !== null) {
         player.takeDamage()
       } else {
         enemy.hitPlayer(Math.ceil(Math.random() * 25))
       }
     }
 
-    if (lastMove !== 'player' && enemy.currentDamage) {
+    if (lastMove !== 'player' && enemy.currentDamage !== null) {
       enemy.takeDamage()
     }
     if (player.currentHeal > 0) {
       player.addHealth()
     }
+    if (player.currentExperienceGain > 0) {
+      player.addExperience()
+      return
+    }
+  }
+  if (player.currentHealth <= 0 && !isMessageActive()) {
+    const { buildings } = getSettlementState()
+    const home = buildings.find((b) => b.name === 'home' && b.isPlaced)
+    if (!home || home.currentHealth === 0) {
+      updateGameState({
+        status: 'game-over',
+      })
+    } else {
+      updateGameState({
+        status: 'building',
+        buildingId: home.id,
+      })
+      handleEnemyMovementCycle(true)
+      player.restoreHealth()
+      player.goToCoordinates(41, 13)
+      player.stopMoving()
+      enemy.restoreHealth()
+      updateMessageState({
+        message:
+          'You awake back in your home... someone must have brought you back',
+      })
+    }
+  }
+
+  if (
+    enemy.currentHealth <= 0 &&
+    player.currentExperienceGain <= 0 &&
+    !isMessageActive() &&
+    status !== 'wait'
+  ) {
+    updateWildernessState((c) => ({
+      wildernessTime: c.wildernessTime + 30 * 1000,
+    }))
+    updateGameState((c) => ({
+      enemies: [...c.enemies.filter((e) => e.id !== enemy.id)],
+      status: 'wilderness',
+    }))
   }
 }

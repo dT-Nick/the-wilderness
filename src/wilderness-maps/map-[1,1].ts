@@ -3,11 +3,13 @@ import { isButtonCurrentlyDown, isKeyCurrentlyDown } from '../input.js'
 import { handleItemPickup } from '../item.js'
 import { handlePlayerMovement } from '../player.js'
 import {
+  addNotification,
   getDeltaFrames,
   getGameState,
   getInputState,
   isPlayerInitialised,
   updateGameState,
+  updateMessageState,
   updateWildernessState,
 } from '../state.js'
 import {
@@ -331,6 +333,9 @@ export function handleMapOneOneExit() {
         updateMapZeroOneState({
           discovered: true,
         })
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
       }
       player.goToCoordinates(blocksHorizontal - 1, pCoordsY)
       player.stopMoving()
@@ -350,6 +355,9 @@ export function handleMapOneOneExit() {
         updateMapOneZeroState({
           discovered: true,
         })
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
       }
       player.goToCoordinates(pCoordsX, 0)
       player.stopMoving()

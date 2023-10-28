@@ -5,12 +5,15 @@ import {
 } from './wilderness.js'
 import { getSettlementMapState } from './wilderness-maps/settlement.js'
 import {
+  addNotification,
   getCanvasState,
   getGameState,
   getSettlementState,
   isInitialised,
   isPlayerInitialised,
   updateGameState,
+  updateMessageState,
+  updateNotificationState,
   updateSettlementState,
 } from './state.js'
 import {
@@ -248,6 +251,9 @@ export function handleSettlementExit() {
         updateMapZeroState({
           discovered: true,
         })
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
       }
       player.goToCoordinates(
         Math.floor(blocksHorizontal / 2),
@@ -469,6 +475,8 @@ function handleBuildingInput() {
         updateSettlementState({
           selected: null,
         })
+      } else {
+        addNotification(`You can't place that building there!`)
       }
     }
     if (isKeyDownEvent(['tab', 'escape']) || isButtonDownEvent('buttonX')) {
@@ -522,6 +530,9 @@ export function takeSettlementDamage() {
   )
 
   if (aliveBuildings.length === 0) {
+    updateNotificationState({
+      notifications: [],
+    })
     return updateGameState({
       status: 'game-over',
     })
@@ -544,4 +555,5 @@ export function takeSettlementDamage() {
   if (!leftMostBuilding) throw new Error('Could not find left most building')
 
   leftMostBuilding.takeDamage(1)
+  addNotification('Your settlement has been attacked!')
 }

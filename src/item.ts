@@ -106,7 +106,7 @@ export function activateConsumable(id: string, entityId: number) {
   item.effect()
   updateBattleState((c) => ({
     playerMenu: 'main',
-    selectedItem: c.selectedItem - 1 < 0 ? 0 : c.selectedItem - 1,
+    selectedItem: c.selectedItem - 1 < 1 ? 1 : c.selectedItem - 1,
   }))
   updateGameState((c) => ({
     inventory: [...c.inventory.filter((i) => i.id !== entityId)],

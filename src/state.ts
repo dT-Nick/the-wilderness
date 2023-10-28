@@ -11,10 +11,12 @@ export const constants: {
   playerSize: number
   startMenuButtonSize: number
   startingScene: 'settlement' | 'map-creator'
+  messageTime: number
 } = {
   playerSize: 20,
   startMenuButtonSize: 200,
   startingScene: 'settlement',
+  messageTime: 2500,
 }
 
 // ##############################
@@ -419,6 +421,94 @@ export function updateBattleState(
   } else {
     Object.assign(battleState, changes)
   }
+}
+
+// ##############################
+
+interface NotificationState {
+  notifications: Array<{
+    text: string
+    startTime: number
+  }>
+}
+
+const notificationState: NotificationState = {
+  notifications: [],
+}
+
+export function getNotificationState() {
+  return notificationState
+}
+
+export function updateNotificationState(
+  changes:
+    | Partial<typeof notificationState>
+    | ((state: typeof notificationState) => Partial<typeof notificationState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(notificationState, changes(notificationState))
+  } else {
+    Object.assign(notificationState, changes)
+  }
+}
+
+export function addNotification(text: string) {
+  const { status } = getGameState()
+  const { lastFrameTime } = getLoopState()
+  if (status === 'game-over') return
+  updateNotificationState((c) => ({
+    notifications: [
+      ...c.notifications,
+      {
+        text,
+        startTime: lastFrameTime,
+      },
+    ],
+  }))
+}
+
+export function removeTimedOutNotifications() {
+  updateNotificationState((c) => ({
+    notifications: c.notifications.filter(
+      (n) => n.startTime + constants.messageTime > Date.now()
+    ),
+  }))
+}
+
+// ##############################
+
+interface MessageState {
+  message: null | string
+}
+
+const messageState: MessageState = {
+  message: null,
+}
+
+export function getMessageState() {
+  return messageState
+}
+
+export function updateMessageState(
+  changes:
+    | Partial<typeof messageState>
+    | ((state: typeof messageState) => Partial<typeof messageState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(messageState, changes(messageState))
+  } else {
+    Object.assign(messageState, changes)
+  }
+}
+
+export function isMessageActive(message?: string | null): message is string {
+  const { message: activeMessage } = getMessageState()
+
+  return activeMessage !== null
+}
+
+export function clearMessage() {
+  updateMessageState({ message: null })
 }
 
 // ##############################

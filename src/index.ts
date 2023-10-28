@@ -22,6 +22,8 @@ import {
   getGameState,
   getLoopState,
   isInitialised,
+  isMessageActive,
+  removeTimedOutNotifications,
   updateCanvasState,
   updateGameState,
   updateLoopState,
@@ -31,7 +33,9 @@ import {
 import { generateMaps } from './wilderness-maps/index.js'
 import {
   drawWilderness,
+  drawWildernessClock,
   handleWildernessScenarios,
+  spawnItemsAndEnemies,
   updateWildernessClock,
 } from './wilderness.js'
 import {
@@ -49,6 +53,8 @@ import { drawWorldMap, handleWorldMapInput } from './world-map.js'
 import { drawController } from './controller/controller.js'
 import { drawBuildingInterior, handleBuildingInput } from './building.js'
 import { drawGameOverScreen } from './game-over.js'
+import { drawNotifications } from './notifications.js'
+import { drawMessage, handleMessageInput } from './message.js'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -148,87 +154,11 @@ document.addEventListener('DOMContentLoaded', function () {
       blockSize,
       player: new Player(playerStartingX, playerStartingY, blockSize * (3 / 4)),
       items: generateGameItems(),
-      floorItems: [
-        new FloorItem(
-          getEntityXAndYValuesFromCoords(12, 12, blockSize)[0],
-          getEntityXAndYValuesFromCoords(12, 12, blockSize)[1],
-          blockSize * (3 / 4),
-          'small-potion',
-          0
-        ),
-        new FloorItem(
-          getEntityXAndYValuesFromCoords(13, 13, blockSize)[0],
-          getEntityXAndYValuesFromCoords(13, 13, blockSize)[1],
-          blockSize * (3 / 4),
-          'large-potion',
-          0
-        ),
-        new FloorItem(
-          getEntityXAndYValuesFromCoords(35, 6, blockSize)[0],
-          getEntityXAndYValuesFromCoords(35, 6, blockSize)[1],
-          blockSize * (3 / 4),
-          'medium-potion',
-          0
-        ),
-        new FloorItem(
-          getEntityXAndYValuesFromCoords(66, 18, blockSize)[0],
-          getEntityXAndYValuesFromCoords(66, 18, blockSize)[1],
-          blockSize * (3 / 4),
-          'large-potion',
-          '[-1,0]'
-        ),
-      ],
-      enemies: [
-        new Enemy(
-          'Kaurismaki Daemon',
-          100,
-          enemyStartingX,
-          enemyStartingY,
-          blockSize * (3 / 4),
-          0
-        ),
-        new Enemy(
-          'Kaurismaki Daemon',
-          100,
-          getEntityXAndYValuesFromCoords(37, 5, blockSize)[0],
-          getEntityXAndYValuesFromCoords(37, 5, blockSize)[1],
-          blockSize * (3 / 4),
-          0
-        ),
-        new Enemy(
-          'Kaurismaki Daemon',
-          100,
-          getEntityXAndYValuesFromCoords(65, 17, blockSize)[0],
-          getEntityXAndYValuesFromCoords(65, 17, blockSize)[1],
-          blockSize * (3 / 4),
-          '[-1,0]'
-        ),
-        new Enemy(
-          'Kaurismaki Daemon',
-          100,
-          getEntityXAndYValuesFromCoords(65, 19, blockSize)[0],
-          getEntityXAndYValuesFromCoords(65, 19, blockSize)[1],
-          blockSize * (3 / 4),
-          '[-1,0]'
-        ),
-        new Enemy(
-          'Kaurismaki Daemon',
-          100,
-          getEntityXAndYValuesFromCoords(67, 17, blockSize)[0],
-          getEntityXAndYValuesFromCoords(67, 17, blockSize)[1],
-          blockSize * (3 / 4),
-          '[-1,0]'
-        ),
-        new Enemy(
-          'Kaurismaki Daemon',
-          100,
-          getEntityXAndYValuesFromCoords(67, 19, blockSize)[0],
-          getEntityXAndYValuesFromCoords(67, 19, blockSize)[1],
-          blockSize * (3 / 4),
-          '[-1,0]'
-        ),
-      ],
+      floorItems: [],
+      enemies: [],
     })
+
+    spawnItemsAndEnemies(true)
 
     updateSettlementState({
       buildings: [
@@ -273,6 +203,8 @@ export function runGameLoop() {
   const { status, player } = getGameState()
   ctx.clearRect(0, 0, width, height)
 
+  removeTimedOutNotifications()
+
   switch (status) {
     case 'start-menu': {
       handleStartMenuInput()
@@ -281,12 +213,17 @@ export function runGameLoop() {
       break
     }
     case 'settlement': {
-      handleSettlementInput()
+      if (isMessageActive()) {
+        handleMessageInput()
+      } else {
+        handleSettlementInput()
+      }
 
       drawSettlementMap()
       drawBuildings()
       drawPlayer()
       drawBuildingSelectionPanel()
+      drawNotifications()
 
       // if (lastExitTime < currentFrameTime - 500) {
       //   handleSettlementScenarios()
@@ -294,10 +231,15 @@ export function runGameLoop() {
       break
     }
     case 'building': {
-      handleBuildingInput()
+      if (isMessageActive()) {
+        handleMessageInput()
+      } else {
+        handleBuildingInput()
+      }
 
       drawBuildingInterior()
       drawPlayer()
+      drawNotifications()
 
       // if (lastExitTime < currentFrameTime - 500) {
       //   handleBuildingScenarios()
@@ -305,24 +247,38 @@ export function runGameLoop() {
       break
     }
     case 'wilderness': {
-      handleWildernessInput()
+      if (isMessageActive()) {
+        handleMessageInput()
+      } else {
+        handleWildernessInput()
+      }
 
       drawWilderness()
       drawFloorItems()
       drawEnemies()
       drawPlayer()
+      drawWildernessClock()
+      drawNotifications()
 
-      updateWildernessClock()
-      handleWildernessScenarios()
+      if (!isMessageActive()) {
+        updateWildernessClock()
+        handleWildernessScenarios()
+      }
 
       break
     }
     case 'battle': {
-      handleBattleInput()
+      if (isMessageActive()) {
+        handleMessageInput()
+      } else {
+        handleBattleInput()
+      }
 
       drawBattle()
 
-      handleBattleScenarios()
+      if (!isMessageActive()) {
+        handleBattleScenarios()
+      }
 
       break
     }
@@ -355,6 +311,7 @@ export function runGameLoop() {
   // generateBackgroundGrid()
   // generateMeasurementsTool()
   // generateFixedMeasurementsTool()
+  drawMessage()
   drawController()
   return requestAnimationFrame(runGameLoop)
 }

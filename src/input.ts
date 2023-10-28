@@ -1,4 +1,5 @@
 import { handleEnemyInteraction } from './enemy.js'
+import { calculateDamage } from './helpers/functions.js'
 import { activateConsumable, handleItemPickup } from './item.js'
 import {
   constants,
@@ -9,8 +10,10 @@ import {
   getPrevInputState,
   getWildernessState,
   isInitialised,
+  isPlayerInitialised,
   updateBattleState,
   updateGameState,
+  updateMessageState,
 } from './state.js'
 import { handleMapZeroInput } from './wilderness-maps/map-0.js'
 import { handleMapMinusOneZeroInput } from './wilderness-maps/map-[-1,0].js'
@@ -85,8 +88,8 @@ export function handleWildernessInput() {
 }
 
 export function handleBattleInput() {
-  const { ctx } = getCanvasState()
   const { enemies, player, inventory } = getGameState()
+
   const {
     status,
     enemyId,
@@ -97,13 +100,13 @@ export function handleBattleInput() {
     playerMenu,
   } = getBattleState()
 
-  if (isInitialised(ctx)) {
+  if (isPlayerInitialised(player)) {
     const enemy = enemies.find((enemy) => enemy.id === enemyId)
     if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
 
     const isWaitingForPlayerInput = lastMove !== 'player' && status !== 'wait'
 
-    if (isKeyDownEvent(['escape', 'tab'])) {
+    if (isKeyDownEvent(['escape', 'tab']) || isButtonDownEvent('buttonB')) {
       if (playerMenu === 'items') {
         updateBattleState({
           playerMenu: 'main',

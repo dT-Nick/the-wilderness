@@ -2,7 +2,13 @@ import {
   generateMapHomeBuildingState,
   updateMapHomeBuildingState,
 } from './building-maps/home.js'
-import { generateSlug } from './helpers/functions.js'
+import {
+  calculateDamage,
+  calculateExperienceFromLevel,
+  calculateExperienceGainedFromBattle,
+  calculateLevelFromExperience,
+  generateSlug,
+} from './helpers/functions.js'
 import { isButtonCurrentlyDown, isKeyCurrentlyDown } from './input.js'
 import {
   deriveExtendedRestrictedCoordsFromRestrictedCoordsArray,
@@ -15,6 +21,8 @@ import {
   updateBattleState,
   getBattleState,
   isPlayerInitialised,
+  addNotification,
+  updateMessageState,
 } from './state.js'
 import { getMapZeroState } from './wilderness-maps/map-0.js'
 import { getSettlementMapState } from './wilderness-maps/settlement.js'
@@ -55,9 +63,15 @@ export class Entity {
 export class LivingBeing extends Entity {
   currentHealth: number
   prevHealth: number
-  maxHealth: number
-  currentDamage: number
+  currentDamage: number | null
   faceDirection: 'up' | 'down' | 'left' | 'right'
+  baseStats: {
+    attack: number
+    defense: number
+    health: number
+  }
+  experience: number
+  prevExperience: number
 
   constructor(
     startX: number,
@@ -70,10 +84,32 @@ export class LivingBeing extends Entity {
 
     this.prevHealth = health
     this.currentHealth = health
-    this.maxHealth = health
     this.faceDirection = faceDirection ?? 'down'
 
-    this.currentDamage = 0
+    this.currentDamage = null
+    this.baseStats = {
+      attack: 10,
+      defense: 10,
+      health,
+    }
+    this.experience = 0
+    this.prevExperience = 0
+  }
+
+  get currentLevel() {
+    return calculateLevelFromExperience(this.experience)
+  }
+
+  get attack() {
+    return this.baseStats.attack + (this.currentLevel - 1) * 4
+  }
+
+  get defense() {
+    return this.baseStats.defense + (this.currentLevel - 1) * 4
+  }
+
+  get maxHealth() {
+    return this.baseStats.health + (this.currentLevel - 1) * 10
   }
 
   public lookLeft() {
@@ -93,16 +129,27 @@ export class LivingBeing extends Entity {
   }
 
   public takeDamage() {
-    if (!this.currentDamage) return
+    if (this.currentDamage === null) return
     const deltaFrames = getDeltaFrames()
     this.currentHealth -= 0.5 * deltaFrames
 
-    if (this.currentHealth <= this.prevHealth - this.currentDamage) {
-      const newHealth = this.prevHealth - this.currentDamage
+    if (
+      this.currentHealth <= this.prevHealth - this.currentDamage ||
+      this.currentHealth <= 0
+    ) {
+      const newHealth =
+        this.prevHealth - this.currentDamage > 0
+          ? this.prevHealth - this.currentDamage
+          : 0
       this.currentHealth = newHealth
       this.prevHealth = newHealth
-      this.currentDamage = 0
+      this.currentDamage = null
     }
+  }
+
+  public restoreHealth() {
+    this.currentHealth = this.maxHealth
+    this.prevHealth = this.maxHealth
   }
 
   public takeHit(damage: number) {
@@ -121,9 +168,11 @@ export class Player extends LivingBeing {
     right: number
   }
   currentHeal: number
+  currentExperienceGain: number
 
   constructor(startX: number, startY: number, size: number) {
-    super(startX, startY, size, 100, 'down')
+    const health = 100
+    super(startX, startY, size, health, 'down')
 
     this.prevX = startX
     this.prevY = startY
@@ -135,6 +184,8 @@ export class Player extends LivingBeing {
     }
     this.movementStatus = 'idle'
     this.currentHeal = 0
+    this.currentHealth = 10
+    this.prevHealth = 10
   }
 
   get coordinates() {
@@ -174,6 +225,7 @@ export class Player extends LivingBeing {
 
   public moveUp() {
     if (this.faceDirection === 'up') {
+      console.log(this.faceCount)
       if (this.faceCount.up >= 8) {
         this.prevY = this.y
         this.movementStatus = 'up'
@@ -277,8 +329,20 @@ export class Player extends LivingBeing {
   }
 
   public takeDamage() {
-    if (!this.currentDamage) return
+    if (this.currentDamage === null) return
     super.takeDamage()
+    if (this.currentHealth <= 0) {
+      this.currentHealth = 0
+      updateMessageState({
+        message: `You were defeated in battle...`,
+      })
+      updateBattleState({
+        lastMove: 'enemy',
+        playerMenu: 'main',
+      })
+
+      return
+    }
     if (this.currentHealth <= this.prevHealth - this.currentDamage) {
       updateBattleState({
         lastMove: 'enemy',
@@ -287,13 +351,68 @@ export class Player extends LivingBeing {
     }
   }
 
-  public heal(amount: number) {
-    this.currentHeal = amount
+  public takeHit(damage: number): void {
+    const { enemies } = getGameState()
+    const { enemyId } = getBattleState()
+    const enemy = enemies.find((e) => e.id === enemyId)
+    if (!enemy) return
+
+    const { damage: modifiedDamage, isCrit } = calculateDamage(
+      enemy.attack,
+      this.defense,
+      damage
+    )
+
+    super.takeHit(modifiedDamage)
+    if (modifiedDamage === 0) {
+      updateMessageState({
+        message: `The ${enemy.name} missed their attack!`,
+      })
+    } else {
+      updateMessageState({
+        message:
+          (isCrit ? 'Critical hit! ' : '') +
+          `The ${enemy.name} attacked you causing ${modifiedDamage} damage!`,
+      })
+    }
+    updateBattleState({
+      playerMenu: 'main',
+    })
   }
 
-  public restoreHealth() {
-    this.currentHealth = this.maxHealth
-    this.prevHealth = this.maxHealth
+  public heal(amount: number) {
+    this.currentHeal = amount
+
+    const actualHeal =
+      this.prevHealth + amount > this.maxHealth
+        ? this.maxHealth - this.prevHealth
+        : amount
+    updateMessageState({
+      message: `You healed ${actualHeal} health!`,
+    })
+  }
+
+  public gainExperience(amount: number) {
+    this.currentExperienceGain = amount
+  }
+
+  public addExperience() {
+    if (!this.currentExperienceGain) return
+    const deltaFrames = getDeltaFrames()
+    this.experience += 0.5 * deltaFrames
+
+    if (this.experience >= this.prevExperience + this.currentExperienceGain) {
+      const newExperience = this.prevExperience + this.currentExperienceGain
+      this.experience = newExperience
+      this.prevExperience = newExperience
+      this.currentExperienceGain = 0
+      console.log('updating battle state')
+      updateBattleState({
+        status: 'wait',
+        waitLengthMs: 1000,
+        waitStart: Date.now(),
+      })
+    }
   }
 
   public addHealth() {
@@ -325,6 +444,7 @@ export class Player extends LivingBeing {
 export class Enemy extends LivingBeing {
   name: string
   mapId: number | string
+  playerPrompted: boolean
 
   constructor(
     name: string,
@@ -346,6 +466,11 @@ export class Enemy extends LivingBeing {
     super(startX, startY, size, health, faceDirection)
     this.name = name
     this.mapId = mapId
+    this.playerPrompted = false
+  }
+
+  public updatePlayerPrompted(bool: boolean) {
+    this.playerPrompted = bool
   }
 
   public moveTowardsSettlement() {
@@ -455,15 +580,25 @@ export class Enemy extends LivingBeing {
   }
 
   public takeDamage() {
-    if (!this.currentDamage) return
+    if (this.currentDamage === null) return
     super.takeDamage()
 
     if (this.currentHealth <= 0) {
       this.currentHealth = 0
-      updateGameState((c) => ({
-        enemies: [...c.enemies.filter((e) => e.id !== this.id)],
-        status: 'wilderness',
-      }))
+
+      const { player } = getGameState()
+      if (!isPlayerInitialised(player)) return
+
+      const experienceGained = calculateExperienceGainedFromBattle(
+        player.currentLevel,
+        this.currentLevel
+      )
+      updateMessageState({
+        message: `You defeated the ${
+          this.name
+        } and gained ${experienceGained.toLocaleString()} experience!`,
+      })
+      player.gainExperience(experienceGained)
 
       return
     }
@@ -485,9 +620,32 @@ export class Enemy extends LivingBeing {
     if (
       lastMove === 'player' &&
       status === 'play' &&
-      player.currentDamage === 0
+      player.currentDamage === null
     ) {
       player.takeHit(damage)
+    }
+  }
+
+  public takeHit(damage: number) {
+    const { player } = getGameState()
+    if (!isPlayerInitialised(player)) return
+    const { damage: modifiedDamage, isCrit } = calculateDamage(
+      player.attack,
+      this.defense,
+      damage
+    )
+
+    super.takeHit(modifiedDamage)
+    if (modifiedDamage === 0) {
+      updateMessageState({
+        message: `You missed your attack!`,
+      })
+    } else {
+      updateMessageState({
+        message:
+          (isCrit ? 'Critical hit! ' : '') +
+          `You attacked the ${this.name} causing ${modifiedDamage} damage!`,
+      })
     }
   }
 }
@@ -511,6 +669,9 @@ export class FloorItem extends Entity {
   }
 
   public pickUpItem() {
+    const { items } = getGameState()
+    const item = items.find((i) => i.id === this.itemId)
+
     updateGameState((c) => ({
       inventory: [
         ...c.inventory,
@@ -521,6 +682,7 @@ export class FloorItem extends Entity {
       ],
       floorItems: [...c.floorItems.filter((i) => i.id !== this.id)],
     }))
+    addNotification(`You picked up a ${item?.name ?? 'an item'}`)
   }
 }
 
@@ -677,6 +839,7 @@ export class Building {
         generateMapHomeBuildingState(this.faceDirection)
       )
     }
+    addNotification('Building has been placed.')
   }
 
   public cancelPlacement() {

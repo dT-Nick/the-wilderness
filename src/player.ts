@@ -106,7 +106,6 @@ export function handlePlayerMovement(
       case 'arrowup':
       case 'w': {
         const [x, y] = player.coordinates
-
         if (
           y > 0 &&
           !restrictedCoords.some((rc) => rc[0] === x && rc[1] === y - 1)
