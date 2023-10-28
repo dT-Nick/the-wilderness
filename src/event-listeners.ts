@@ -118,6 +118,28 @@ function handleTouchEnd(e: TouchEvent) {
 }
 
 function handleTouchMove(e: TouchEvent) {
+  const { changedTouches } = e
+  const { showGamepad } = getInputState()
+
+  for (let i = 0; i < changedTouches.length; i++) {
+    const touch = changedTouches[i]
+    if (showGamepad) {
+      const button = isControllerButtonCoords(touch.clientX, touch.clientY)
+      if (!button) continue
+      if (!button.includes('dpad')) continue
+
+      updateInputState((c) => ({
+        touches: [
+          ...c.touches.filter((t) => t.identifier !== touch.identifier),
+          {
+            identifier: touch.identifier,
+            type: button,
+          },
+        ],
+      }))
+    }
+  }
+
   updateInputState({
     mouseX: e.touches[0].clientX,
     mouseY: e.touches[0].clientY,
