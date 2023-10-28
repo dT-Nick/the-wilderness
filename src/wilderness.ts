@@ -320,7 +320,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           ...c.enemies,
           new Enemy(
             'Kaurismaki Daemon',
-            100,
+            1,
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
             blockSize * (3 / 4),
@@ -368,7 +368,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           ...c.enemies,
           new Enemy(
             'Kaurismaki Daemon',
-            100,
+            Math.ceil(Math.random() * 3),
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
             blockSize * (3 / 4),
@@ -416,7 +416,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           ...c.enemies,
           new Enemy(
             'Kaurismaki Daemon',
-            100,
+            Math.ceil(Math.random() * 3),
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
             blockSize * (3 / 4),
@@ -464,7 +464,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           ...c.enemies,
           new Enemy(
             'Kaurismaki Daemon',
-            100,
+            Math.ceil(Math.random() * 3),
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
             blockSize * (3 / 4),
@@ -513,7 +513,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           ...c.enemies,
           new Enemy(
             'Kaurismaki Daemon',
-            100,
+            Math.ceil(Math.random() * 3),
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
             blockSize * (3 / 4),
@@ -560,7 +560,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           ...c.enemies,
           new Enemy(
             'Kaurismaki Daemon',
-            100,
+            Math.ceil(Math.random() * 3),
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
             blockSize * (3 / 4),

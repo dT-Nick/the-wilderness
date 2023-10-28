@@ -184,8 +184,6 @@ export class Player extends LivingBeing {
     }
     this.movementStatus = 'idle'
     this.currentHeal = 0
-    this.currentHealth = 10
-    this.prevHealth = 10
   }
 
   get coordinates() {
@@ -399,17 +397,27 @@ export class Player extends LivingBeing {
   public addExperience() {
     if (!this.currentExperienceGain) return
     const deltaFrames = getDeltaFrames()
+    const experienceAtNextLevel = calculateExperienceFromLevel(
+      this.currentLevel
+    )
+    const experienceIncrease = 0.5 * deltaFrames
+    const experienceAfterIncrease = this.experience + experienceIncrease
+
     this.experience += 0.5 * deltaFrames
+
+    if (experienceAfterIncrease >= experienceAtNextLevel) {
+      this.currentHealth += 10
+      this.prevHealth += 10
+    }
 
     if (this.experience >= this.prevExperience + this.currentExperienceGain) {
       const newExperience = this.prevExperience + this.currentExperienceGain
       this.experience = newExperience
       this.prevExperience = newExperience
       this.currentExperienceGain = 0
-      console.log('updating battle state')
       updateBattleState({
         status: 'wait',
-        waitLengthMs: 1000,
+        waitLengthMs: 2000,
         waitStart: Date.now(),
       })
     }
@@ -448,11 +456,12 @@ export class Enemy extends LivingBeing {
 
   constructor(
     name: string,
-    health: number,
+    level: number,
     startX: number,
     startY: number,
     size: number,
-    mapId: number | string
+    mapId: number | string,
+    health: number = 100
   ) {
     const directionRng = Math.random()
     let faceDirection: 'left' | 'up' | 'right' | 'down' = 'left'
@@ -464,6 +473,10 @@ export class Enemy extends LivingBeing {
       faceDirection = 'down'
     }
     super(startX, startY, size, health, faceDirection)
+    this.experience = calculateExperienceFromLevel(level - 1)
+    this.prevExperience = this.experience
+    this.currentHealth = this.maxHealth
+    this.prevHealth = this.maxHealth
     this.name = name
     this.mapId = mapId
     this.playerPrompted = false

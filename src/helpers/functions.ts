@@ -60,6 +60,7 @@ export function calculateLevelFromExperience(experience: number) {
 }
 
 export function calculateExperienceFromLevel(level: number) {
+  if (level === 0) return 0
   let experience = baseExperience
   for (let i = 1; i < level; i++) {
     experience = Math.floor(experience * levelMultiplier + baseExperience)

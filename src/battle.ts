@@ -2,6 +2,7 @@
 
 import {
   calculateDamage,
+  calculateExperienceFromLevel,
   calculateExperienceGainedFromBattle,
 } from './helpers/functions.js'
 import { getItemViaId } from './item.js'
@@ -29,34 +30,102 @@ export function drawBattle() {
 }
 
 export function drawPlayerInfo() {
-  const { ctx, scale, verticalOffset } = getCanvasState()
+  const { ctx, scale, verticalOffset, height } = getCanvasState()
   const { player } = getGameState()
 
   if (isInitialised(ctx) && isPlayerInitialised(player)) {
+    const spacingBetweenElements = 10 * scale
+
+    const nameHeight = 17 * scale
+    const nameX = 10 * scale
+    const nameY = 10 * scale + verticalOffset / 2
+    const nameMaxWidth = 400 * scale
+    ctx.fillStyle = 'white'
+    ctx.font = `${Math.floor(20 * scale)}px Arial`
     ctx.textAlign = 'left'
-    ctx.textBaseline = 'middle'
+    ctx.textBaseline = 'top'
+    ctx.fillText('Player', nameX, nameY, nameMaxWidth)
+
+    // health bar
+    const healthBarWidth = 400 * scale
+    const healthBarHeight = 15 * scale
+    const healthBarX = 10 * scale
+    const healthBarY =
+      10 * scale + verticalOffset / 2 + nameHeight + spacingBetweenElements
+
+    const healthBarFillWidth =
+      (player.currentHealth / player.maxHealth) * healthBarWidth
+
+    ctx.fillStyle = '#333333'
+    ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight)
+    ctx.fillStyle = 'red'
+    ctx.fillRect(healthBarX, healthBarY, healthBarFillWidth, healthBarHeight)
+
+    const experienceBarWidth = 400 * scale
+    const experienceBarHeight = 10 * scale
+    const experienceBarX = 10 * scale
+    const experienceBarY = healthBarY + healthBarHeight + spacingBetweenElements
+    const experienceAtStartOfLevel = calculateExperienceFromLevel(
+      player.currentLevel - 1
+    )
+    const experienceAtEndOfLevel = calculateExperienceFromLevel(
+      player.currentLevel
+    )
+
+    const experienceBarFillWidth =
+      ((player.experience - experienceAtStartOfLevel) /
+        (experienceAtEndOfLevel - experienceAtStartOfLevel)) *
+      experienceBarWidth
+
+    ctx.fillStyle = '#333333'
+    ctx.fillRect(
+      experienceBarX,
+      experienceBarY,
+      experienceBarWidth,
+      experienceBarHeight
+    )
+    ctx.fillStyle = 'green'
+    ctx.fillRect(
+      experienceBarX,
+      experienceBarY,
+      experienceBarFillWidth,
+      experienceBarHeight
+    )
+
+    const levelBoxHeight = healthBarHeight + experienceBarHeight + 10 * scale
+    const levelBoxWidth = levelBoxHeight
+    const levelBoxX = healthBarX + healthBarWidth + 10 * scale
+    const levelBoxY = healthBarY
+
+    ctx.lineWidth = 2
+    ctx.strokeStyle = 'white'
+    ctx.strokeRect(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight)
+
     ctx.fillStyle = 'white'
     ctx.font = `${Math.floor(25 * scale)}px monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
     ctx.fillText(
-      `Health: ${Math.ceil(player.currentHealth)}`,
-      10 * scale,
-      20 * scale + verticalOffset / 2
+      player.currentLevel.toString(),
+      levelBoxX + levelBoxWidth / 2,
+      levelBoxY + levelBoxHeight / 2 + 2
     )
-    ctx.fillText(
-      `Level: ${player.currentLevel}`,
+
+    const imageHeight = 280 * scale
+    const imageWidth = 200 * scale
+
+    ctx.drawImage(
+      document.getElementById('player-image') as HTMLImageElement,
       10 * scale,
-      50 * scale + verticalOffset / 2
-    )
-    ctx.fillText(
-      `Experience: ${Math.floor(player.experience)}`,
-      10 * scale,
-      80 * scale + verticalOffset / 2
+      height / 2 - imageHeight / 2 - 50 * scale,
+      imageWidth,
+      imageHeight
     )
   }
 }
 
 export function drawEnemyInfo() {
-  const { ctx, scale, verticalOffset, width } = getCanvasState()
+  const { ctx, scale, verticalOffset, width, height } = getCanvasState()
   const { enemies } = getGameState()
   const { enemyId, lastMove } = getBattleState()
 
@@ -64,19 +133,79 @@ export function drawEnemyInfo() {
     const enemy = enemies.find((e) => e.id === enemyId)
     if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
 
+    const spacingBetweenElements = 10 * scale
+
+    const nameHeight = 17 * scale
+    const nameX = width - 10 * scale
+    const nameY = 10 * scale + verticalOffset / 2
+    const nameMaxWidth = 400 * scale
+
+    ctx.font = `${Math.floor(20 * scale)}px Arial`
     ctx.textAlign = 'right'
-    ctx.textBaseline = 'middle'
+    ctx.textBaseline = 'top'
+    ctx.fillText(enemy.name, nameX, nameY, nameMaxWidth)
+
+    // health bar
+    const healthBarWidth = 400 * scale
+    const healthBarHeight = 15 * scale
+    const healthBarX = width - healthBarWidth - 10 * scale
+    const healthBarY =
+      10 * scale + verticalOffset / 2 + nameHeight + spacingBetweenElements
+
+    const healthBarFillWidth =
+      (enemy.currentHealth / enemy.maxHealth) * healthBarWidth
+
+    ctx.fillStyle = '#333333'
+    ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight)
+    ctx.fillStyle = 'red'
+    ctx.fillRect(
+      healthBarX + healthBarWidth - healthBarFillWidth,
+      healthBarY,
+      healthBarFillWidth,
+      healthBarHeight
+    )
+
+    const experienceBarWidth = 400 * scale
+    const experienceBarHeight = 10 * scale
+    const experienceBarX = width - experienceBarWidth - 10 * scale
+    const experienceBarY = healthBarY + healthBarHeight + spacingBetweenElements
+
+    ctx.fillStyle = 'gold'
+    ctx.fillRect(
+      experienceBarX,
+      experienceBarY,
+      experienceBarWidth,
+      experienceBarHeight
+    )
+
+    const levelBoxHeight = healthBarHeight + experienceBarHeight + 10 * scale
+    const levelBoxWidth = levelBoxHeight
+    const levelBoxX = healthBarX - levelBoxWidth - 10 * scale
+    const levelBoxY = healthBarY
+
+    ctx.lineWidth = 2
+    ctx.strokeStyle = 'white'
+    ctx.strokeRect(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight)
+
     ctx.fillStyle = 'white'
     ctx.font = `${Math.floor(25 * scale)}px monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
     ctx.fillText(
-      `Health: ${Math.ceil(enemy.currentHealth)}`,
-      width - 10 * scale,
-      20 * scale + verticalOffset / 2
+      enemy.currentLevel.toString(),
+      levelBoxX + levelBoxWidth / 2,
+      levelBoxY + levelBoxHeight / 2 + 2
     )
-    ctx.fillText(
-      `Level: ${enemy.currentLevel}`,
-      width - 10 * scale,
-      50 * scale + verticalOffset / 2
+
+    const imageHeight = 280 * scale
+    const imageWidth = 200 * scale
+
+    ctx.drawImage(
+      document.getElementById('demon-image') as HTMLImageElement,
+      width - imageWidth - 10 * scale,
+      height / 2 - imageHeight / 2 - 50 * scale,
+      imageWidth,
+      imageHeight
     )
   }
 }
