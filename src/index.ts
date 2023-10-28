@@ -29,7 +29,11 @@ import {
   updateSettlementState,
 } from './state.js'
 import { generateMaps } from './wilderness-maps/index.js'
-import { drawWilderness, handleWildernessScenarios } from './wilderness.js'
+import {
+  drawWilderness,
+  handleWildernessScenarios,
+  updateWildernessClock,
+} from './wilderness.js'
 import {
   drawBuildingSelectionPanel,
   drawBuildings,
@@ -44,6 +48,7 @@ import { generateBackgroundGrid } from './background.js'
 import { drawWorldMap, handleWorldMapInput } from './world-map.js'
 import { drawController } from './controller/controller.js'
 import { drawBuildingInterior, handleBuildingInput } from './building.js'
+import { drawGameOverScreen } from './game-over.js'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -307,6 +312,7 @@ export function runGameLoop() {
       drawEnemies()
       drawPlayer()
 
+      updateWildernessClock()
       handleWildernessScenarios()
 
       break
@@ -334,6 +340,10 @@ export function runGameLoop() {
     case 'world-map': {
       drawWorldMap()
       handleWorldMapInput()
+      break
+    }
+    case 'game-over': {
+      drawGameOverScreen()
       break
     }
     default: {

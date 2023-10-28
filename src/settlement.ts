@@ -480,7 +480,7 @@ function handleBuildingInput() {
   }
 
   if (
-    (isKeyDownEvent(['escape', 'tab']) || isButtonDownEvent('buttonX')) &&
+    (isKeyDownEvent(['escape', 'tab', 'b']) || isButtonDownEvent('buttonX')) &&
     selected === null
   ) {
     updateSettlementState({
@@ -512,4 +512,36 @@ export function deriveExtendedRestrictedCoordsFromRestrictedCoordsArray(
   }
 
   return extendedRestrictedCoords
+}
+
+export function takeSettlementDamage() {
+  const { buildings } = getSettlementState()
+
+  const aliveBuildings = buildings.filter(
+    (b) => b.currentHealth > 0 && b.isPlaced
+  )
+
+  if (aliveBuildings.length === 0) {
+    return updateGameState({
+      status: 'game-over',
+    })
+  }
+
+  // min because the top of the map is Y = 0 and the left of the map is X = 0
+  const highestYCoord = Math.min(
+    ...aliveBuildings.map((b) => b.coordinates.fromCoords[1])
+  )
+  const highestXCoord = Math.min(
+    ...aliveBuildings.map((b) => b.coordinates.fromCoords[0])
+  )
+
+  const upperMostBuildings = aliveBuildings.filter(
+    (b) => b.coordinates.fromCoords[1] === highestYCoord
+  )
+  const leftMostBuilding = upperMostBuildings.find(
+    (b) => b.coordinates.fromCoords[0] === highestXCoord
+  )
+  if (!leftMostBuilding) throw new Error('Could not find left most building')
+
+  leftMostBuilding.takeDamage(1)
 }

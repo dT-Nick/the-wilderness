@@ -3,7 +3,7 @@
   "short_name": "Wilderness",
   "description": "A web-based adventure game",
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "icons": [
     {
       "src": "/public/icons/icon-72x72.png",

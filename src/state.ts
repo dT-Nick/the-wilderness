@@ -169,6 +169,7 @@ interface GameState {
     | 'map-creator'
     | 'world-map'
     | 'building'
+    | 'game-over'
 
   prevStatus:
     | null
@@ -179,6 +180,7 @@ interface GameState {
     | 'world-map'
     | 'map-creator'
     | 'building'
+    | 'game-over'
 
   playTime: number
   player: Player | null
@@ -262,10 +264,16 @@ export function updateSettlementState(
 
 interface WildernessState {
   mapId: number | string
+  wildernessTime: number
+  enemyMovementCycleCount: number
+  spawnCycleCount: number
 }
 
 const wildernessState: WildernessState = {
   mapId: 0,
+  wildernessTime: 0,
+  enemyMovementCycleCount: 0,
+  spawnCycleCount: 0,
 }
 
 export function getWildernessState() {

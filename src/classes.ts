@@ -4,7 +4,10 @@ import {
 } from './building-maps/home.js'
 import { generateSlug } from './helpers/functions.js'
 import { isButtonCurrentlyDown, isKeyCurrentlyDown } from './input.js'
-import { deriveExtendedRestrictedCoordsFromRestrictedCoordsArray } from './settlement.js'
+import {
+  deriveExtendedRestrictedCoordsFromRestrictedCoordsArray,
+  takeSettlementDamage,
+} from './settlement.js'
 import {
   getGameState,
   getDeltaFrames,
@@ -13,6 +16,7 @@ import {
   getBattleState,
   isPlayerInitialised,
 } from './state.js'
+import { getMapZeroState } from './wilderness-maps/map-0.js'
 import { getSettlementMapState } from './wilderness-maps/settlement.js'
 import { deriveRestrictedCoordsFromMap } from './wilderness.js'
 
@@ -344,6 +348,112 @@ export class Enemy extends LivingBeing {
     this.mapId = mapId
   }
 
+  public moveTowardsSettlement() {
+    const settlementEntryCoords = [41, 24]
+    const [eCoordsX, eCoordsY] = this.coordinates
+
+    if (
+      eCoordsX === settlementEntryCoords[0] &&
+      eCoordsY === settlementEntryCoords[1]
+    ) {
+      takeSettlementDamage()
+      updateGameState((c) => ({
+        enemies: [...c.enemies.filter((e) => e.id !== this.id)],
+      }))
+      return
+    }
+
+    const distanceFromSettlementEntry = [
+      Math.abs(eCoordsX - settlementEntryCoords[0]),
+      Math.abs(eCoordsY - settlementEntryCoords[1]),
+    ]
+
+    const isXDistanceGreater =
+      distanceFromSettlementEntry[0] > distanceFromSettlementEntry[1]
+
+    if (isXDistanceGreater) {
+      if (eCoordsX > settlementEntryCoords[0]) {
+        this.moveLeft()
+      } else {
+        this.moveRight()
+      }
+    } else {
+      if (eCoordsY > settlementEntryCoords[1]) {
+        this.moveUp()
+      } else {
+        this.moveDown()
+      }
+    }
+  }
+
+  public moveRight() {
+    const { blockSize } = getGameState()
+    const { map } = getMapZeroState()
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+
+    const [eCoordsX, eCoordsY] = this.coordinates
+
+    if (
+      restrictedCoords.some((c) => c[0] === eCoordsX + 1 && c[1] === eCoordsY)
+    ) {
+      return
+    }
+
+    this.faceDirection = 'right'
+    this.x += blockSize
+  }
+
+  public moveLeft() {
+    const { blockSize } = getGameState()
+    const { map } = getMapZeroState()
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+
+    const [eCoordsX, eCoordsY] = this.coordinates
+
+    if (
+      restrictedCoords.some((c) => c[0] === eCoordsX - 1 && c[1] === eCoordsY)
+    ) {
+      return
+    }
+
+    this.faceDirection = 'left'
+    this.x -= blockSize
+  }
+
+  public moveUp() {
+    const { blockSize } = getGameState()
+    const { map } = getMapZeroState()
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+
+    const [eCoordsX, eCoordsY] = this.coordinates
+
+    if (
+      restrictedCoords.some((c) => c[0] === eCoordsX && c[1] === eCoordsY - 1)
+    ) {
+      return
+    }
+
+    this.faceDirection = 'up'
+    this.y -= blockSize
+  }
+
+  public moveDown() {
+    const { blockSize } = getGameState()
+    const { map } = getMapZeroState()
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+
+    const [eCoordsX, eCoordsY] = this.coordinates
+
+    if (
+      restrictedCoords.some((c) => c[0] === eCoordsX && c[1] === eCoordsY + 1)
+    ) {
+      return
+    }
+
+    this.faceDirection = 'down'
+    this.y += blockSize
+  }
+
   public takeDamage() {
     if (!this.currentDamage) return
     super.takeDamage()
@@ -552,6 +662,10 @@ export class Building {
     }
 
     return true
+  }
+
+  public takeDamage(amount: number) {
+    this.currentHealth -= amount
   }
 
   public place() {

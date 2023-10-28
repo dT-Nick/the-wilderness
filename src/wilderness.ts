@@ -1,22 +1,42 @@
 import { generateBackgroundGrid } from './background.js'
+import { Enemy, FloorItem } from './classes.js'
+import { getEntityXAndYValuesFromCoords } from './helpers/coordinates.js'
+import { generateSlug } from './helpers/functions.js'
 import {
   BlockType,
   getBlockPropertiesFromName,
   getCanvasState,
   getGameState,
+  getLoopState,
   getSettlementState,
   getWildernessState,
   isInitialised,
   isPlayerInitialised,
   updateBattleState,
   updateGameState,
+  updateWildernessState,
 } from './state.js'
-import { drawMapZero } from './wilderness-maps/map-0.js'
-import { drawMapMinusOneZero } from './wilderness-maps/map-[-1,0].js'
-import { drawMapMinusOneOne } from './wilderness-maps/map-[-1,1].js'
-import { drawMapZeroOne } from './wilderness-maps/map-[0,1].js'
-import { drawMapOneZero } from './wilderness-maps/map-[1,0].js'
-import { drawMapOneOne } from './wilderness-maps/map-[1,1].js'
+import { drawMapZero, getMapZeroState } from './wilderness-maps/map-0.js'
+import {
+  drawMapMinusOneZero,
+  getMapMinusOneZeroState,
+} from './wilderness-maps/map-[-1,0].js'
+import {
+  drawMapMinusOneOne,
+  getMapMinusOneOneState,
+} from './wilderness-maps/map-[-1,1].js'
+import {
+  drawMapZeroOne,
+  getMapZeroOneState,
+} from './wilderness-maps/map-[0,1].js'
+import {
+  drawMapOneZero,
+  getMapOneZeroState,
+} from './wilderness-maps/map-[1,0].js'
+import {
+  drawMapOneOne,
+  getMapOneOneState,
+} from './wilderness-maps/map-[1,1].js'
 
 export interface MapState {
   map: Array<{
@@ -145,7 +165,52 @@ export function drawBackgroundFromMap(map: MapState['map']) {
   // generateBackgroundGrid()
 }
 
+export function updateWildernessClock() {
+  const { deltaTime } = getLoopState()
+  updateWildernessState((c) => ({
+    wildernessTime: c.wildernessTime + deltaTime,
+  }))
+}
+
 export function handleWildernessScenarios() {
+  handleEnemyEncounter()
+  handleEnemyMovementCycle()
+  handleSpawnCycle()
+}
+
+function handleEnemyMovementCycle() {
+  const { wildernessTime, enemyMovementCycleCount } = getWildernessState()
+  const { enemies } = getGameState()
+
+  const minutesPassed = Math.floor(wildernessTime / 1000)
+
+  if (minutesPassed <= enemyMovementCycleCount) return
+  // move enemies
+  const enemiesInMapZero = enemies.filter((e) => e.mapId === 0)
+
+  for (let enemy of enemiesInMapZero) {
+    enemy.moveTowardsSettlement()
+  }
+
+  updateWildernessState({
+    enemyMovementCycleCount: minutesPassed,
+  })
+}
+
+function handleSpawnCycle() {
+  const { wildernessTime, spawnCycleCount } = getWildernessState()
+
+  const tenMinutesPassed = Math.floor(wildernessTime / 1000 / 30)
+
+  if (tenMinutesPassed <= spawnCycleCount) return
+
+  spawnItemsAndEnemies()
+  updateWildernessState({
+    spawnCycleCount: tenMinutesPassed,
+  })
+}
+
+function handleEnemyEncounter() {
   const { player, enemies } = getGameState()
   const { mapId } = getWildernessState()
   if (!isPlayerInitialised(player)) return
@@ -188,4 +253,320 @@ export function handleWildernessScenarios() {
       })
     }
   }
+}
+
+function spawnItemsAndEnemies() {
+  const { enemies, blockSize, floorItems, items } = getGameState()
+
+  const { discovered: mapZeroDiscovered, map: mapZero } = getMapZeroState()
+  const { discovered: mapMinusOneZeroDiscovered, map: mapMinusOneZero } =
+    getMapMinusOneZeroState()
+  const { discovered: mapZeroOneDiscovered, map: mapZeroOne } =
+    getMapZeroOneState()
+  const { discovered: mapOneZeroDiscovered, map: mapOneZero } =
+    getMapOneZeroState()
+  const { discovered: mapOneOneDiscovered, map: mapOneOne } =
+    getMapOneOneState()
+  const { discovered: mapMinusOneOneDiscovered, map: mapMinusOneOne } =
+    getMapMinusOneOneState()
+
+  if (mapZeroDiscovered) {
+    const currentEnemies = enemies.filter((e) => e.mapId === 0)
+    const newEnemyCount = 5 - currentEnemies.length
+
+    for (let i = 0; i < newEnemyCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapZero)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      updateGameState((c) => ({
+        enemies: [
+          ...c.enemies,
+          new Enemy(
+            'Kaurismaki Daemon',
+            100,
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            0
+          ),
+        ],
+      }))
+    }
+
+    const currentItems = floorItems.filter((i) => i.mapId === 0)
+    const newItemCount = 3 - currentItems.length
+
+    for (let i = 0; i < newItemCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapZero)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      const randomItemName =
+        items[Math.floor(Math.random() * items.length)].name
+
+      updateGameState((c) => ({
+        floorItems: [
+          ...c.floorItems,
+          new FloorItem(
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            generateSlug(randomItemName),
+            0
+          ),
+        ],
+      }))
+    }
+  }
+
+  if (mapMinusOneZeroDiscovered) {
+    const currentEnemies = enemies.filter((e) => e.mapId === '[-1,0]')
+    const newEnemyCount = 5 - currentEnemies.length
+    for (let i = 0; i < newEnemyCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapMinusOneZero)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      updateGameState((c) => ({
+        enemies: [
+          ...c.enemies,
+          new Enemy(
+            'Kaurismaki Daemon',
+            100,
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            '[-1,0]'
+          ),
+        ],
+      }))
+    }
+
+    const currentItems = floorItems.filter((i) => i.mapId === '[-1,0]')
+    const newItemCount = 3 - currentItems.length
+    for (let i = 0; i < newItemCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapMinusOneZero)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      const randomItemName =
+        items[Math.floor(Math.random() * items.length)].name
+
+      updateGameState((c) => ({
+        floorItems: [
+          ...c.floorItems,
+          new FloorItem(
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            generateSlug(randomItemName),
+            '[-1,0]'
+          ),
+        ],
+      }))
+    }
+  }
+
+  if (mapZeroOneDiscovered) {
+    const currentEnemies = enemies.filter((e) => e.mapId === '[0,1]')
+    const newEnemyCount = 5 - currentEnemies.length
+
+    for (let i = 0; i < newEnemyCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapZeroOne)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      updateGameState((c) => ({
+        enemies: [
+          ...c.enemies,
+          new Enemy(
+            'Kaurismaki Daemon',
+            100,
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            '[0,1]'
+          ),
+        ],
+      }))
+    }
+
+    const currentItems = floorItems.filter((i) => i.mapId === '[0,1]')
+    const newItemCount = 3 - currentItems.length
+    for (let i = 0; i < newItemCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapZeroOne)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      const randomItemName =
+        items[Math.floor(Math.random() * items.length)].name
+
+      updateGameState((c) => ({
+        floorItems: [
+          ...c.floorItems,
+          new FloorItem(
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            generateSlug(randomItemName),
+            '[0,1]'
+          ),
+        ],
+      }))
+    }
+  }
+
+  if (mapOneZeroDiscovered) {
+    const currentEnemies = enemies.filter((e) => e.mapId === '[1,0]')
+    const newEnemyCount = 5 - currentEnemies.length
+
+    for (let i = 0; i < newEnemyCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapOneZero)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      updateGameState((c) => ({
+        enemies: [
+          ...c.enemies,
+          new Enemy(
+            'Kaurismaki Daemon',
+            100,
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            '[1,0]'
+          ),
+        ],
+      }))
+    }
+
+    const currentItems = floorItems.filter((i) => i.mapId === '[1,0]')
+    const newItemCount = 3 - currentItems.length
+
+    for (let i = 0; i < newItemCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapOneZero)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      const randomItemName =
+        items[Math.floor(Math.random() * items.length)].name
+
+      updateGameState((c) => ({
+        floorItems: [
+          ...c.floorItems,
+          new FloorItem(
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            generateSlug(randomItemName),
+            '[1,0]'
+          ),
+        ],
+      }))
+    }
+  }
+
+  if (mapOneOneDiscovered) {
+    const currentEnemies = enemies.filter((e) => e.mapId === '[1,1]')
+    const newEnemyCount = 5 - currentEnemies.length
+
+    for (let i = 0; i < newEnemyCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapOneOne)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      updateGameState((c) => ({
+        enemies: [
+          ...c.enemies,
+          new Enemy(
+            'Kaurismaki Daemon',
+            100,
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            '[1,1]'
+          ),
+        ],
+      }))
+    }
+
+    const currentItems = floorItems.filter((i) => i.mapId === '[1,1]')
+    const newItemCount = 3 - currentItems.length
+
+    for (let i = 0; i < newItemCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapOneOne)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      const randomItemName =
+        items[Math.floor(Math.random() * items.length)].name
+
+      updateGameState((c) => ({
+        floorItems: [
+          ...c.floorItems,
+          new FloorItem(
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            generateSlug(randomItemName),
+            '[1,1]'
+          ),
+        ],
+      }))
+    }
+  }
+
+  if (mapMinusOneOneDiscovered) {
+    const currentEnemies = enemies.filter((e) => e.mapId === '[-1,1]')
+    const newEnemyCount = 5 - currentEnemies.length
+
+    for (let i = 0; i < newEnemyCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapMinusOneOne)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      updateGameState((c) => ({
+        enemies: [
+          ...c.enemies,
+          new Enemy(
+            'Kaurismaki Daemon',
+            100,
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            '[-1,1]'
+          ),
+        ],
+      }))
+    }
+
+    const currentItems = floorItems.filter((i) => i.mapId === '[-1,1]')
+    const newItemCount = 3 - currentItems.length
+
+    for (let i = 0; i < newItemCount; i++) {
+      const restrictedCoords = deriveRestrictedCoordsFromMap(mapMinusOneOne)
+      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+
+      const randomItemName =
+        items[Math.floor(Math.random() * items.length)].name
+
+      updateGameState((c) => ({
+        floorItems: [
+          ...c.floorItems,
+          new FloorItem(
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+            blockSize * (3 / 4),
+            generateSlug(randomItemName),
+            '[-1,1]'
+          ),
+        ],
+      }))
+    }
+  }
+}
+
+function generateEnemySpawnCoords(restrictedCoords: Array<[number, number]>) {
+  const { blocksHorizontal, blocksVertical } = getGameState()
+
+  const x = Math.floor(Math.random() * blocksHorizontal)
+  const y = Math.floor(Math.random() * blocksVertical)
+
+  const isOnRestrictedCoords = restrictedCoords.some(
+    ([rX, rY]) => rX === x && rY === y
+  )
+
+  if (isOnRestrictedCoords) return generateEnemySpawnCoords(restrictedCoords)
+
+  return [x, y]
 }
