@@ -1,13 +1,21 @@
 import { handleEnemyInteraction } from '../enemy.js'
-import { isButtonCurrentlyDown, isKeyCurrentlyDown } from '../input.js'
+import { getOppositeDirection } from '../helpers/functions.js'
+import {
+  isButtonCurrentlyDown,
+  isButtonDownEvent,
+  isKeyCurrentlyDown,
+  isKeyDownEvent,
+} from '../input.js'
 import { handleItemPickup } from '../item.js'
 import { handlePlayerMovement } from '../player.js'
 import {
+  getCanvasState,
   getDeltaFrames,
   getGameState,
   getInputState,
   getLoopState,
   getSettlementState,
+  isInitialised,
   isPlayerInitialised,
   updateGameState,
   updateWildernessState,
@@ -144,13 +152,96 @@ export function updateMapHomeBuildingState(
 export function drawMapHomeBuilding() {
   const { map } = mapHomeBuildingState
   drawBackgroundFromMap(map)
+  drawFirstAidVisitBlock()
+}
+
+export function drawFirstAidVisitBlock() {
+  const { ctx, scale, verticalOffset } = getCanvasState()
+  if (!isInitialised(ctx)) return
+  const { buildingId, blockSize } = getGameState()
+  const { buildings } = getSettlementState()
+  const building = buildings.find((b) => b.id === buildingId)
+  if (!building) return
+
+  const { faceDirection: bFaceDirection } = building
+
+  let firstAidCoords = [0, 0]
+  if (bFaceDirection === 'up') {
+    firstAidCoords = [41, 19]
+  }
+  if (bFaceDirection === 'down') {
+    firstAidCoords = [41, 7]
+  }
+  if (bFaceDirection === 'left') {
+    firstAidCoords = [50, 13]
+  }
+  if (bFaceDirection === 'right') {
+    firstAidCoords = [32, 13]
+  }
+
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(
+    firstAidCoords[0] * (blockSize * scale),
+    firstAidCoords[1] * (blockSize * scale) + verticalOffset / 2,
+    blockSize * scale,
+    blockSize * scale
+  )
+  // draw a red cross within the block
+  const crossLength = (blockSize - 6) * scale
+  const crossThickness = 4 * scale
+
+  ctx.fillStyle = '#ff0000'
+  ctx.fillRect(
+    firstAidCoords[0] * (blockSize * scale) +
+      (blockSize / 2) * scale -
+      crossLength / 2,
+    firstAidCoords[1] * (blockSize * scale) +
+      (blockSize / 2) * scale +
+      verticalOffset / 2 -
+      crossThickness / 2,
+    crossLength,
+    crossThickness
+  )
+  ctx.fillRect(
+    firstAidCoords[0] * (blockSize * scale) +
+      (blockSize / 2) * scale -
+      crossThickness / 2,
+    firstAidCoords[1] * (blockSize * scale) +
+      (blockSize / 2) * scale +
+      verticalOffset / 2 -
+      crossLength / 2,
+    crossThickness,
+    crossLength
+  )
 }
 
 export function handleMapHomeBuildingInput() {
   const { map } = mapHomeBuildingState
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+  const { buildingId } = getGameState()
+  const { buildings } = getSettlementState()
+  const building = buildings.find((b) => b.id === buildingId)
+  if (!building) return
+
+  const { faceDirection: bFaceDirection } = building
+
+  let firstAidCoords: [number, number] = [0, 0]
+  if (bFaceDirection === 'up') {
+    firstAidCoords = [41, 19]
+  }
+  if (bFaceDirection === 'down') {
+    firstAidCoords = [41, 7]
+  }
+  if (bFaceDirection === 'left') {
+    firstAidCoords = [50, 13]
+  }
+  if (bFaceDirection === 'right') {
+    firstAidCoords = [32, 13]
+  }
+
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, [firstAidCoords])
   handlePlayerMovement(restrictedCoords)
   handleMapHomeBuildingExit()
+  handleFirstAidVisit()
 }
 
 export function handleMapHomeBuildingExit() {
@@ -234,6 +325,52 @@ export function handleMapHomeBuildingExit() {
         )
       }
       player.stopMoving()
+    }
+  }
+}
+
+function handleFirstAidVisit() {
+  const { player, buildingId } = getGameState()
+  if (!isPlayerInitialised(player)) return
+  const { buildings } = getSettlementState()
+  const building = buildings.find((b) => b.id === buildingId)
+  if (!building) return
+
+  const { coordinates, faceDirection: pFaceDirection } = player
+  const { faceDirection: bFaceDirection } = building
+
+  let firstAidCoords = [0, 0]
+  if (bFaceDirection === 'up') {
+    firstAidCoords = [41, 19]
+  }
+  if (bFaceDirection === 'down') {
+    firstAidCoords = [41, 7]
+  }
+  if (bFaceDirection === 'left') {
+    firstAidCoords = [50, 13]
+  }
+  if (bFaceDirection === 'right') {
+    firstAidCoords = [32, 13]
+  }
+
+  const [pCoordsX, pCoordsY] = coordinates
+
+  if (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) {
+    if (
+      (pCoordsX === firstAidCoords[0] + 1 &&
+        pCoordsY === firstAidCoords[1] &&
+        pFaceDirection === 'left') ||
+      (pCoordsX === firstAidCoords[0] - 1 &&
+        pCoordsY === firstAidCoords[1] &&
+        pFaceDirection === 'right') ||
+      (pCoordsX === firstAidCoords[0] &&
+        pCoordsY === firstAidCoords[1] + 1 &&
+        pFaceDirection === 'up') ||
+      (pCoordsX === firstAidCoords[0] &&
+        pCoordsY === firstAidCoords[1] - 1 &&
+        pFaceDirection === 'down')
+    ) {
+      player.restoreHealth()
     }
   }
 }

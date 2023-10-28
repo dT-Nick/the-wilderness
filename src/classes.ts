@@ -4,6 +4,7 @@ import {
 } from './building-maps/home.js'
 import { generateSlug } from './helpers/functions.js'
 import { isButtonCurrentlyDown, isKeyCurrentlyDown } from './input.js'
+import { deriveExtendedRestrictedCoordsFromRestrictedCoordsArray } from './settlement.js'
 import {
   getGameState,
   getDeltaFrames,
@@ -164,7 +165,7 @@ export class Player extends LivingBeing {
     const isSprintDown =
       isKeyCurrentlyDown('shift') || isButtonCurrentlyDown('buttonB')
 
-    return blockSize / (isSprintDown ? 8 : 12)
+    return blockSize / (isSprintDown ? 3 : 4)
   }
 
   public moveUp() {
@@ -284,6 +285,11 @@ export class Player extends LivingBeing {
 
   public heal(amount: number) {
     this.currentHeal = amount
+  }
+
+  public restoreHealth() {
+    this.currentHealth = this.maxHealth
+    this.prevHealth = this.maxHealth
   }
 
   public addHealth() {
@@ -469,6 +475,7 @@ export class Building {
   y: number
   width: number
   height: number
+  faceCount: number
   faceDirection: 'up' | 'down' | 'left' | 'right'
   colour: string
 
@@ -494,6 +501,7 @@ export class Building {
     this.width = width
     this.height = height
     this.faceDirection = faceDirection ?? 'down'
+    this.faceCount = 0
     this.colour = 'chocolate'
   }
 
@@ -527,7 +535,12 @@ export class Building {
 
   get isPlaceable() {
     const { map } = getSettlementMapState()
-    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const looseRestrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const restrictedCoords =
+      deriveExtendedRestrictedCoordsFromRestrictedCoordsArray(
+        looseRestrictedCoords
+      )
+
     const { fromCoords, toCoords } = this.coordinates
 
     for (let x = fromCoords[0]; x <= toCoords[0] - 1; x++) {
@@ -580,6 +593,57 @@ export class Building {
     } else if (this.faceDirection === 'left') {
       this.faceDirection = 'up'
     }
+  }
+
+  get faceCountMax() {
+    if (isKeyCurrentlyDown('shift') || isButtonCurrentlyDown('buttonB')) {
+      return 4
+    }
+    return 10
+  }
+
+  public startMovingRight() {
+    const deltaFrames = getDeltaFrames()
+    if (this.faceCount > this.faceCountMax) {
+      this.faceCount = 0
+      this.moveRight()
+    } else {
+      this.faceCount += 1 * deltaFrames
+    }
+  }
+
+  public startMovingLeft() {
+    const deltaFrames = getDeltaFrames()
+    if (this.faceCount > this.faceCountMax) {
+      this.faceCount = 0
+      this.moveLeft()
+    } else {
+      this.faceCount += 1 * deltaFrames
+    }
+  }
+
+  public startMovingUp() {
+    const deltaFrames = getDeltaFrames()
+    if (this.faceCount > this.faceCountMax) {
+      this.faceCount = 0
+      this.moveUp()
+    } else {
+      this.faceCount += 1 * deltaFrames
+    }
+  }
+
+  public startMovingDown() {
+    const deltaFrames = getDeltaFrames()
+    if (this.faceCount > this.faceCountMax) {
+      this.faceCount = 0
+      this.moveDown()
+    } else {
+      this.faceCount += 1 * deltaFrames
+    }
+  }
+
+  public stopMoving() {
+    this.faceCount = 0
   }
 
   public moveRight() {

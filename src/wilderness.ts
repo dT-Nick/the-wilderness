@@ -61,10 +61,13 @@ export function drawWilderness() {
   }
 }
 
-export function deriveRestrictedCoordsFromMap(map: MapState['map']) {
+export function deriveRestrictedCoordsFromMap(
+  map: MapState['map'],
+  extraCoordinates: Array<[number, number]> = []
+) {
   const { enemies, status, player } = getGameState()
   const { mapId } = getWildernessState()
-  const restrictedCoords: Array<[number, number]> = []
+  const restrictedCoords: Array<[number, number]> = extraCoordinates
 
   for (
     let blockRangeIndex = 0;

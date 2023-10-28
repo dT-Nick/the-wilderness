@@ -17,8 +17,10 @@ import {
   handleSettingsTriggerInputs,
   isButtonCurrentlyDown,
   isButtonDownEvent,
+  isButtonUpEvent,
   isKeyCurrentlyDown,
   isKeyDownEvent,
+  isKeyUpEvent,
 } from './input.js'
 import { getMapZeroState, updateMapZeroState } from './wilderness-maps/map-0.js'
 
@@ -405,6 +407,45 @@ function handleBuildingInput() {
       ) {
         building.moveRight()
       }
+      if (
+        isKeyCurrentlyDown(['w', 'arrowup']) ||
+        isButtonCurrentlyDown('dpadUp')
+      ) {
+        building.startMovingUp()
+      }
+      if (
+        isKeyCurrentlyDown(['s', 'arrowdown']) ||
+        isButtonCurrentlyDown('dpadDown')
+      ) {
+        building.startMovingDown()
+      }
+      if (
+        isKeyCurrentlyDown(['a', 'arrowleft']) ||
+        isButtonCurrentlyDown('dpadLeft')
+      ) {
+        building.startMovingLeft()
+      }
+      if (
+        isKeyCurrentlyDown(['d', 'arrowright']) ||
+        isButtonCurrentlyDown('dpadRight')
+      ) {
+        building.startMovingRight()
+      }
+      if (
+        isKeyUpEvent([
+          'w',
+          'arrowup',
+          's',
+          'arrowdown',
+          'a',
+          'arrowleft',
+          'd',
+          'arrowright',
+        ]) ||
+        isButtonUpEvent(['dpadUp', 'dpadDown', 'dpadLeft', 'dpadRight'])
+      ) {
+        building.stopMoving()
+      }
     }
 
     if (
@@ -447,4 +488,28 @@ function handleBuildingInput() {
       selected: null,
     })
   }
+}
+
+export function deriveExtendedRestrictedCoordsFromRestrictedCoordsArray(
+  restrictedCoords: Array<[number, number]>
+) {
+  let extendedRestrictedCoords: Array<[number, number]> = [...restrictedCoords]
+
+  for (let coords of restrictedCoords) {
+    const [x, y] = coords
+    if (!extendedRestrictedCoords.find((c) => c[0] === x + 1 && c[1] === y)) {
+      extendedRestrictedCoords.push([x + 1, y])
+    }
+    if (!extendedRestrictedCoords.find((c) => c[0] === x - 1 && c[1] === y)) {
+      extendedRestrictedCoords.push([x - 1, y])
+    }
+    if (!extendedRestrictedCoords.find((c) => c[0] === x && c[1] === y + 1)) {
+      extendedRestrictedCoords.push([x, y + 1])
+    }
+    if (!extendedRestrictedCoords.find((c) => c[0] === x && c[1] === y - 1)) {
+      extendedRestrictedCoords.push([x, y - 1])
+    }
+  }
+
+  return extendedRestrictedCoords
 }
