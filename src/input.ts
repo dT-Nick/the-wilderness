@@ -43,6 +43,8 @@ export function handleStartMenuInput() {
       status: constants.startingScene,
     })
   }
+
+  document.documentElement.requestFullscreen()
 }
 
 export function handleWildernessInput() {
