@@ -127,6 +127,16 @@ export function drawController() {
   const startSelectX = width / 2 - startSelectWidth / 2
   ctx.fillStyle = touches.find((t) => t.type === 'start') ? 'white' : 'gray'
   ctx.fillRect(startSelectX, startSelectY, startSelectWidth, startSelectHeight)
+
+  // Draw fullscreen button
+  const fullscreenWidth = 80
+  const fullscreenHeight = 45
+  const fullscreenPadding = 20
+  const fullscreenY = fullscreenPadding
+  const fullscreenX = width - fullscreenPadding - fullscreenWidth
+  ctx.strokeStyle = 'gray'
+  ctx.lineWidth = 3
+  ctx.strokeRect(fullscreenX, fullscreenY, fullscreenWidth, fullscreenHeight)
 }
 
 export function isControllerButtonCoords(x: number, y: number) {
@@ -225,5 +235,18 @@ export function isControllerButtonCoords(x: number, y: number) {
     return 'dpadRight'
   }
 
+  const fullscreenWidth = 80
+  const fullscreenHeight = 45
+  const fullscreenPadding = 20
+  const fullscreenY = fullscreenPadding
+  const fullscreenX = width - fullscreenPadding - fullscreenWidth
+  if (
+    x > fullscreenX &&
+    x < fullscreenX + fullscreenWidth &&
+    y < fullscreenY + fullscreenHeight &&
+    y > fullscreenY
+  ) {
+    return 'fullscreen'
+  }
   return false
 }

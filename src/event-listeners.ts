@@ -87,6 +87,11 @@ function handleTouchStart(e: TouchEvent) {
     if (showGamepad) {
       const button = isControllerButtonCoords(touch.clientX, touch.clientY)
       if (!button) continue
+      if (button === 'fullscreen') {
+        document.documentElement.requestFullscreen()
+        continue
+      }
+
       updateInputState((c) => ({
         touches: [
           ...c.touches,
@@ -127,6 +132,7 @@ function handleTouchMove(e: TouchEvent) {
       const button = isControllerButtonCoords(touch.clientX, touch.clientY)
       if (!button) continue
       if (!button.includes('dpad')) continue
+      if (button === 'fullscreen') continue
 
       updateInputState((c) => ({
         touches: [
