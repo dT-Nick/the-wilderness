@@ -42,9 +42,8 @@ export function handleStartMenuInput() {
     updateGameState({
       status: constants.startingScene,
     })
+    document.documentElement.requestFullscreen()
   }
-
-  document.documentElement.requestFullscreen()
 }
 
 export function handleWildernessInput() {
