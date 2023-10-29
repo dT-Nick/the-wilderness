@@ -159,24 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
       blockSize,
       player: new Player(playerStartingX, playerStartingY, blockSize * (3 / 4)),
       items: items,
-      inventory: [
-        {
-          id: 0,
-          itemId: items[0].id,
-        },
-        {
-          id: 1,
-          itemId: items[1].id,
-        },
-        {
-          id: 2,
-          itemId: items[2].id,
-        },
-        {
-          id: 3,
-          itemId: items[3].id,
-        },
-      ],
+      inventory: [],
       floorItems: [],
       enemies: [],
     })
