@@ -17,6 +17,7 @@ import { drawFloorItems, generateGameItems } from './item.js'
 import {
   drawSettingsMenu,
   drawStartMenu,
+  drawStatisticsAndPlayerDetails,
   handleSettingsInput,
 } from './menus.js'
 import { drawPlayer } from './player.js'
@@ -311,6 +312,7 @@ export function runGameLoop() {
       }
 
       drawSettingsMenu()
+      drawStatisticsAndPlayerDetails()
       break
     }
     case 'inventory': {
@@ -341,6 +343,11 @@ export function runGameLoop() {
   // generateBackgroundGrid()
   // generateMeasurementsTool()
   // generateFixedMeasurementsTool()
+  if (status !== 'start-menu') {
+    updateGameState((c) => ({
+      playTime: c.playTime + deltaTime,
+    }))
+  }
   drawMessage()
   drawController()
   return requestAnimationFrame(runGameLoop)

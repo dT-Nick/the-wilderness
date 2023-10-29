@@ -457,14 +457,14 @@ function handleBuildingInput() {
     if (
       isKeyDownEvent(['z']) ||
       (isKeyCurrentlyDown('alt') && isKeyDownEvent(['arrowleft', 'a'])) ||
-      (isButtonCurrentlyDown('buttonB') && isButtonDownEvent('dpadLeft'))
+      (isButtonCurrentlyDown('buttonY') && isButtonDownEvent('dpadLeft'))
     ) {
       building.rotateLeft()
     }
     if (
       isKeyDownEvent(['c']) ||
       (isKeyCurrentlyDown('alt') && isKeyDownEvent(['arrowright', 'd'])) ||
-      (isButtonCurrentlyDown('buttonB') && isButtonDownEvent('dpadRight'))
+      (isButtonCurrentlyDown('buttonY') && isButtonDownEvent('dpadRight'))
     ) {
       building.rotateRight()
     }

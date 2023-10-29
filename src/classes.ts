@@ -69,7 +69,7 @@ export class LivingBeing extends Entity {
   faceDirection: 'up' | 'down' | 'left' | 'right'
   baseStats: {
     attack: number
-    defense: number
+    defence: number
     health: number
   }
   experience: number
@@ -91,7 +91,7 @@ export class LivingBeing extends Entity {
     this.currentDamage = null
     this.baseStats = {
       attack: 10,
-      defense: 10,
+      defence: 10,
       health,
     }
     this.experience = 0
@@ -109,10 +109,10 @@ export class LivingBeing extends Entity {
     )
   }
 
-  get defense() {
+  get defence() {
     return (
-      this.baseStats.defense +
-      (this.currentLevel - 1) * Math.floor(this.baseStats.defense / 2)
+      this.baseStats.defence +
+      (this.currentLevel - 1) * Math.floor(this.baseStats.defence / 2)
     )
   }
 
@@ -364,7 +364,7 @@ export class Player extends LivingBeing {
 
     const { damage: modifiedDamage, isCrit } = calculateDamage(
       enemy.attack,
-      this.defense,
+      this.defence,
       damage
     )
 
@@ -493,7 +493,7 @@ export class Enemy extends LivingBeing {
     mapId: number | string,
     health: number = 100,
     attack: number = 10,
-    defense: number = 10,
+    defence: number = 10,
     faceDirection?: 'up' | 'down' | 'left' | 'right'
   ) {
     const directionRng = Math.random()
@@ -508,7 +508,7 @@ export class Enemy extends LivingBeing {
     super(startX, startY, size, health, faceDirection ?? rndFaceDirection)
     this.baseStats = {
       attack,
-      defense,
+      defence,
       health,
     }
     this.experience = calculateExperienceFromLevel(level - 1)
@@ -683,7 +683,7 @@ export class Enemy extends LivingBeing {
     if (!isPlayerInitialised(player)) return
     const { damage: modifiedDamage, isCrit } = calculateDamage(
       player.attack,
-      this.defense,
+      this.defence,
       damage
     )
 
@@ -818,13 +818,13 @@ export class EquipableItem extends Item {
   slot: 'weapon' | 'armour'
   stats: {
     attack: number
-    defense: number
+    defence: number
   }
 
   constructor(
     name: string,
     slot: 'weapon' | 'armour',
-    stats: { attack: number; defense: number }
+    stats: { attack: number; defence: number }
   ) {
     super(name, false, true, false)
     this.slot = slot

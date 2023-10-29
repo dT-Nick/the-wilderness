@@ -49,7 +49,7 @@ export function handleStartMenuInput() {
         status: constants.startingScene,
       })
     }
-    document.documentElement.requestFullscreen()
+    // document.documentElement.requestFullscreen()
   }
 
   if (isKeyDownEvent(['d', 'arrowRight']) || isButtonDownEvent('dpadRight')) {
@@ -276,7 +276,7 @@ export function handleSettingsTriggerInputs() {
   const { status: settlementStatus } = getSettlementState()
   const { status } = getGameState()
 
-  if (isKeyDownEvent(['m']) || isButtonDownEvent('buttonY')) {
+  if (isKeyDownEvent(['m'])) {
     updateGameState((c) => ({
       status: 'world-map',
       prevStatus: c.status,

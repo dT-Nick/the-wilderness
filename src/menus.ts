@@ -1,3 +1,4 @@
+import { calculateExperienceFromLevel } from './helpers/functions.js'
 import { isButtonDownEvent, isHoveringOn, isKeyDownEvent } from './input.js'
 import { saveGame } from './save.js'
 import {
@@ -5,8 +6,11 @@ import {
   getCanvasState,
   getGameState,
   getSettingsState,
+  getSettlementState,
   getStartMenuState,
+  getWildernessState,
   isInitialised,
+  isPlayerInitialised,
   updateGameState,
   updateSettingsState,
 } from './state.js'
@@ -106,8 +110,15 @@ export function drawSettingsMenu() {
   const startsAndDetailsY = verticalOffset / 2 + statsAndDetailsMargin
 
   ctx.strokeStyle = 'white'
+  ctx.fillStyle = 'black'
   ctx.lineWidth = 2
   ctx.strokeRect(
+    statsAndDetailsX,
+    startsAndDetailsY,
+    statsAndDetailsWidth,
+    statsAndDetailsHeight
+  )
+  ctx.fillRect(
     statsAndDetailsX,
     startsAndDetailsY,
     statsAndDetailsWidth,
@@ -133,7 +144,7 @@ export function drawSettingsMenu() {
     ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight)
 
     ctx.fillStyle = selectedMenu === index ? 'orangered' : 'white'
-    ctx.font = '30px Arial'
+    ctx.font = `${30 * scale}px Arial`
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'center'
     ctx.fillText(
@@ -143,6 +154,188 @@ export function drawSettingsMenu() {
       buttonWidth
     )
   })
+}
+
+export function drawStatisticsAndPlayerDetails() {
+  const { ctx, scale, verticalOffset, height, width } = getCanvasState()
+  const { buildings } = getSettlementState()
+  const { player, playTime } = getGameState()
+  const { wildernessTime } = getWildernessState()
+
+  if (isInitialised(ctx) && isPlayerInitialised(player)) {
+    const spacingBetweenElements = 10 * scale
+
+    // health bar
+    const experienceBarHeight = 10 * scale
+    const healthBarHeight = 15 * scale
+    const healthBarWidth =
+      width * (3 / 4) -
+      spacingBetweenElements * 5 -
+      healthBarHeight -
+      experienceBarHeight -
+      spacingBetweenElements
+    const healthBarX = 20 * scale
+    const healthBarY = 20 * scale + verticalOffset / 2
+
+    const healthBarFillWidth =
+      (player.currentHealth / player.maxHealth) * healthBarWidth
+
+    ctx.fillStyle = '#333333'
+    ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight)
+    ctx.fillStyle = 'red'
+    ctx.fillRect(healthBarX, healthBarY, healthBarFillWidth, healthBarHeight)
+
+    const experienceBarWidth = healthBarWidth
+    const experienceBarX = 20 * scale
+    const experienceBarY = healthBarY + healthBarHeight + spacingBetweenElements
+    const experienceAtStartOfLevel = calculateExperienceFromLevel(
+      player.currentLevel - 1
+    )
+    const experienceAtEndOfLevel = calculateExperienceFromLevel(
+      player.currentLevel
+    )
+
+    const experienceBarFillWidth =
+      ((player.experience - experienceAtStartOfLevel) /
+        (experienceAtEndOfLevel - experienceAtStartOfLevel)) *
+      experienceBarWidth
+
+    ctx.fillStyle = '#333333'
+    ctx.fillRect(
+      experienceBarX,
+      experienceBarY,
+      experienceBarWidth,
+      experienceBarHeight
+    )
+    ctx.fillStyle = 'green'
+    ctx.fillRect(
+      experienceBarX,
+      experienceBarY,
+      experienceBarFillWidth,
+      experienceBarHeight
+    )
+
+    const levelBoxHeight = healthBarHeight + experienceBarHeight + 10 * scale
+    const levelBoxWidth = levelBoxHeight
+    const levelBoxX = healthBarX + healthBarWidth + 10 * scale
+    const levelBoxY = healthBarY
+
+    ctx.lineWidth = 2
+    ctx.strokeStyle = 'white'
+    ctx.strokeRect(levelBoxX, levelBoxY, levelBoxWidth, levelBoxHeight)
+
+    ctx.fillStyle = 'white'
+    ctx.font = `${Math.floor(25 * scale)}px monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(
+      player.currentLevel.toString(),
+      levelBoxX + levelBoxWidth / 2,
+      levelBoxY + levelBoxHeight / 2 + 2
+    )
+
+    const imageHeight = 280 * scale
+    const imageWidth = 200 * scale
+    const imageNudgeY = 30 * scale
+
+    ctx.drawImage(
+      document.getElementById('player-image') as HTMLImageElement,
+      (healthBarWidth + levelBoxWidth + spacingBetweenElements) / 2 -
+        imageWidth / 2,
+      experienceBarY + experienceBarHeight + 10 * scale - imageNudgeY,
+      imageWidth,
+      imageHeight
+    )
+
+    const detailsX = 20 * scale
+    const detailsY =
+      experienceBarY +
+      experienceBarHeight +
+      (imageHeight - imageNudgeY) +
+      20 * scale
+    const detailsWidth = healthBarWidth + levelBoxWidth + spacingBetweenElements
+    const detailsHeight =
+      height -
+      verticalOffset -
+      healthBarHeight -
+      experienceBarHeight -
+      (imageHeight - imageNudgeY) -
+      spacingBetweenElements * 7
+
+    ctx.fillStyle = '#333333'
+    ctx.fillRect(detailsX, detailsY, detailsWidth, detailsHeight)
+
+    const textHeight = 20 * scale
+    ctx.fillStyle = 'white'
+    ctx.font = `${Math.floor(20 * scale)}px monospace`
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'top'
+    ctx.fillText(
+      `Name: Player`,
+      detailsX + 10 * scale,
+      detailsY + spacingBetweenElements
+    )
+    ctx.fillText(
+      `Experience: ${player.experience}`,
+      detailsX + 10 * scale,
+      detailsY + textHeight + spacingBetweenElements * 3
+    )
+    ctx.fillText(
+      `Attack: ${player.attack}`,
+      detailsX + 10 * scale,
+      detailsY + textHeight * 2 + spacingBetweenElements * 4
+    )
+    ctx.fillText(
+      `Defence: ${player.defence}`,
+      detailsX + 10 * scale,
+      detailsY + textHeight * 3 + spacingBetweenElements * 5
+    )
+    ctx.fillText(
+      `Max Health: ${player.maxHealth}`,
+      detailsX + 10 * scale,
+      detailsY + textHeight * 4 + spacingBetweenElements * 6
+    )
+    const settlementHealthMax =
+      buildings.reduce((acc, b) => (b.isPlaced ? acc + b.maxHealth : acc), 0) +
+      1
+    const settlementHealthCurrent =
+      buildings.reduce(
+        (acc, b) => (b.isPlaced ? acc + b.currentHealth : acc),
+        0
+      ) + 1
+
+    ctx.fillText(
+      `Settlement Health: ${settlementHealthCurrent}/${settlementHealthMax}`,
+      detailsX + 10 * scale,
+      detailsY + textHeight * 5 + spacingBetweenElements * 7
+    )
+
+    const playTimeMinutes = Math.floor(playTime / 60 / 1000)
+      .toString()
+      .padStart(2, '0')
+    const playTimeSeconds = Math.floor((playTime / 1000) % 60)
+      .toString()
+      .padStart(2, '0')
+    ctx.textBaseline = 'bottom'
+    ctx.fillText(
+      `Game time: ${playTimeMinutes}:${playTimeSeconds}`,
+      detailsX + 10 * scale,
+      height - verticalOffset / 2 - spacingBetweenElements * 3
+    )
+
+    const wildernessTimeMinutes = Math.floor(wildernessTime / 60 / 1000)
+      .toString()
+      .padStart(2, '0')
+    const wildernessTimeSeconds = Math.floor((wildernessTime / 1000) % 60)
+      .toString()
+      .padStart(2, '0')
+
+    ctx.fillText(
+      `Wilderness time: ${wildernessTimeMinutes}:${wildernessTimeSeconds}`,
+      detailsX + 10 * scale,
+      height - verticalOffset / 2 - spacingBetweenElements * 4 - textHeight
+    )
+  }
 }
 
 export function handleSettingsInput() {

@@ -21,11 +21,11 @@ export function getOppositeDirection(
 
 export function calculateDamage(
   attackersAttack: number,
-  defendersDefense: number,
+  defendersDefence: number,
   damage: number
 ) {
-  const isAttackerStronger = attackersAttack > defendersDefense
-  const diff = Math.abs(attackersAttack - defendersDefense)
+  const isAttackerStronger = attackersAttack > defendersDefence
+  const diff = Math.abs(attackersAttack - defendersDefence)
   const randomExtra = Math.floor(Math.random() * diff)
 
   const critMultiplier = Math.random() < 0.1 ? 1.5 : 1
