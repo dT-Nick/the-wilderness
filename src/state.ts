@@ -11,7 +11,7 @@ import {
 export const constants: {
   playerSize: number
   startMenuButtonSize: number
-  startingScene: 'settlement' | 'map-creator'
+  startingScene: 'settlement' | 'map-creator' | 'settings' | 'inventory'
   messageTime: number
 } = {
   playerSize: 20,
@@ -173,6 +173,8 @@ interface GameState {
     | 'world-map'
     | 'building'
     | 'game-over'
+    | 'settings'
+    | 'inventory'
 
   prevStatus:
     | null
@@ -184,6 +186,8 @@ interface GameState {
     | 'map-creator'
     | 'building'
     | 'game-over'
+    | 'settings'
+    | 'inventory'
 
   playTime: number
   player: Player | null
@@ -541,6 +545,111 @@ export function updateQuestState(
     Object.assign(questState, changes(questState))
   } else {
     Object.assign(questState, changes)
+  }
+}
+
+// ##############################
+
+interface SettingsState {
+  selectedMenu: number
+  selectedInventoryTopMenu: number
+  selectedInventoryItem: number
+  prevGameStatus:
+    | null
+    | 'start-menu'
+    | 'settlement'
+    | 'wilderness'
+    | 'battle'
+    | 'world-map'
+    | 'map-creator'
+    | 'building'
+    | 'game-over'
+    | 'settings'
+    | 'inventory'
+}
+
+const settingsState: SettingsState = {
+  selectedMenu: 0,
+  selectedInventoryTopMenu: 0,
+  selectedInventoryItem: 0,
+  prevGameStatus: null,
+}
+
+export function getSettingsState() {
+  return settingsState
+}
+
+export function updateSettingsState(
+  changes:
+    | Partial<typeof settingsState>
+    | ((state: typeof settingsState) => Partial<typeof settingsState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(settingsState, changes(settingsState))
+  } else {
+    Object.assign(settingsState, changes)
+  }
+}
+
+// ##############################
+
+interface idState {
+  entityId: number
+  buildingId: number
+}
+
+const idState: idState = {
+  entityId: 0,
+  buildingId: 0,
+}
+
+export function getIdState(type: 'entityId' | 'buildingId') {
+  updateIdState((c) => ({
+    [type]: c[type] + 1,
+  }))
+
+  return idState[type]
+}
+
+export function getEntireIdState() {
+  return idState
+}
+
+export function updateIdState(
+  changes:
+    | Partial<typeof idState>
+    | ((state: typeof idState) => Partial<typeof idState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(idState, changes(idState))
+  } else {
+    Object.assign(idState, changes)
+  }
+}
+
+// ##############################
+
+interface StartMenuState {
+  selectedButton: number
+}
+
+const startMenuState: StartMenuState = {
+  selectedButton: 0,
+}
+
+export function getStartMenuState() {
+  return startMenuState
+}
+
+export function updateStartMenuState(
+  changes:
+    | Partial<typeof startMenuState>
+    | ((state: typeof startMenuState) => Partial<typeof startMenuState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(startMenuState, changes(startMenuState))
+  } else {
+    Object.assign(startMenuState, changes)
   }
 }
 

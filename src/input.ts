@@ -1,6 +1,7 @@
 import { handleEnemyInteraction } from './enemy.js'
 import { calculateDamage } from './helpers/functions.js'
 import { activateConsumable, handleItemPickup } from './item.js'
+import { loadGame } from './save.js'
 import {
   constants,
   getBattleState,
@@ -8,12 +9,15 @@ import {
   getGameState,
   getInputState,
   getPrevInputState,
+  getSettlementState,
+  getStartMenuState,
   getWildernessState,
   isInitialised,
   isPlayerInitialised,
   updateBattleState,
   updateGameState,
   updateMessageState,
+  updateStartMenuState,
 } from './state.js'
 import { handleMapZeroInput } from './wilderness-maps/map-0.js'
 import { handleMapMinusOneMinusOneInput } from './wilderness-maps/map-[-1,-1].js'
@@ -28,31 +32,35 @@ import { handleMapZeroTwoInput } from './wilderness-maps/map-[0,2].js'
 import { handleMapZeroThreeInput } from './wilderness-maps/map-[0,3].js'
 import { handleMapOneZeroInput } from './wilderness-maps/map-[1,0].js'
 import { handleMapOneOneInput } from './wilderness-maps/map-[1,1].js'
+import { getSettlementMapState } from './wilderness-maps/settlement.js'
 
 export function handleStartMenuInput() {
   const { width, height } = getCanvasState()
   const { mouseX, mouseY } = getInputState()
   const { startMenuButtonSize } = constants
-  const mouseDownEvent = isMouseDownEvent()
+  const { selectedButton } = getStartMenuState()
 
-  if (mouseDownEvent) {
-    if (
-      mouseX > width / 2 - startMenuButtonSize / 2 &&
-      mouseX < width / 2 + startMenuButtonSize / 2 &&
-      mouseY > height / 2 - startMenuButtonSize / 2 &&
-      mouseY < height / 2 + startMenuButtonSize / 2
-    ) {
+  if (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) {
+    if (selectedButton === 1) {
+      const loaded = loadGame()
+      if (!loaded) return
+    } else {
       updateGameState({
         status: constants.startingScene,
       })
     }
+    document.documentElement.requestFullscreen()
   }
 
-  if (isButtonDownEvent('buttonA')) {
-    updateGameState({
-      status: constants.startingScene,
-    })
-    document.documentElement.requestFullscreen()
+  if (isKeyDownEvent(['d', 'arrowRight']) || isButtonDownEvent('dpadRight')) {
+    updateStartMenuState((c) => ({
+      selectedButton: c.selectedButton === 0 ? 1 : 0,
+    }))
+  }
+  if (isKeyDownEvent(['a', 'arrowLeft']) || isButtonDownEvent('dpadLeft')) {
+    updateStartMenuState((c) => ({
+      selectedButton: c.selectedButton === 0 ? 1 : 0,
+    }))
   }
 }
 
@@ -265,9 +273,32 @@ export function handleBattleInput() {
 }
 
 export function handleSettingsTriggerInputs() {
+  const { status: settlementStatus } = getSettlementState()
+  const { status } = getGameState()
+
   if (isKeyDownEvent(['m']) || isButtonDownEvent('buttonY')) {
     updateGameState((c) => ({
       status: 'world-map',
+      prevStatus: c.status,
+    }))
+  }
+
+  if (
+    (status === 'settlement' &&
+      isKeyDownEvent(['escape', 'tab']) &&
+      settlementStatus === 'exploring') ||
+    (status !== 'settlement' && isKeyDownEvent(['escape', 'tab'])) ||
+    isButtonDownEvent('start')
+  ) {
+    updateGameState((c) => ({
+      status: 'settings',
+      prevStatus: c.status,
+    }))
+  }
+
+  if (isKeyDownEvent(['i'])) {
+    updateGameState((c) => ({
+      status: 'inventory',
       prevStatus: c.status,
     }))
   }

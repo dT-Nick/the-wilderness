@@ -318,15 +318,19 @@ function handleEnemyEncounter() {
     const isOnAttackBlock =
       (eFaceDirection === 'up' &&
         pCoordsX === eCoordsX &&
-        pCoordsY === eCoordsY - 1) ||
+        pCoordsY < eCoordsY &&
+        pCoordsY >= eCoordsY - 3) ||
       (eFaceDirection === 'down' &&
         pCoordsX === eCoordsX &&
-        pCoordsY === eCoordsY + 1) ||
+        pCoordsY > eCoordsY &&
+        pCoordsY <= eCoordsY + 3) ||
       (eFaceDirection === 'left' &&
-        pCoordsX === eCoordsX - 1 &&
+        pCoordsX < eCoordsX &&
+        pCoordsX >= eCoordsX - 3 &&
         pCoordsY === eCoordsY) ||
       (eFaceDirection === 'right' &&
-        pCoordsX === eCoordsX + 1 &&
+        pCoordsX > eCoordsX &&
+        pCoordsX <= eCoordsX + 3 &&
         pCoordsY === eCoordsY)
 
     if (isOnAttackBlock) {
@@ -441,7 +445,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             0
           ),
@@ -511,7 +515,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[-1,0]'
           ),
@@ -581,7 +585,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[-2,0]'
           ),
@@ -649,7 +653,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[-3,0]'
           ),
@@ -720,7 +724,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[0,1]'
           ),
@@ -791,7 +795,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[0,2]'
           ),
@@ -868,7 +872,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[1,0]'
           ),
@@ -934,7 +938,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[1,1]'
           ),
@@ -1052,7 +1056,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[-1,-1]'
           ),
@@ -1122,7 +1126,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[-2,-1]'
           ),
@@ -1192,7 +1196,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
             getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             generateSlug(randomItemName),
             '[-3,-1]'
           ),
@@ -1230,7 +1234,7 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           new FloorItem(
             getEntityXAndYValuesFromCoords(60, 9, blockSize)[0],
             getEntityXAndYValuesFromCoords(60, 9, blockSize)[1],
-            blockSize * (3 / 4),
+            blockSize * (1 / 2),
             'bridge-pieces',
             '[-1,-1]'
           ),

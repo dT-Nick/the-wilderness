@@ -14,7 +14,11 @@ import {
   isKeyCurrentlyDown,
 } from './input.js'
 import { drawFloorItems, generateGameItems } from './item.js'
-import { drawStartMenu } from './menus.js'
+import {
+  drawSettingsMenu,
+  drawStartMenu,
+  handleSettingsInput,
+} from './menus.js'
 import { drawPlayer } from './player.js'
 import {
   constants,
@@ -55,6 +59,10 @@ import { drawBuildingInterior, handleBuildingInput } from './building.js'
 import { drawGameOverScreen } from './game-over.js'
 import { drawNotifications } from './notifications.js'
 import { drawMessage, handleMessageInput } from './message.js'
+import {
+  drawInventorySettings,
+  handleInventorySettingsInput,
+} from './inventory.js'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -145,10 +153,30 @@ document.addEventListener('DOMContentLoaded', function () {
       blockSize
     )
 
+    const items = generateGameItems()
+
     updateGameState({
       blockSize,
       player: new Player(playerStartingX, playerStartingY, blockSize * (3 / 4)),
-      items: generateGameItems(),
+      items: items,
+      inventory: [
+        {
+          id: 0,
+          itemId: items[0].id,
+        },
+        {
+          id: 1,
+          itemId: items[1].id,
+        },
+        {
+          id: 2,
+          itemId: items[2].id,
+        },
+        {
+          id: 3,
+          itemId: items[3].id,
+        },
+      ],
       floorItems: [],
       enemies: [],
     })
@@ -202,7 +230,11 @@ export function runGameLoop() {
 
   switch (status) {
     case 'start-menu': {
-      handleStartMenuInput()
+      if (!isMessageActive()) {
+        handleStartMenuInput()
+      } else {
+        handleMessageInput()
+      }
       drawStartMenu()
 
       break
@@ -286,6 +318,26 @@ export function runGameLoop() {
         generateFixedMeasurementsTool()
       }
 
+      break
+    }
+    case 'settings': {
+      if (!isMessageActive()) {
+        handleSettingsInput()
+      } else {
+        handleMessageInput()
+      }
+
+      drawSettingsMenu()
+      break
+    }
+    case 'inventory': {
+      if (!isMessageActive()) {
+        handleInventorySettingsInput()
+      } else {
+        handleMessageInput()
+      }
+
+      drawInventorySettings()
       break
     }
     case 'world-map': {

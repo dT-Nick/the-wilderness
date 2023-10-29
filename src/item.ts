@@ -4,7 +4,7 @@ import {
   QuestItem,
   type Item,
 } from './classes.js'
-import { generateSlug } from './helpers/functions.js'
+import { generateSlug, getColourFromItemSlug } from './helpers/functions.js'
 import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import {
   getCanvasState,
@@ -27,7 +27,8 @@ export function drawFloorItems() {
 
   if (isInitialised(ctx)) {
     for (const floorItem of floorItems.filter((fI) => fI.mapId === mapId)) {
-      ctx.fillStyle = 'yellow'
+      const itemDetails = getItemViaId(floorItem.itemId)
+      ctx.fillStyle = getColourFromItemSlug(itemDetails.id)
 
       ctx.fillRect(
         (floorItem.x + blockSize / 2 - floorItem.size / 2) * scale,

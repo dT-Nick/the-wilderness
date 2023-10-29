@@ -10,6 +10,7 @@ import {
   generateSlug,
 } from './helpers/functions.js'
 import { isButtonCurrentlyDown, isKeyCurrentlyDown } from './input.js'
+import { SaveFile } from './save.js'
 import {
   deriveExtendedRestrictedCoordsFromRestrictedCoordsArray,
   takeSettlementDamage,
@@ -23,6 +24,7 @@ import {
   isPlayerInitialised,
   addNotification,
   updateMessageState,
+  getIdState,
 } from './state.js'
 import { getMapZeroState } from './wilderness-maps/map-0.js'
 import { getSettlementMapState } from './wilderness-maps/settlement.js'
@@ -40,7 +42,7 @@ export class Entity {
     this.x = startX
     this.y = startY
     this.size = size
-    this.id = entityId++
+    this.id = getIdState('entityId')
   }
 
   get coordinates() {
@@ -452,6 +454,27 @@ export class Player extends LivingBeing {
       })
     }
   }
+
+  public load(props: SaveFile['gameState']['player']) {
+    if (!props) return
+    this.baseStats = props.baseStats
+    this.experience = props.experience
+    this.prevExperience = props.prevExperience
+    this.prevHealth = props.prevHealth
+    this.currentHealth = props.currentHealth
+    this.prevX = props.prevX
+    this.prevY = props.prevY
+    this.x = props.x
+    this.y = props.y
+    this.faceDirection = props.faceDirection
+    this.faceCount = props.faceCount
+    this.movementStatus = props.movementStatus
+    this.currentHeal = props.currentHeal
+    this.currentExperienceGain = props.currentExperienceGain
+    this.currentDamage = props.currentDamage
+    this.id = props.id
+    this.size = props.size
+  }
 }
 
 export class Enemy extends LivingBeing {
@@ -677,6 +700,25 @@ export class Enemy extends LivingBeing {
       })
     }
   }
+
+  public load(props: SaveFile['gameState']['enemies'][number]) {
+    if (!props) return
+    this.baseStats = props.baseStats
+    this.experience = props.experience
+    this.prevExperience = props.prevExperience
+    this.prevHealth = props.prevHealth
+    this.currentHealth = props.currentHealth
+    this.x = props.x
+    this.y = props.y
+    this.faceDirection = props.faceDirection
+    this.currentDamage = props.currentDamage
+    this.id = props.id
+    this.size = props.size
+    this.name = props.name
+    this.mapId = props.mapId
+    this.playerPrompted = props.playerPrompted
+    this.pictureId = props.pictureId
+  }
 }
 
 // ########################
@@ -712,6 +754,16 @@ export class FloorItem extends Entity {
       floorItems: [...c.floorItems.filter((i) => i.id !== this.id)],
     }))
     addNotification(`You picked up a ${item?.name ?? 'an item'}`)
+  }
+
+  public load(props: SaveFile['gameState']['floorItems'][number]) {
+    if (!props) return
+    this.x = props.x
+    this.y = props.y
+    this.itemId = props.itemId
+    this.id = props.id
+    this.size = props.size
+    this.mapId = props.mapId
   }
 }
 
@@ -810,7 +862,7 @@ export class Building {
     faceDirection?: 'up' | 'down' | 'left' | 'right',
     isPlaced?: boolean
   ) {
-    this.id = buildingId++
+    this.id = getIdState('buildingId')
     this.name = name
     this.isPlaced = isPlaced ?? false
     this.maxHealth = maxHealth
@@ -997,5 +1049,23 @@ export class Building {
     const { blockSize } = getGameState()
 
     this.y += blockSize
+  }
+
+  public load(props: SaveFile['settlementState']['buildings'][number]) {
+    if (!props) return
+    this.id = props.id
+    this.name = props.name
+    this.isPlaced = props.isPlaced
+    this.maxHealth = props.maxHealth
+    this.currentHealth = props.currentHealth
+    this.prevX = props.prevX
+    this.prevY = props.prevY
+    this.x = props.x
+    this.y = props.y
+    this.width = props.width
+    this.height = props.height
+    this.faceDirection = props.faceDirection
+    this.faceCount = props.faceCount
+    this.colour = props.colour
   }
 }

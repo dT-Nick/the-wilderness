@@ -81,3 +81,29 @@ export function calculateExperienceGainedFromBattle(
   if (experience < 0) return 0
   return Math.floor(experience)
 }
+
+export function getColourFromEnemyName(name: string | undefined) {
+  switch (name) {
+    case 'Kaurismaki Daemon':
+      return '#590208'
+    case 'Settlement Zombie':
+      return '#40a174'
+    case 'Night Witch':
+      return '#22273b'
+    default:
+      return 'orangered'
+  }
+}
+
+export function getColourFromItemSlug(slug: string | undefined) {
+  switch (slug) {
+    case 'small-potion':
+    case 'medium-potion':
+    case 'large-potion':
+      return '#c0392b'
+    case 'bridge-pieces':
+      return '#553400'
+    default:
+      return 'yellow'
+  }
+}

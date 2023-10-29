@@ -1,4 +1,5 @@
 import { Enemy } from './classes.js'
+import { getColourFromEnemyName } from './helpers/functions.js'
 import { isKeyDownEvent } from './input.js'
 import {
   getBattleState,
@@ -28,7 +29,7 @@ export function drawEnemies() {
         enemy.y * scale + enemy.size * scale + verticalOffset / 2
       )
 
-      gradient.addColorStop(0, 'orangered')
+      gradient.addColorStop(0, getColourFromEnemyName(enemy.name))
       gradient.addColorStop(1, 'white')
       ctx.fillStyle = gradient
 

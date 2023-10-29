@@ -3,6 +3,7 @@ import {
   getBlockPropertiesFromName,
   getCanvasState,
   getGameState,
+  getSettingsState,
   getWildernessState,
   isInitialised,
   isPlayerInitialised,
@@ -313,12 +314,15 @@ export function drawMiniBackgroundFromMap(
 }
 
 export function handleWorldMapInput() {
+  const { prevGameStatus } = getSettingsState()
+
   if (
     isKeyDownEvent(['m', 'escape', 'tab']) ||
     isButtonDownEvent(['buttonB', 'buttonY'])
   ) {
     updateGameState((c) => ({
       status: c.prevStatus ?? 'settlement',
+      prevStatus: prevGameStatus,
     }))
   }
 }
