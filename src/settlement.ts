@@ -397,7 +397,7 @@ function handleBuildingInput() {
     const building = buildings.find((b) => b.id === selected)
     if (!building)
       throw new Error(`Could not find building with id: ${selected}`)
-    if (!isKeyCurrentlyDown('alt') && !isButtonCurrentlyDown('buttonB')) {
+    if (!isKeyCurrentlyDown('alt') && !isButtonCurrentlyDown('buttonY')) {
       if (isKeyDownEvent(['w', 'arrowup']) || isButtonDownEvent('dpadUp')) {
         building.moveUp()
       }
