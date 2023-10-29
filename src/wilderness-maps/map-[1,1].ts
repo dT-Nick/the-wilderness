@@ -308,7 +308,7 @@ export function drawMapOneOne() {
 
 export function handleMapOneOneInput() {
   const { map } = mapOneOneState
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, '[1,1]')
 
   handlePlayerMovement(restrictedCoords)
   handleMapOneOneExit()

@@ -1,4 +1,9 @@
-import { ConsumableItem, EquipableItem, type Item } from './classes.js'
+import {
+  ConsumableItem,
+  EquipableItem,
+  QuestItem,
+  type Item,
+} from './classes.js'
 import { generateSlug } from './helpers/functions.js'
 import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import {
@@ -10,6 +15,10 @@ import {
   updateBattleState,
   updateGameState,
 } from './state.js'
+import {
+  generateMapZeroOneState,
+  updateMapZeroOneState,
+} from './wilderness-maps/map-[0,1].js'
 
 export function drawFloorItems() {
   const { floorItems, blockSize } = getGameState()
@@ -89,6 +98,13 @@ export function generateGameItems() {
 
       player.heal(100)
     }),
+    new QuestItem('Bridge Pieces', () => {
+      const { map } = generateMapZeroOneState(true)
+
+      updateMapZeroOneState({
+        map,
+      })
+    }),
   ]
 }
 
@@ -119,4 +135,8 @@ export function isConsumable(item: Item): item is ConsumableItem {
 
 export function isEquipable(item: Item): item is EquipableItem {
   return item.isEquipable
+}
+
+export function isUsable(item: Item): item is QuestItem {
+  return item.isUsable
 }

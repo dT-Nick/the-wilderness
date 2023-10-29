@@ -239,7 +239,9 @@ export function handleMapHomeBuildingInput() {
     firstAidCoords = [32, 13]
   }
 
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map, [firstAidCoords])
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, 'home', [
+    firstAidCoords,
+  ])
   handlePlayerMovement(restrictedCoords)
   handleMapHomeBuildingExit()
   handleFirstAidVisit()

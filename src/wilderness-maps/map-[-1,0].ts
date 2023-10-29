@@ -22,6 +22,10 @@ import {
   getMapMinusOneOneState,
   updateMapMinusOneOneState,
 } from './map-[-1,1].js'
+import {
+  getMapMinusTwoZeroState,
+  updateMapMinusTwoZeroState,
+} from './map-[-2,0].js'
 
 export function generateMapMinusOneZeroState(): MapState {
   const { blocksVertical, blocksHorizontal } = getGameState()
@@ -288,7 +292,7 @@ export function drawMapMinusOneZero() {
 
 export function handleMapMinusOneZeroInput() {
   const { map } = mapMinusOneZeroState
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, '[-1,0]')
 
   handlePlayerMovement(restrictedCoords)
   handleMapMinusOneZeroExit()
@@ -340,6 +344,28 @@ export function handleMapMinusOneZeroExit() {
         )
       }
       player.goToCoordinates(pCoordsX, blocksVertical - 1)
+      player.stopMoving()
+    }
+  }
+  if (pCoordsX === 0) {
+    if (
+      (isKeyCurrentlyDown(['a', 'arrowleft']) ||
+        isButtonCurrentlyDown('dpadLeft')) &&
+      player.faceDirection === 'left'
+    ) {
+      updateWildernessState({
+        mapId: '[-2,0]',
+      })
+      const { discovered } = getMapMinusTwoZeroState()
+      if (!discovered) {
+        updateMapMinusTwoZeroState({
+          discovered: true,
+        })
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
+      }
+      player.goToCoordinates(blocksHorizontal - 1, pCoordsY)
       player.stopMoving()
     }
   }

@@ -101,11 +101,17 @@ export class LivingBeing extends Entity {
   }
 
   get attack() {
-    return this.baseStats.attack + (this.currentLevel - 1) * 4
+    return (
+      this.baseStats.attack +
+      (this.currentLevel - 1) * Math.floor(this.baseStats.attack / 2)
+    )
   }
 
   get defense() {
-    return this.baseStats.defense + (this.currentLevel - 1) * 4
+    return (
+      this.baseStats.defense +
+      (this.currentLevel - 1) * Math.floor(this.baseStats.defense / 2)
+    )
   }
 
   get maxHealth() {
@@ -218,12 +224,11 @@ export class Player extends LivingBeing {
     const isSprintDown =
       isKeyCurrentlyDown('shift') || isButtonCurrentlyDown('buttonB')
 
-    return blockSize / (isSprintDown ? 3 : 4)
+    return blockSize / (isSprintDown ? 8 : 12)
   }
 
   public moveUp() {
     if (this.faceDirection === 'up') {
-      console.log(this.faceCount)
       if (this.faceCount.up >= 8) {
         this.prevY = this.y
         this.movementStatus = 'up'
@@ -453,27 +458,38 @@ export class Enemy extends LivingBeing {
   name: string
   mapId: number | string
   playerPrompted: boolean
+  pictureId: string
 
   constructor(
     name: string,
+    pictureId: string,
     level: number,
     startX: number,
     startY: number,
     size: number,
     mapId: number | string,
-    health: number = 100
+    health: number = 100,
+    attack: number = 10,
+    defense: number = 10,
+    faceDirection?: 'up' | 'down' | 'left' | 'right'
   ) {
     const directionRng = Math.random()
-    let faceDirection: 'left' | 'up' | 'right' | 'down' = 'left'
+    let rndFaceDirection: 'left' | 'up' | 'right' | 'down' = 'left'
     if (directionRng < 0.25) {
-      faceDirection = 'up'
+      rndFaceDirection = 'up'
     } else if (directionRng < 0.5) {
-      faceDirection = 'right'
+      rndFaceDirection = 'right'
     } else if (directionRng < 0.75) {
-      faceDirection = 'down'
+      rndFaceDirection = 'down'
     }
-    super(startX, startY, size, health, faceDirection)
+    super(startX, startY, size, health, faceDirection ?? rndFaceDirection)
+    this.baseStats = {
+      attack,
+      defense,
+      health,
+    }
     this.experience = calculateExperienceFromLevel(level - 1)
+    this.pictureId = pictureId
     this.prevExperience = this.experience
     this.currentHealth = this.maxHealth
     this.prevHealth = this.maxHealth
@@ -527,7 +543,7 @@ export class Enemy extends LivingBeing {
   public moveRight() {
     const { blockSize } = getGameState()
     const { map } = getMapZeroState()
-    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map, this.mapId)
 
     const [eCoordsX, eCoordsY] = this.coordinates
 
@@ -544,7 +560,7 @@ export class Enemy extends LivingBeing {
   public moveLeft() {
     const { blockSize } = getGameState()
     const { map } = getMapZeroState()
-    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map, this.mapId)
 
     const [eCoordsX, eCoordsY] = this.coordinates
 
@@ -561,7 +577,7 @@ export class Enemy extends LivingBeing {
   public moveUp() {
     const { blockSize } = getGameState()
     const { map } = getMapZeroState()
-    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map, this.mapId)
 
     const [eCoordsX, eCoordsY] = this.coordinates
 
@@ -578,7 +594,7 @@ export class Enemy extends LivingBeing {
   public moveDown() {
     const { blockSize } = getGameState()
     const { map } = getMapZeroState()
-    const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const restrictedCoords = deriveRestrictedCoordsFromMap(map, this.mapId)
 
     const [eCoordsX, eCoordsY] = this.coordinates
 
@@ -704,12 +720,19 @@ export class Item {
   name: string
   isConsumable: boolean
   isEquipable: boolean
+  isUsable: boolean
 
-  constructor(name: string, isConsumable: boolean, isEquipable: boolean) {
+  constructor(
+    name: string,
+    isConsumable: boolean,
+    isEquipable: boolean,
+    isUsable: boolean
+  ) {
     this.id = generateSlug(name)
     this.name = name
     this.isConsumable = isConsumable
     this.isEquipable = isEquipable
+    this.isUsable = isUsable
   }
 }
 
@@ -717,11 +740,24 @@ export class ConsumableItem extends Item {
   effect: () => void
 
   constructor(name: string, effect: () => void) {
-    super(name, true, false)
+    super(name, true, false, false)
     this.effect = effect
   }
 
   public consume() {
+    this.effect()
+  }
+}
+
+export class QuestItem extends Item {
+  effect: () => void
+
+  constructor(name: string, effect: () => void) {
+    super(name, false, false, true)
+    this.effect = effect
+  }
+
+  public use() {
     this.effect()
   }
 }
@@ -738,7 +774,7 @@ export class EquipableItem extends Item {
     slot: 'weapon' | 'armour',
     stats: { attack: number; defense: number }
   ) {
-    super(name, false, true)
+    super(name, false, true, false)
     this.slot = slot
     this.stats = stats
   }
@@ -820,7 +856,10 @@ export class Building {
 
   get isPlaceable() {
     const { map } = getSettlementMapState()
-    const looseRestrictedCoords = deriveRestrictedCoordsFromMap(map)
+    const looseRestrictedCoords = deriveRestrictedCoordsFromMap(
+      map,
+      'settlement'
+    )
     const restrictedCoords =
       deriveExtendedRestrictedCoordsFromRestrictedCoordsArray(
         looseRestrictedCoords

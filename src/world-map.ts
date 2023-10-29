@@ -3,39 +3,42 @@ import {
   getBlockPropertiesFromName,
   getCanvasState,
   getGameState,
-  getInputState,
   getWildernessState,
   isInitialised,
   isPlayerInitialised,
   updateGameState,
 } from './state.js'
-import {
-  drawMapZero,
-  generateMapZeroState,
-  getMapZeroState,
-} from './wilderness-maps/map-0.js'
+import { getMapZeroState } from './wilderness-maps/map-0.js'
+import { getMapMinusOneMinusOneState } from './wilderness-maps/map-[-1,-1].js'
 import { getMapMinusOneZeroState } from './wilderness-maps/map-[-1,0].js'
 import { getMapMinusOneOneState } from './wilderness-maps/map-[-1,1].js'
-import {
-  generateMapZeroOneState,
-  getMapZeroOneState,
-} from './wilderness-maps/map-[0,1].js'
-import {
-  generateMapOneZeroState,
-  getMapOneZeroState,
-} from './wilderness-maps/map-[1,0].js'
+import { getMapMinusTwoMinusOneState } from './wilderness-maps/map-[-2,-1].js'
+import { getMapMinusTwoZeroState } from './wilderness-maps/map-[-2,0].js'
+import { getMapMinusThreeMinusOneState } from './wilderness-maps/map-[-3,-1].js'
+import { getMapMinusThreeZeroState } from './wilderness-maps/map-[-3,0].js'
+import { getMapZeroOneState } from './wilderness-maps/map-[0,1].js'
+import { getMapZeroTwoState } from './wilderness-maps/map-[0,2].js'
+import { getMapZeroThreeState } from './wilderness-maps/map-[0,3].js'
+import { getMapOneZeroState } from './wilderness-maps/map-[1,0].js'
 import { getMapOneOneState } from './wilderness-maps/map-[1,1].js'
 import { getSettlementMapState } from './wilderness-maps/settlement.js'
-import { MapState, drawBackgroundFromMap } from './wilderness.js'
+import { MapState } from './wilderness.js'
 
 const mapIds: Array<string | number> = [
   'settlement',
   0,
   '[0,1]',
+  '[0,2]',
+  '[0,3]',
   '[1,0]',
   '[1,1]',
   '[-1,0]',
+  '[-2,0]',
+  '[-3,0]',
   '[-1,1]',
+  '[-1,-1]',
+  '[-2,-1]',
+  '[-3,-1]',
 ]
 
 export function drawWorldMap() {
@@ -135,6 +138,26 @@ export function drawWorldMapSection(
     }
     return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
   }
+  if (mapId === '[0,2]') {
+    const { map, discovered } = getMapZeroTwoState()
+    if (!discovered) {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(x, y, width, height)
+      return
+    }
+
+    return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
+  }
+  if (mapId === '[0,3]') {
+    const { map, discovered } = getMapZeroThreeState()
+    if (!discovered) {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(x, y, width, height)
+      return
+    }
+
+    return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
+  }
   if (mapId === '[1,0]') {
     const { map, discovered } = getMapOneZeroState()
     if (!discovered) {
@@ -162,8 +185,53 @@ export function drawWorldMapSection(
     }
     return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
   }
+  if (mapId === '[-2,0]') {
+    const { map, discovered } = getMapMinusTwoZeroState()
+    if (!discovered) {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(x, y, width, height)
+      return
+    }
+    return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
+  }
+  if (mapId === '[-3,0]') {
+    const { map, discovered } = getMapMinusThreeZeroState()
+    if (!discovered) {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(x, y, width, height)
+      return
+    }
+    return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
+  }
   if (mapId === '[-1,1]') {
     const { map, discovered } = getMapMinusOneOneState()
+    if (!discovered) {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(x, y, width, height)
+      return
+    }
+    return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
+  }
+  if (mapId === '[-1,-1]') {
+    const { map, discovered } = getMapMinusOneMinusOneState()
+    if (!discovered) {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(x, y, width, height)
+      return
+    }
+    return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
+  }
+  if (mapId === '[-2,-1]') {
+    const { map, discovered } = getMapMinusTwoMinusOneState()
+    if (!discovered) {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(x, y, width, height)
+      return
+    }
+    return drawMiniBackgroundFromMap(map, x, y, width, height, mapId)
+  }
+  if (mapId === '[-3,-1]') {
+    const { map, discovered } = getMapMinusThreeMinusOneState()
     if (!discovered) {
       ctx.fillStyle = 'black'
       ctx.fillRect(x, y, width, height)

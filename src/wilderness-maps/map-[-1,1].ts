@@ -133,7 +133,7 @@ export function drawMapMinusOneOne() {
 
 export function handleMapMinusOneOneInput() {
   const { map } = mapMinusOneOneState
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, '[-1,1]')
 
   handlePlayerMovement(restrictedCoords)
   handleMapMinusOneOneExit()

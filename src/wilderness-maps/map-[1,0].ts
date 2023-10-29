@@ -343,7 +343,7 @@ export function drawMapOneZero() {
 
 export function handleMapOneZeroInput() {
   const { map } = mapOneZeroState
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, '[1,0]')
 
   handlePlayerMovement(restrictedCoords)
   handleMapOneZeroExit()

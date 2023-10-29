@@ -1,3 +1,4 @@
+import { Enemy } from './classes.js'
 import { isKeyDownEvent } from './input.js'
 import {
   getBattleState,
@@ -121,4 +122,123 @@ export function handleEnemyInteraction() {
       }
     }
   }
+}
+
+export function generateKaurismakiDaemon(
+  level: number,
+  startX: number,
+  startY: number,
+  mapId: number | string,
+  faceDirection?: 'up' | 'down' | 'left' | 'right'
+) {
+  const { blockSize } = getGameState()
+
+  return new Enemy(
+    'Kaurismaki Daemon',
+    'demon-image',
+    level,
+    startX,
+    startY,
+    blockSize * (3 / 4),
+    mapId,
+    100,
+    Math.floor(Math.random() * 4 + 8),
+    Math.floor(Math.random() * 4 + 4),
+    faceDirection
+  )
+}
+
+export function generateSettlementZombie(
+  level: number,
+  startX: number,
+  startY: number,
+  mapId: number | string,
+  faceDirection?: 'up' | 'down' | 'left' | 'right'
+) {
+  const { blockSize } = getGameState()
+
+  return new Enemy(
+    'Settlement Zombie',
+    'zombie-image',
+    level,
+    startX,
+    startY,
+    blockSize * (3 / 4),
+    mapId,
+    70,
+    Math.floor(Math.random() * 4 + 10),
+    Math.floor(Math.random() * 6 + 2),
+    faceDirection
+  )
+}
+
+export function generateNightWitch(
+  level: number,
+  startX: number,
+  startY: number,
+  mapId: number | string,
+  faceDirection?: 'up' | 'down' | 'left' | 'right'
+) {
+  const { blockSize } = getGameState()
+
+  return new Enemy(
+    'Night Witch',
+    'witch-image',
+    level,
+    startX,
+    startY,
+    blockSize * (3 / 4),
+    mapId,
+    120,
+    Math.floor(Math.random() * 4 + 4),
+    Math.floor(Math.random() * 4 + 12),
+    faceDirection
+  )
+}
+
+export function generateEliteWitch(
+  level: number,
+  startX: number,
+  startY: number,
+  mapId: number | string,
+  faceDirection?: 'up' | 'down' | 'left' | 'right'
+) {
+  const { blockSize } = getGameState()
+
+  return new Enemy(
+    'Elite Witch',
+    'witch-image',
+    level,
+    startX,
+    startY,
+    blockSize * (3 / 4),
+    mapId,
+    200,
+    Math.floor(Math.random() * 4 + 13),
+    Math.floor(Math.random() * 4 + 15),
+    faceDirection
+  )
+}
+
+export function generateKaurismakiKing(
+  startX: number,
+  startY: number,
+  mapId: number | string,
+  faceDirection?: 'up' | 'down' | 'left' | 'right'
+) {
+  const { blockSize } = getGameState()
+
+  return new Enemy(
+    'Kaurismaki King',
+    'demon-image',
+    30,
+    startX,
+    startY,
+    blockSize * (3 / 4),
+    mapId,
+    1000,
+    25,
+    25,
+    faceDirection
+  )
 }

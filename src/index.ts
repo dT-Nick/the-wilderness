@@ -144,11 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
       1,
       blockSize
     )
-    const [enemyStartingX, enemyStartingY] = getEntityXAndYValuesFromCoords(
-      10,
-      10,
-      blockSize
-    )
 
     updateGameState({
       blockSize,

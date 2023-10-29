@@ -1,6 +1,11 @@
 import { handleEnemyInteraction } from '../enemy.js'
-import { isButtonCurrentlyDown, isKeyCurrentlyDown } from '../input.js'
-import { handleItemPickup } from '../item.js'
+import {
+  isButtonCurrentlyDown,
+  isButtonDownEvent,
+  isKeyCurrentlyDown,
+  isKeyDownEvent,
+} from '../input.js'
+import { handleItemPickup, isUsable } from '../item.js'
 import { handlePlayerMovement } from '../player.js'
 import {
   addNotification,
@@ -22,9 +27,10 @@ import {
   getMapMinusOneOneState,
   updateMapMinusOneOneState,
 } from './map-[-1,1].js'
+import { getMapZeroTwoState, updateMapZeroTwoState } from './map-[0,2].js'
 import { getMapOneOneState, updateMapOneOneState } from './map-[1,1].js'
 
-export function generateMapZeroOneState(): MapState {
+export function generateMapZeroOneState(withBridge: boolean = false): MapState {
   const { blocksVertical, blocksHorizontal } = getGameState()
 
   return {
@@ -125,11 +131,6 @@ export function generateMapZeroOneState(): MapState {
         toCoords: [83, 11],
       },
       {
-        type: 'water',
-        fromCoords: [42, 7],
-        toCoords: [45, 9],
-      },
-      {
         type: 'forest',
         fromCoords: [17, 17],
         toCoords: [28, 23],
@@ -219,7 +220,23 @@ export function generateMapZeroOneState(): MapState {
         fromCoords: [22, 24],
         toCoords: [25, 25],
       },
-    ],
+    ].concat(
+      withBridge
+        ? [
+            {
+              type: 'wood',
+              fromCoords: [42, 7],
+              toCoords: [45, 9],
+            },
+          ]
+        : [
+            {
+              type: 'water',
+              fromCoords: [42, 7],
+              toCoords: [45, 9],
+            },
+          ]
+    ) as MapState['map'],
     discovered: false,
   }
 }
@@ -246,16 +263,49 @@ export function updateMapZeroOneState(
 }
 
 export function drawMapZeroOne() {
-  const { map } = mapZeroOneState
+  const { map } = getMapZeroOneState()
   drawBackgroundFromMap(map)
 }
 
 export function handleMapZeroOneInput() {
-  const { map } = mapZeroOneState
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+  const { map } = getMapZeroOneState()
+  const bridgeBlocks = map.filter((block) => block.type === 'wood')
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, '[0,1]')
 
   handlePlayerMovement(restrictedCoords)
   handleMapZeroOneExit()
+  handleBuildBridge()
+}
+
+function handleBuildBridge() {
+  const { inventory, items } = getGameState()
+  const bridgeItemDetails = items.find(
+    (item) => item.id === 'bridge-pieces' && item.isUsable
+  )
+  if (!bridgeItemDetails) throw new Error('Bridge item not generated')
+
+  const bridgeItem = inventory.find((i) => i.itemId === bridgeItemDetails.id)
+  if (!bridgeItem) return
+  if (!isUsable(bridgeItemDetails)) return
+
+  const { player } = getGameState()
+  if (!isPlayerInitialised(player)) return
+
+  const [pCoordsX, pCoordsY] = player.coordinates
+
+  if (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) {
+    if (
+      pCoordsX >= 42 &&
+      pCoordsX < 45 &&
+      pCoordsY === 9 &&
+      player.faceDirection === 'up'
+    ) {
+      bridgeItemDetails.effect()
+      updateGameState({
+        inventory: inventory.filter((i) => i.itemId !== bridgeItem.itemId),
+      })
+    }
+  }
 }
 
 export function handleMapZeroOneExit() {
@@ -326,6 +376,28 @@ export function handleMapZeroOneExit() {
         )
       }
       player.goToCoordinates(blocksHorizontal - 1, pCoordsY)
+      player.stopMoving()
+    }
+  }
+  if (pCoordsY === 0) {
+    if (
+      (isKeyCurrentlyDown(['w', 'arrowup']) ||
+        isButtonCurrentlyDown('dpadUp')) &&
+      player.faceDirection === 'up'
+    ) {
+      updateWildernessState({
+        mapId: '[0,2]',
+      })
+      const { discovered } = getMapZeroTwoState()
+      if (!discovered) {
+        updateMapZeroTwoState({
+          discovered: true,
+        })
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
+      }
+      player.goToCoordinates(pCoordsX, blocksVertical - 1)
       player.stopMoving()
     }
   }

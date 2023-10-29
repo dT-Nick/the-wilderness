@@ -218,7 +218,7 @@ export function drawBuildingSelectionPanel() {
 export function handleSettlementInput() {
   const { map } = getSettlementMapState()
   const { status } = getSettlementState()
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map)
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map, 'settlement')
 
   if (status === 'exploring') {
     handlePlayerMovement(restrictedCoords)

@@ -22,7 +22,10 @@ import {
 } from '../state.js'
 import { generateMapZeroState } from '../wilderness-maps/map-0.js'
 import { generateMapMinusOneZeroState } from '../wilderness-maps/map-[-1,0].js'
+import { generateMapMinusThreeZeroState } from '../wilderness-maps/map-[-3,0].js'
 import { generateMapZeroOneState } from '../wilderness-maps/map-[0,1].js'
+import { generateMapZeroTwoState } from '../wilderness-maps/map-[0,2].js'
+import { generateMapZeroThreeState } from '../wilderness-maps/map-[0,3].js'
 import { generateMapOneZeroState } from '../wilderness-maps/map-[1,0].js'
 import { generateSettlementMapState } from '../wilderness-maps/settlement.js'
 import { MapState, drawBackgroundFromMap } from '../wilderness.js'
@@ -35,7 +38,7 @@ interface BuilderState extends MapState {
 }
 
 const builderState: BuilderState = {
-  map: generateMapZeroState().map,
+  map: generateMapZeroThreeState().map,
   discovered: true,
   currentType: 'water',
   fillFromCoords: null,

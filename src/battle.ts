@@ -1,5 +1,6 @@
 // import { battleState, gameState } from './state.js'
 
+import { Enemy } from './classes.js'
 import {
   calculateDamage,
   calculateExperienceFromLevel,
@@ -20,7 +21,10 @@ import {
   updateSettlementState,
   updateWildernessState,
 } from './state.js'
-import { handleEnemyMovementCycle } from './wilderness.js'
+import {
+  handleEnemyMovementCycle,
+  respawnKaurismakiFinalIsland,
+} from './wilderness.js'
 
 export function drawBattle() {
   drawPlayerInfo()
@@ -201,7 +205,7 @@ export function drawEnemyInfo() {
     const imageWidth = 200 * scale
 
     ctx.drawImage(
-      document.getElementById('demon-image') as HTMLImageElement,
+      document.getElementById(enemy.pictureId) as HTMLImageElement,
       width - imageWidth - 10 * scale,
       height / 2 - imageHeight / 2 - 50 * scale,
       imageWidth,
@@ -403,11 +407,13 @@ export function drawInventory() {
 
   const items = inventory.map((item) => getItemViaId(item.itemId))
 
+  const consumableItems = items.filter((item) => item.isConsumable)
+
   ctx.textAlign = 'left'
   ctx.fillStyle = '#333'
   ctx.fillRect(0, verticalOffset / 2, width, height - verticalOffset)
 
-  for (let i = 0; i < items.length; i++) {
+  for (let i = 0; i < consumableItems.length; i++) {
     const item = items[i]
 
     const colour = getOptionsColour(lastMove, false, false, selectedItem, i + 1)
@@ -481,11 +487,19 @@ export function handleBattleScenarios() {
         status: 'building',
         buildingId: home.id,
       })
+      updateWildernessState({
+        mapId: 0,
+      })
       handleEnemyMovementCycle(true)
       player.restoreHealth()
       player.goToCoordinates(41, 13)
       player.stopMoving()
-      enemy.restoreHealth()
+      if (enemy.name === 'Elite Witch') {
+        respawnKaurismakiFinalIsland()
+      } else {
+        enemy.restoreHealth()
+        enemy.updatePlayerPrompted(false)
+      }
       updateMessageState({
         message:
           'You awake back in your home... someone must have brought you back',
@@ -506,5 +520,28 @@ export function handleBattleScenarios() {
       enemies: [...c.enemies.filter((e) => e.id !== enemy.id)],
       status: 'wilderness',
     }))
+    if (enemy.name === 'Elite Witch') {
+      const [eCoordsX, eCoordsY] = enemy.coordinates
+
+      let nextEliteWitch: Enemy | undefined
+      if (eCoordsX === 40 && eCoordsY !== 12) {
+        nextEliteWitch = enemies.find(
+          (e) => e.coordinates[0] === 42 && e.coordinates[1] === eCoordsY - 1
+        )
+      }
+      if (eCoordsX === 42) {
+        nextEliteWitch = enemies.find(
+          (e) => e.coordinates[0] === 40 && e.coordinates[1] === eCoordsY - 1
+        )
+      }
+      if (!nextEliteWitch) return
+      player.goToCoordinates(
+        nextEliteWitch.coordinates[0] === 40
+          ? nextEliteWitch.coordinates[0] + 1
+          : nextEliteWitch.coordinates[0] - 1,
+        nextEliteWitch.coordinates[1]
+      )
+      player.stopMoving()
+    }
   }
 }

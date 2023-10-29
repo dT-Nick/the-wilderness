@@ -5,6 +5,7 @@ import {
   type FloorItem,
   type Player,
   Building,
+  QuestItem,
 } from './classes.js'
 
 export const constants: {
@@ -192,7 +193,7 @@ interface GameState {
     itemId: string
   }>
   floorItems: Array<FloorItem>
-  items: Array<ConsumableItem | EquipableItem>
+  items: Array<ConsumableItem | EquipableItem | QuestItem>
   blocksHorizontal: number
   blocksVertical: number
   blockSize: number
@@ -307,6 +308,7 @@ export interface BlockType {
     | 'wall'
     | 'void'
     | 'carpet'
+    | 'hellstone'
   colour: string
   isPassable: boolean
 }
@@ -360,6 +362,11 @@ const blockTypeState: BlockTypeState = {
     {
       name: 'carpet',
       colour: '#663399',
+      isPassable: true,
+    },
+    {
+      name: 'hellstone',
+      colour: '#681d1a',
       isPassable: true,
     },
   ],
@@ -509,6 +516,32 @@ export function isMessageActive(message?: string | null): message is string {
 
 export function clearMessage() {
   updateMessageState({ message: null })
+}
+
+// ##############################
+
+interface QuestState {
+  hasBridgeSpawned: boolean
+}
+
+const questState: QuestState = {
+  hasBridgeSpawned: false,
+}
+
+export function getQuestState() {
+  return questState
+}
+
+export function updateQuestState(
+  changes:
+    | Partial<typeof questState>
+    | ((state: typeof questState) => Partial<typeof questState>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(questState, changes(questState))
+  } else {
+    Object.assign(questState, changes)
+  }
 }
 
 // ##############################

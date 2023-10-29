@@ -16,9 +16,16 @@ import {
   updateMessageState,
 } from './state.js'
 import { handleMapZeroInput } from './wilderness-maps/map-0.js'
+import { handleMapMinusOneMinusOneInput } from './wilderness-maps/map-[-1,-1].js'
 import { handleMapMinusOneZeroInput } from './wilderness-maps/map-[-1,0].js'
 import { handleMapMinusOneOneInput } from './wilderness-maps/map-[-1,1].js'
+import { handleMapMinusTwoMinusOneInput } from './wilderness-maps/map-[-2,-1].js'
+import { handleMapMinusTwoZeroInput } from './wilderness-maps/map-[-2,0].js'
+import { handleMapMinusThreeMinusOneInput } from './wilderness-maps/map-[-3,-1].js'
+import { handleMapMinusThreeZeroInput } from './wilderness-maps/map-[-3,0].js'
 import { handleMapZeroOneInput } from './wilderness-maps/map-[0,1].js'
+import { handleMapZeroTwoInput } from './wilderness-maps/map-[0,2].js'
+import { handleMapZeroThreeInput } from './wilderness-maps/map-[0,3].js'
 import { handleMapOneZeroInput } from './wilderness-maps/map-[1,0].js'
 import { handleMapOneOneInput } from './wilderness-maps/map-[1,1].js'
 
@@ -61,8 +68,24 @@ export function handleWildernessInput() {
       handleMapMinusOneZeroInput()
       break
     }
+    case '[-2,0]': {
+      handleMapMinusTwoZeroInput()
+      break
+    }
+    case '[-3,0]': {
+      handleMapMinusThreeZeroInput()
+      break
+    }
     case '[0,1]': {
       handleMapZeroOneInput()
+      break
+    }
+    case '[0,2]': {
+      handleMapZeroTwoInput()
+      break
+    }
+    case '[0,3]': {
+      handleMapZeroThreeInput()
       break
     }
     case '[1,0]': {
@@ -75,6 +98,18 @@ export function handleWildernessInput() {
     }
     case '[-1,1]': {
       handleMapMinusOneOneInput()
+      break
+    }
+    case '[-1,-1]': {
+      handleMapMinusOneMinusOneInput()
+      break
+    }
+    case '[-2,-1]': {
+      handleMapMinusTwoMinusOneInput()
+      break
+    }
+    case '[-3,-1]': {
+      handleMapMinusThreeMinusOneInput()
       break
     }
     default: {
