@@ -139,7 +139,12 @@ export function handleBattleInput() {
     const enemy = enemies.find((enemy) => enemy.id === enemyId)
     if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
 
-    const isWaitingForPlayerInput = lastMove !== 'player' && status !== 'wait'
+    const isWaitingForPlayerInput =
+      lastMove !== 'player' &&
+      status !== 'wait' &&
+      player.currentDamage === null &&
+      !player.currentHeal &&
+      !player.currentExperienceGain
 
     if (isKeyDownEvent(['escape', 'tab']) || isButtonDownEvent('buttonB')) {
       if (playerMenu === 'items') {

@@ -238,12 +238,11 @@ function drawOptions() {
 
 function getOptionsColour(
   lastMove: 'player' | 'enemy' | null,
-  isDamageApplying: boolean,
   isWaiting: boolean,
   selectedOption: number,
   optionIndex: number
 ) {
-  if (lastMove === 'player' || isDamageApplying || isWaiting) {
+  if (lastMove === 'player' || isWaiting) {
     return 'darkgrey'
   }
   if (selectedOption === optionIndex) {
@@ -254,9 +253,11 @@ function getOptionsColour(
 
 function drawMainOptions() {
   const { ctx, scale, verticalOffset, width, height } = getCanvasState()
-  const { lastMove, status, selectedOption } = getBattleState()
+  const { lastMove, status, selectedOption, enemyId } = getBattleState()
+  const { player, enemies } = getGameState()
+  const enemy = enemies.find((e) => e.id === enemyId)
 
-  if (isInitialised(ctx)) {
+  if (isInitialised(ctx) && isPlayerInitialised(player) && enemy) {
     ctx.lineWidth = 1
     ctx.font = `${Math.floor(25 * scale)}px monospace`
     ctx.textBaseline = 'middle'
@@ -264,7 +265,15 @@ function drawMainOptions() {
 
     const widthOfBox = (width - 30 * scale) / 2
 
-    let colour = getOptionsColour(lastMove, false, false, selectedOption, 1)
+    const isWaiting = Boolean(
+      player.currentDamage !== null ||
+        player.currentExperienceGain > 0 ||
+        player.currentHeal > 0 ||
+        enemy.currentDamage !== null ||
+        status === 'wait'
+    )
+
+    let colour = getOptionsColour(lastMove, isWaiting, selectedOption, 1)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
@@ -279,7 +288,7 @@ function drawMainOptions() {
       height - 65 * scale - verticalOffset / 2
     )
 
-    colour = getOptionsColour(lastMove, false, false, selectedOption, 2)
+    colour = getOptionsColour(lastMove, isWaiting, selectedOption, 2)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
@@ -299,27 +308,26 @@ function drawMainOptions() {
 export function drawMoves() {
   const { ctx, scale, verticalOffset, height, width } = getCanvasState()
   const { lastMove, selectedMove, enemyId, status } = getBattleState()
-  const { enemies } = getGameState()
+  const { enemies, player } = getGameState()
 
-  if (isInitialised(ctx)) {
+  if (isInitialised(ctx) && isPlayerInitialised(player)) {
     const enemy = enemies.find((e) => e.id === enemyId)
     if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
 
-    const isDamageApplying = enemy.currentDamage !== null
-    const isWaiting = status === 'wait'
+    const isWaiting = Boolean(
+      player.currentDamage !== null ||
+        player.currentExperienceGain > 0 ||
+        player.currentHeal ||
+        enemy.currentDamage !== null ||
+        status === 'wait'
+    )
 
     ctx.lineWidth = 1
     ctx.font = `${Math.floor(25 * scale)}px monospace`
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
 
-    let colour = getOptionsColour(
-      lastMove,
-      isDamageApplying,
-      isWaiting,
-      selectedMove,
-      1
-    )
+    let colour = getOptionsColour(lastMove, isWaiting, selectedMove, 1)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
@@ -334,13 +342,7 @@ export function drawMoves() {
       height - 95 * scale - verticalOffset / 2
     )
 
-    colour = getOptionsColour(
-      lastMove,
-      isDamageApplying,
-      isWaiting,
-      selectedMove,
-      2
-    )
+    colour = getOptionsColour(lastMove, isWaiting, selectedMove, 2)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
@@ -355,13 +357,7 @@ export function drawMoves() {
       height - 95 * scale - verticalOffset / 2
     )
 
-    colour = getOptionsColour(
-      lastMove,
-      isDamageApplying,
-      isWaiting,
-      selectedMove,
-      3
-    )
+    colour = getOptionsColour(lastMove, isWaiting, selectedMove, 3)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
@@ -376,13 +372,7 @@ export function drawMoves() {
       height - 35 * scale - verticalOffset / 2
     )
 
-    colour = getOptionsColour(
-      lastMove,
-      isDamageApplying,
-      isWaiting,
-      selectedMove,
-      4
-    )
+    colour = getOptionsColour(lastMove, isWaiting, selectedMove, 4)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
@@ -416,7 +406,7 @@ export function drawInventory() {
   for (let i = 0; i < consumableItems.length; i++) {
     const item = items[i]
 
-    const colour = getOptionsColour(lastMove, false, false, selectedItem, i + 1)
+    const colour = getOptionsColour(lastMove, false, selectedItem, i + 1)
     ctx.fillStyle = colour
     ctx.strokeStyle = colour
     ctx.strokeRect(
