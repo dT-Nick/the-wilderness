@@ -49,7 +49,7 @@ export function drawMessage() {
       messagePopupWidth - messagePadding * 2
     )
   } else {
-    ctx.font = `bold ${14 * scale}px Arial`
+    ctx.font = `bold ${Math.ceil(14 * scale)}px Arial`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
 

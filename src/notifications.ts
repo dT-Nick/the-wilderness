@@ -8,7 +8,7 @@ export function drawNotifications() {
   const notificationPadding = 5 * scale
   const notificationX = notificationPadding
   const notificationY = notificationPadding + verticalOffset / 2
-  ctx.font = `bold ${14 * scale}px Arial`
+  ctx.font = `bold ${Math.ceil(14 * scale)}px Arial`
   ctx.shadowColor = 'black'
   ctx.shadowBlur = 7
   ctx.fillStyle = 'yellow'

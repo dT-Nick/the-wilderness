@@ -13,7 +13,7 @@ export function drawGameOverScreen() {
   )
 
   ctx.fillStyle = 'white'
-  ctx.font = `${scale * 50}px Arial`
+  ctx.font = `${Math.ceil(scale * 50)}px Arial`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText('Game Over', ctx.canvas.width / 2, ctx.canvas.height / 2)

@@ -28,7 +28,7 @@ export function drawInventorySettings() {
   const topMenuButtonHeight = 90 * scale
   const topMenuX = topMenuMargin
   const topMenuY = verticalOffset / 2 + topMenuMargin
-  const topMenuButtonFontSize = 30 * scale
+  const topMenuButtonFontSize = Math.ceil(30 * scale)
 
   ctx.strokeStyle = 'white'
   ctx.fillStyle = 'white'
@@ -74,7 +74,7 @@ export function drawInventorySettings() {
   const inventoryItemSpacer = 10 * scale
   const inventoryItemWidth = width - 2 * inventoryMargin
   const inventoryItemHeight = 50 * scale
-  const inventoryItemFontSize = 20 * scale
+  const inventoryItemFontSize = Math.ceil(20 * scale)
 
   ctx.strokeStyle = 'white'
   ctx.fillStyle = 'white'
@@ -164,7 +164,7 @@ export function handleInventorySettingsInput() {
     }
   }
 
-  if (isKeyDownEvent(['tab', 'escape', 'i'] || isButtonDownEvent('buttonB'))) {
+  if (isKeyDownEvent(['tab', 'escape', 'i']) || isButtonDownEvent('buttonB')) {
     updateGameState((c) => ({
       status: c.prevStatus ?? 'settlement',
       prevStatus: prevGameStatus,

@@ -43,7 +43,7 @@ export function drawStartMenu() {
     }
 
     ctx.fillStyle = 'white'
-    ctx.font = '50px Arial'
+    ctx.font = `${Math.ceil(50 * scale)}px Arial`
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'center'
     ctx.fillText(
@@ -79,7 +79,7 @@ export function drawStartMenu() {
     }
 
     ctx.fillStyle = 'white'
-    ctx.font = '50px Arial'
+    ctx.font = `${Math.ceil(50 * scale)}px Arial`
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'center'
     ctx.fillText(
