@@ -1,29 +1,25 @@
-import {
-  ConsumableItem,
-  EquipableItem,
-  QuestItem,
-  type Item,
-} from './classes.js'
-import { generateSlug, getColourFromItemSlug } from './helpers/functions.js'
+import { ConsumableItem } from './classes/ConsumableItem.js'
+import { EquipableItem } from './classes/EquipableItem.js'
+import { Item } from './classes/Item.js'
+import { QuestItem } from './classes/QuestItem.js'
+import { getColourFromItemSlug } from './helpers/functions.js'
 import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import {
   getCanvasState,
+  getCurrentMap,
   getGameState,
-  getWildernessState,
   isInitialised,
   isPlayerInitialised,
   updateBattleState,
   updateGameState,
+  updateMap,
 } from './state.js'
-import {
-  generateMapZeroOneState,
-  updateMapZeroOneState,
-} from './wilderness-maps/map-[0,1].js'
+import { generateMapZeroOneDesign } from './wilderness-maps/map-[0,1].js'
 
 export function drawFloorItems() {
   const { floorItems, blockSize } = getGameState()
   const { ctx, scale, verticalOffset } = getCanvasState()
-  const { mapId } = getWildernessState()
+  const { id: mapId } = getCurrentMap()
 
   if (isInitialised(ctx)) {
     for (const floorItem of floorItems.filter((fI) => fI.mapId === mapId)) {
@@ -43,7 +39,7 @@ export function drawFloorItems() {
 
 export function handleItemPickup() {
   const { player, floorItems } = getGameState()
-  const { mapId } = getWildernessState()
+  const { id: mapId } = getCurrentMap()
   if (!isPlayerInitialised(player)) return
 
   if (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) {
@@ -100,10 +96,9 @@ export function generateGameItems() {
       player.heal(100)
     }),
     new QuestItem('Bridge Pieces', () => {
-      const { map } = generateMapZeroOneState(true)
-
-      updateMapZeroOneState({
-        map,
+      const design = generateMapZeroOneDesign(true)
+      updateMap('[0,1]', {
+        design,
       })
     }),
   ]

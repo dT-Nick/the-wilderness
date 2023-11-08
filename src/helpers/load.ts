@@ -1,11 +1,7 @@
-import {
-  Building,
-  ConsumableItem,
-  Enemy,
-  FloorItem,
-  Item,
-  Player,
-} from '../classes.js'
+import { Building } from '../classes/Building.js'
+import { Enemy } from '../classes/Enemy.js'
+import { FloorItem } from '../classes/FloorItem.js'
+import { Player } from '../classes/Player.js'
 import { SaveFile } from '../save.js'
 
 export function loadPlayer(props: SaveFile['gameState']['player']) {
@@ -17,7 +13,7 @@ export function loadPlayer(props: SaveFile['gameState']['player']) {
 }
 
 export function loadEnemy(props: SaveFile['gameState']['enemies'][number]) {
-  const enemy = new Enemy('', '', 0, 0, 0, 0, 0, 0, 0)
+  const enemy = new Enemy('', '', 0, 0, 0, 0, '[0,0]', 0, 0)
   if (!props) throw new Error('Enemy props not found')
   enemy.load(props)
 

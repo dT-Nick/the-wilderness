@@ -1,10 +1,7 @@
-import { generateBackgroundGrid } from '../background.js'
-import { generateMapHomeBuildingState } from '../building-maps/home.js'
 import {
   getCoordsFromXAndYValues,
   getXAndYValuesFromCoords,
 } from '../helpers/coordinates.js'
-import { generateFixedMeasurementsTool } from '../helpers/tools.js'
 import {
   isKeyCurrentlyDown,
   isKeyDownEvent,
@@ -20,14 +17,7 @@ import {
   getInputState,
   isInitialised,
 } from '../state.js'
-import { generateMapZeroState } from '../wilderness-maps/map-0.js'
-import { generateMapMinusOneZeroState } from '../wilderness-maps/map-[-1,0].js'
-import { generateMapMinusThreeZeroState } from '../wilderness-maps/map-[-3,0].js'
-import { generateMapZeroOneState } from '../wilderness-maps/map-[0,1].js'
-import { generateMapZeroTwoState } from '../wilderness-maps/map-[0,2].js'
-import { generateMapZeroThreeState } from '../wilderness-maps/map-[0,3].js'
-import { generateMapOneZeroState } from '../wilderness-maps/map-[1,0].js'
-import { generateSettlementMapState } from '../wilderness-maps/settlement.js'
+import { generateMapZeroThreeDesign } from '../wilderness-maps/map-[0,3].js'
 import { MapState, drawBackgroundFromMap } from '../wilderness.js'
 
 interface BuilderState extends MapState {
@@ -38,7 +28,7 @@ interface BuilderState extends MapState {
 }
 
 const builderState: BuilderState = {
-  map: generateMapZeroThreeState().map,
+  map: generateMapZeroThreeDesign(),
   discovered: true,
   currentType: 'water',
   fillFromCoords: null,
@@ -53,7 +43,7 @@ export function getBuilderState() {
 export function updateBuilderState(
   changes:
     | Partial<typeof builderState>
-    | ((state: typeof builderState) => Partial<typeof builderState>)
+    | ((state: typeof builderState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(builderState, changes(builderState))
@@ -299,13 +289,10 @@ function drawCurrentPaintedBlock() {
 }
 
 function drawBlockTypeSelector() {
-  const { ctx, scale, width, height, verticalOffset } = getCanvasState()
+  const { ctx, height, verticalOffset } = getCanvasState()
   if (!isInitialised(ctx)) return
-  const { currentType } = getBuilderState()
   const { blockTypes } = getBlockTypeState()
   const { mouseX, mouseY } = getInputState()
-
-  const { blockSize } = getGameState()
 
   ctx.fillStyle = 'white'
 

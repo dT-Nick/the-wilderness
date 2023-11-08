@@ -1,21 +1,27 @@
-import { generateBackgroundGrid } from './background.js'
-import { Enemy, FloorItem } from './classes.js'
+import { Enemy } from './classes/Enemy.js'
+import { FloorItem } from './classes/FloorItem.js'
 import {
   generateEliteWitch,
   generateKaurismakiDaemon,
   generateKaurismakiKing,
   generateNightWitch,
   generateSettlementZombie,
+  handleEnemyInteraction,
 } from './enemy.js'
 import { getEntityXAndYValuesFromCoords } from './helpers/coordinates.js'
 import { generateSlug } from './helpers/functions.js'
+import { handleSettingsTriggerInputs } from './input.js'
+import { handleItemPickup } from './item.js'
+import { handlePlayerMovement } from './player.js'
 import {
   BlockType,
   addNotification,
   getBlockPropertiesFromName,
   getCanvasState,
+  getCurrentMap,
   getGameState,
   getLoopState,
+  getMapsState,
   getQuestState,
   getSettlementState,
   getWildernessState,
@@ -27,127 +33,41 @@ import {
   updateQuestState,
   updateWildernessState,
 } from './state.js'
-import { drawMapZero, getMapZeroState } from './wilderness-maps/map-0.js'
-import {
-  drawMapMinusOneMinusOne,
-  getMapMinusOneMinusOneState,
-} from './wilderness-maps/map-[-1,-1].js'
-import {
-  drawMapMinusOneZero,
-  getMapMinusOneZeroState,
-} from './wilderness-maps/map-[-1,0].js'
-import {
-  drawMapMinusOneOne,
-  getMapMinusOneOneState,
-} from './wilderness-maps/map-[-1,1].js'
-import {
-  drawMapMinusTwoMinusOne,
-  getMapMinusTwoMinusOneState,
-} from './wilderness-maps/map-[-2,-1].js'
-import {
-  drawMapMinusTwoZero,
-  getMapMinusTwoZeroState,
-} from './wilderness-maps/map-[-2,0].js'
-import {
-  drawMapMinusThreeMinusOne,
-  getMapMinusThreeMinusOneState,
-} from './wilderness-maps/map-[-3,-1].js'
-import {
-  drawMapMinusThreeZero,
-  getMapMinusThreeZeroState,
-} from './wilderness-maps/map-[-3,0].js'
-import {
-  drawMapZeroOne,
-  getMapZeroOneState,
-} from './wilderness-maps/map-[0,1].js'
-import {
-  drawMapZeroTwo,
-  getMapZeroTwoState,
-} from './wilderness-maps/map-[0,2].js'
-import { drawMapZeroThree } from './wilderness-maps/map-[0,3].js'
-import {
-  drawMapOneZero,
-  getMapOneZeroState,
-} from './wilderness-maps/map-[1,0].js'
-import {
-  drawMapOneOne,
-  getMapOneOneState,
-} from './wilderness-maps/map-[1,1].js'
+import { handleMapExit } from './wilderness-maps/index.js'
+import { handleMapMinusOneMinusOneInput } from './wilderness-maps/map-[-1,-1].js'
+import { handleMapMinusOneZeroInput } from './wilderness-maps/map-[-1,0].js'
+import { handleMapMinusOneOneInput } from './wilderness-maps/map-[-1,1].js'
+import { handleMapMinusTwoMinusOneInput } from './wilderness-maps/map-[-2,-1].js'
+import { handleMapMinusTwoZeroInput } from './wilderness-maps/map-[-2,0].js'
+import { handleMapMinusThreeMinusOneInput } from './wilderness-maps/map-[-3,-1].js'
+import { handleMapMinusThreeZeroInput } from './wilderness-maps/map-[-3,0].js'
+import { handleMapZeroInput } from './wilderness-maps/map-[0,0].js'
+import { handleMapZeroOneInput } from './wilderness-maps/map-[0,1].js'
+import { handleMapZeroTwoInput } from './wilderness-maps/map-[0,2].js'
+import { handleMapZeroThreeInput } from './wilderness-maps/map-[0,3].js'
+import { handleMapOneZeroInput } from './wilderness-maps/map-[1,0].js'
+import { handleMapOneOneInput } from './wilderness-maps/map-[1,1].js'
+
+export type MapDesign = Array<{
+  type: BlockType['name']
+  fromCoords: [number, number]
+  toCoords: [number, number]
+}>
 
 export interface MapState {
-  map: Array<{
-    type: BlockType['name']
-    fromCoords: [number, number]
-    toCoords: [number, number]
-  }>
+  map: MapDesign
   discovered: boolean
 }
 
 export function drawWilderness() {
-  const { mapId } = getWildernessState()
+  const { design } = getCurrentMap()
 
-  switch (mapId) {
-    case 0: {
-      drawMapZero()
-      break
-    }
-    case '[-1,0]': {
-      drawMapMinusOneZero()
-      break
-    }
-    case '[-2,0]': {
-      drawMapMinusTwoZero()
-      break
-    }
-    case '[-3,0]': {
-      drawMapMinusThreeZero()
-      break
-    }
-    case '[0,1]': {
-      drawMapZeroOne()
-      break
-    }
-    case '[0,2]': {
-      drawMapZeroTwo()
-      break
-    }
-    case '[0,3]': {
-      drawMapZeroThree()
-      break
-    }
-    case '[1,0]': {
-      drawMapOneZero()
-      break
-    }
-    case '[1,1]': {
-      drawMapOneOne()
-      break
-    }
-    case '[-1,1]': {
-      drawMapMinusOneOne()
-      break
-    }
-    case '[-1,-1]': {
-      drawMapMinusOneMinusOne()
-      break
-    }
-    case '[-2,-1]': {
-      drawMapMinusTwoMinusOne()
-      break
-    }
-    case '[-3,-1]': {
-      drawMapMinusThreeMinusOne()
-      break
-    }
-    default: {
-      throw new Error(`Unknown mapId: ${mapId}`)
-    }
-  }
+  drawBackgroundFromMap(design)
 }
 
 export function drawWildernessClock() {
   const { wildernessTime } = getWildernessState()
-  const { ctx, scale, width, height, verticalOffset } = getCanvasState()
+  const { ctx, scale, width, verticalOffset } = getCanvasState()
 
   if (!isInitialised(ctx)) return
 
@@ -260,6 +180,76 @@ export function updateWildernessClock() {
   }))
 }
 
+export function handleWildernessInput() {
+  const map = getCurrentMap()
+
+  switch (map.id) {
+    case '[0,0]': {
+      handleMapZeroInput()
+      break
+    }
+    case '[-1,0]': {
+      handleMapMinusOneZeroInput()
+      break
+    }
+    case '[-2,0]': {
+      handleMapMinusTwoZeroInput()
+      break
+    }
+    case '[-3,0]': {
+      handleMapMinusThreeZeroInput()
+      break
+    }
+    case '[0,1]': {
+      handleMapZeroOneInput()
+      break
+    }
+    case '[0,2]': {
+      handleMapZeroTwoInput()
+      break
+    }
+    case '[0,3]': {
+      handleMapZeroThreeInput()
+      break
+    }
+    case '[1,0]': {
+      handleMapOneZeroInput()
+      break
+    }
+    case '[1,1]': {
+      handleMapOneOneInput()
+      break
+    }
+    case '[-1,1]': {
+      handleMapMinusOneOneInput()
+      break
+    }
+    case '[-1,-1]': {
+      handleMapMinusOneMinusOneInput()
+      break
+    }
+    case '[-2,-1]': {
+      handleMapMinusTwoMinusOneInput()
+      break
+    }
+    case '[-3,-1]': {
+      handleMapMinusThreeMinusOneInput()
+      break
+    }
+    default: {
+      throw new Error(`Unknown mapId: ${map.id}`)
+    }
+  }
+
+  const restrictedCoords = deriveRestrictedCoordsFromMap(map.design, map.id)
+
+  handleSettingsTriggerInputs()
+  handlePlayerMovement(restrictedCoords)
+  handleMapExit()
+  handleItemPickup()
+  handleEnemyInteraction()
+}
+
 export function handleWildernessScenarios() {
   handleEnemyEncounter()
   handleEnemyMovementCycle()
@@ -274,7 +264,7 @@ export function handleEnemyMovementCycle(bypassTime: boolean = false) {
 
   if (thirtySecondsPassed <= enemyMovementCycleCount && !bypassTime) return
   // move enemies
-  const enemiesInMapZero = enemies.filter((e) => e.mapId === 0)
+  const enemiesInMapZero = enemies.filter((e) => e.mapId === '[0,0]')
 
   for (let enemy of enemiesInMapZero) {
     enemy.moveTowardsSettlement()
@@ -303,7 +293,7 @@ function handleSpawnCycle() {
 
 function handleEnemyEncounter() {
   const { player, enemies } = getGameState()
-  const { mapId } = getWildernessState()
+  const { id: mapId } = getCurrentMap()
   if (!isPlayerInitialised(player)) return
 
   for (const enemy of enemies.filter((e) => e.mapId === mapId)) {
@@ -359,745 +349,159 @@ function handleEnemyEncounter() {
 
 export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
   const { enemies, blockSize, floorItems, items } = getGameState()
-
-  const { discovered: mapZeroDiscovered, map: mapZero } = getMapZeroState()
-  const { discovered: mapMinusOneZeroDiscovered, map: mapMinusOneZero } =
-    getMapMinusOneZeroState()
-  const { discovered: mapMinusTwoZeroDiscovered, map: mapMinusTwoZero } =
-    getMapMinusTwoZeroState()
-  const { discovered: mapMinusThreeZeroDiscovered, map: mapMinusThreeZero } =
-    getMapMinusThreeZeroState()
-  const { discovered: mapZeroOneDiscovered, map: mapZeroOne } =
-    getMapZeroOneState()
-  const { discovered: mapZeroTwoDiscovered, map: mapZeroTwo } =
-    getMapZeroTwoState()
-  const { discovered: mapOneZeroDiscovered, map: mapOneZero } =
-    getMapOneZeroState()
-  const { discovered: mapOneOneDiscovered, map: mapOneOne } =
-    getMapOneOneState()
-  const { discovered: mapMinusOneOneDiscovered } = getMapMinusOneOneState()
-  const {
-    discovered: mapMinusOneMinusOneDiscovered,
-    map: mapMinusOneMinusOne,
-  } = getMapMinusOneMinusOneState()
-  const {
-    discovered: mapMinusTwoMinusOneDiscovered,
-    map: mapMinusTwoMinusOne,
-  } = getMapMinusTwoMinusOneState()
-  const {
-    discovered: mapMinusThreeMinusOneDiscovered,
-    map: mapMinusThreeMinusOne,
-  } = getMapMinusThreeMinusOneState()
-
-  if (mapZeroDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === 0)
-    const newEnemyCount =
-      Math.round(Math.random() * 5) + 2 - currentEnemies.length
-
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(mapZero, 0)
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          1,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          0
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          1,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          0
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          1,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          0
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === 0)
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(mapZero, 0)
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            0
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapMinusOneZeroDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[-1,0]')
-    const newEnemyCount =
-      Math.round(Math.random() * 3) + 2 - currentEnemies.length
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusOneZero,
-        '[-1,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,0]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,0]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,0]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[-1,0]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusOneZero,
-        '[-1,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[-1,0]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapMinusTwoZeroDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[-2,0]')
-    const newEnemyCount =
-      Math.round(Math.random() * 2) + 2 - currentEnemies.length
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusTwoZero,
-        '[-2,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 4),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-2,0]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 4),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-2,0]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 4),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-2,0]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[-2,0]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusTwoZero,
-        '[-2,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[-2,0]'
-          ),
-        ],
-      }))
-    }
-  }
-  if (mapMinusThreeZeroDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[-3,0]')
-    const newEnemyCount = Math.round(Math.random() * 3) - currentEnemies.length
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusThreeZero,
-        '[-3,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 4),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-3,0]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 4),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-3,0]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 4),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-3,0]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[-3,0]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusThreeZero,
-        '[-3,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[-3,0]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapZeroOneDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[0,1]')
-    const newEnemyCount =
-      Math.round(Math.random() * 3) + 2 - currentEnemies.length
-
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapZeroOne,
-        '[0,1]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[0,1]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[0,1]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[0,1]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[0,1]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapZeroOne,
-        '[0,1]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[0,1]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapZeroTwoDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[0,2]')
-    const newEnemyCount =
-      Math.round(Math.random() * 9) + 4 - currentEnemies.length
-
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapZeroTwo,
-        '[0,2]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.3) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 8) + 10,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[0,2]'
-        )
-      } else if (enemyTypeRng < 0.7) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 8) + 10,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[0,2]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 8) + 10,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[0,2]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[0,2]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapZeroTwo,
-        '[0,2]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[0,2]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  // mapZeroThree spawns
-  if (initialSpawn) {
-    respawnKaurismakiFinalIsland()
-  }
-
-  if (mapOneZeroDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[1,0]')
-    const newEnemyCount =
-      Math.round(Math.random() * 3) + 2 - currentEnemies.length
-
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapOneZero,
-        '[1,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[1,0]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[1,0]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[1,0]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[1,0]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapOneZero,
-        '[1,0]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[1,0]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapOneOneDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[1,1]')
-    const newEnemyCount =
-      Math.round(Math.random() * 3) + 2 - currentEnemies.length
-
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(mapOneOne, '[1,1]')
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[1,1]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[1,1]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[1,1]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[1,1]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(mapOneOne, '[1,1]')
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[1,1]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapMinusOneOneDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[-1,1]')
-    const newEnemyCount = 1 - currentEnemies.length
-
-    for (let i = 0; i < newEnemyCount; i++) {
-      const [x, y] = [78, 23]
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,1]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,1]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 3),
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,1]'
-        )
-      }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-  }
-
-  if (mapMinusOneMinusOneDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[-1,-1]')
-    const newEnemyCount =
-      Math.round(Math.random() * 2) + 6 - currentEnemies.length
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusOneMinusOne,
-        '[-1,-1]',
-        [
+  const { maps } = getMapsState()
+
+  for (let mapIndex = 0; mapIndex < maps.length; mapIndex++) {
+    const map = maps[mapIndex]
+    const { design, id } = map
+    if (!id.includes('[')) continue
+    if (!map.isDiscovered && !initialSpawn) continue
+
+    const currentEnemies = enemies.filter((e) => e.mapId === id)
+    const currentItems = floorItems.filter((i) => i.mapId === id)
+    let newEnemyCount: number = 0
+    let newItemCount: number = 0
+    let zombieRatioThreshhold: number = 0.5
+    let daemonRatioThreshhold: number = 0.9
+    let witchRatioThreshhold: number = 1
+    let enemyLevel: number | (() => number) = 0
+    let extraRestrictedCoords: Array<[number, number]> = []
+
+    switch (id) {
+      case '[-1,-1]': {
+        newEnemyCount =
+          Math.round(Math.random() * 2) + 6 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 4)
+        extraRestrictedCoords = [
           [60, 9],
           [57, 8],
           [57, 10],
         ]
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 4) + 5,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,-1]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 4) + 5,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,-1]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 4) + 5,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-1,-1]'
-        )
+        break
       }
-
-      updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
+      case '[-1,0]': {
+        newEnemyCount =
+          Math.round(Math.random() * 3) + 2 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 3)
+        break
+      }
+      case '[-1,1]': {
+        newEnemyCount = 1 - currentEnemies.length
+        newItemCount = 0
+        enemyLevel = () => Math.ceil(Math.random() * 3)
+        break
+      }
+      case '[-2,-1]': {
+        newEnemyCount =
+          Math.round(Math.random() * 2) + 6 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 4) + 2
+        break
+      }
+      case '[-2,0]': {
+        newEnemyCount =
+          Math.round(Math.random() * 2) + 2 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 4)
+        break
+      }
+      case '[-3,-1]': {
+        newEnemyCount =
+          Math.round(Math.random() * 2) + 6 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 4) + 1
+        break
+      }
+      case '[-3,0]': {
+        newEnemyCount = Math.round(Math.random() * 3) - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 4)
+        break
+      }
+      case '[0,0]': {
+        newEnemyCount =
+          Math.round(Math.random() * 5) + 2 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = 1
+        break
+      }
+      case '[0,1]': {
+        newEnemyCount =
+          Math.round(Math.random() * 3) + 2 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 3)
+        break
+      }
+      case '[0,2]': {
+        newEnemyCount =
+          Math.round(Math.random() * 9) + 4 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        zombieRatioThreshhold = 0.3
+        daemonRatioThreshhold = 0.7
+        witchRatioThreshhold = 1
+        enemyLevel = () => Math.ceil(Math.random() * 8) + 10
+        break
+      }
+      case '[0,3]': {
+        if (initialSpawn) {
+          respawnKaurismakiFinalIsland()
+        }
+        break
+      }
+      case '[1,0]': {
+        newEnemyCount =
+          Math.round(Math.random() * 3) + 2 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 3)
+        break
+      }
+      case '[1,1]': {
+        newEnemyCount =
+          Math.round(Math.random() * 3) + 2 - currentEnemies.length
+        newItemCount = Math.round(Math.random() * 3) - currentItems.length
+        enemyLevel = () => Math.ceil(Math.random() * 3)
+        break
+      }
+      default: {
+        throw new Error('Map not found')
+      }
     }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[-1,-1]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusOneMinusOne,
-        '[-1,-1]',
-        [
-          [60, 9],
-          [57, 8],
-          [57, 10],
-        ]
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[-1,-1]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapMinusTwoMinusOneDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[-2,-1]')
-    const newEnemyCount =
-      Math.round(Math.random() * 2) + 6 - currentEnemies.length
     for (let i = 0; i < newEnemyCount; i++) {
       const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusTwoMinusOne,
-        '[-2,-1]'
+        design,
+        id,
+        extraRestrictedCoords
       )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+      const {
+        coords: [x, y],
+        direction,
+      } = generateEntitySpawnDirectionAndCoords(restrictedCoords)
 
       const enemyTypeRng = Math.random()
       let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
+      if (enemyTypeRng < zombieRatioThreshhold) {
         newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 4) + 2,
+          typeof enemyLevel === 'function' ? enemyLevel() : enemyLevel,
           getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
           getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-2,-1]'
+          id,
+          direction
         )
-      } else if (enemyTypeRng < 0.9) {
+      } else if (enemyTypeRng < daemonRatioThreshhold) {
         newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 4) + 2,
+          typeof enemyLevel === 'function' ? enemyLevel() : enemyLevel,
           getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
           getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-2,-1]'
+          id
         )
-      } else {
+      } else if (enemyTypeRng < witchRatioThreshhold) {
         newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 4) + 2,
+          typeof enemyLevel === 'function' ? enemyLevel() : enemyLevel,
           getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
           getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-2,-1]'
+          id
         )
       }
 
@@ -1105,102 +509,30 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
         enemies: [...c.enemies, newEnemy],
       }))
     }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[-2,-1]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
     for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusTwoMinusOne,
-        '[-2,-1]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
+      const restrictedCoords = deriveRestrictedCoordsFromMap(design, id, [
+        ...floorItems.map((item) => item.coordinates),
+        ...extraRestrictedCoords,
+      ])
+      const {
+        coords: [x, y],
+      } = generateEntitySpawnDirectionAndCoords(restrictedCoords)
 
       const consumableItems = items.filter((i) => i.isConsumable)
 
       const randomItemName =
         consumableItems[Math.floor(Math.random() * consumableItems.length)].name
 
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[-2,-1]'
-          ),
-        ],
-      }))
-    }
-  }
-
-  if (mapMinusThreeMinusOneDiscovered || initialSpawn) {
-    const currentEnemies = enemies.filter((e) => e.mapId === '[-3,-1]')
-    const newEnemyCount =
-      Math.round(Math.random() * 2) + 6 - currentEnemies.length
-    for (let i = 0; i < newEnemyCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusThreeMinusOne,
-        '[-3,-1]'
+      const newItem = new FloorItem(
+        getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
+        getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
+        blockSize * (1 / 2),
+        generateSlug(randomItemName),
+        id
       )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const enemyTypeRng = Math.random()
-      let newEnemy: Enemy
-      if (enemyTypeRng < 0.5) {
-        newEnemy = generateSettlementZombie(
-          Math.ceil(Math.random() * 4) + 1,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-3,-1]'
-        )
-      } else if (enemyTypeRng < 0.9) {
-        newEnemy = generateKaurismakiDaemon(
-          Math.ceil(Math.random() * 4) + 1,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-3,-1]'
-        )
-      } else {
-        newEnemy = generateNightWitch(
-          Math.ceil(Math.random() * 4) + 1,
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-          getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          '[-3,-1]'
-        )
-      }
 
       updateGameState((c) => ({
-        enemies: [...c.enemies, newEnemy],
-      }))
-    }
-
-    const currentItems = floorItems.filter((i) => i.mapId === '[-3,-1]')
-    const newItemCount = Math.round(Math.random() * 3) - currentItems.length
-    for (let i = 0; i < newItemCount; i++) {
-      const restrictedCoords = deriveRestrictedCoordsFromMap(
-        mapMinusThreeMinusOne,
-        '[-3,-1]'
-      )
-      const [x, y] = generateEnemySpawnCoords(restrictedCoords)
-
-      const consumableItems = items.filter((i) => i.isConsumable)
-
-      const randomItemName =
-        consumableItems[Math.floor(Math.random() * consumableItems.length)].name
-
-      updateGameState((c) => ({
-        floorItems: [
-          ...c.floorItems,
-          new FloorItem(
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
-            getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-            blockSize * (1 / 2),
-            generateSlug(randomItemName),
-            '[-3,-1]'
-          ),
-        ],
+        floorItems: [...c.floorItems, newItem],
       }))
     }
   }
@@ -1251,7 +583,9 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
   }
 }
 
-function generateEnemySpawnCoords(restrictedCoords: Array<[number, number]>) {
+function generateEntitySpawnDirectionAndCoords(
+  restrictedCoords: Array<[number, number]>
+) {
   const { blocksHorizontal, blocksVertical } = getGameState()
 
   const x = Math.floor(Math.random() * blocksHorizontal)
@@ -1260,10 +594,53 @@ function generateEnemySpawnCoords(restrictedCoords: Array<[number, number]>) {
   const isOnRestrictedCoords = restrictedCoords.some(
     ([rX, rY]) => rX === x && rY === y
   )
+  let availableDirections: Array<'up' | 'down' | 'left' | 'right'> = [
+    'up',
+    'down',
+    'left',
+    'right',
+  ]
 
-  if (isOnRestrictedCoords) return generateEnemySpawnCoords(restrictedCoords)
+  if (
+    restrictedCoords.some(([rX, rY]) => rX === x && rY === y - 1) ||
+    y - 1 < 0
+  ) {
+    availableDirections = availableDirections.filter((d) => d !== 'up')
+  }
+  if (
+    restrictedCoords.some(([rX, rY]) => rX === x && rY === y + 1) ||
+    y + 1 > blocksVertical - 1
+  ) {
+    availableDirections = availableDirections.filter((d) => d !== 'down')
+  }
+  if (
+    restrictedCoords.some(([rX, rY]) => rX === x - 1 && rY === y) ||
+    x - 1 < 0
+  ) {
+    availableDirections = availableDirections.filter((d) => d !== 'left')
+  }
+  if (
+    restrictedCoords.some(([rX, rY]) => rX === x + 1 && rY === y) ||
+    x + 1 > blocksHorizontal - 1
+  ) {
+    availableDirections = availableDirections.filter((d) => d !== 'right')
+  }
 
-  return [x, y]
+  const directionIndex = Math.floor(Math.random() * availableDirections.length)
+  const direction =
+    availableDirections[
+      directionIndex >= availableDirections.length
+        ? availableDirections.length - 1
+        : directionIndex
+    ] ?? 'down'
+
+  if (isOnRestrictedCoords)
+    return generateEntitySpawnDirectionAndCoords(restrictedCoords)
+
+  return {
+    direction,
+    coords: [x, y],
+  }
 }
 
 export function respawnKaurismakiFinalIsland() {

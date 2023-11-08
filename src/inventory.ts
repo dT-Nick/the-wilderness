@@ -1,4 +1,4 @@
-import { Item } from './classes.js'
+import { Item } from './classes/Item.js'
 import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import { getItemViaId, isConsumable } from './item.js'
 import {
@@ -7,6 +7,7 @@ import {
   getGameState,
   getSettingsState,
   isInitialised,
+  isPlayerInitialised,
   updateGameState,
   updateSettingsState,
 } from './state.js'
@@ -104,7 +105,9 @@ export function drawInventorySettings() {
 export function handleInventorySettingsInput() {
   const { selectedInventoryItem, selectedInventoryTopMenu, prevGameStatus } =
     getSettingsState()
-  const { inventory } = getGameState()
+  const { inventory, prevStatus, player } = getGameState()
+  if (!isPlayerInitialised(player)) return
+
   const mappedInventory = inventory.map((i) => ({
     ...getItemViaId(i.itemId),
     inventoryId: i.id,
@@ -165,6 +168,21 @@ export function handleInventorySettingsInput() {
   }
 
   if (isKeyDownEvent(['tab', 'escape', 'i']) || isButtonDownEvent('buttonB')) {
+    if (
+      prevStatus !== 'settings' &&
+      prevStatus !== 'inventory' &&
+      prevStatus !== 'world-map'
+    ) {
+      if (player.currentHeal > 0) {
+        player.addHealth(true)
+      }
+      if (player.currentExperienceGain > 0) {
+        player.addExperience(true)
+      }
+      if (player.currentDamage) {
+        player.takeDamage(true)
+      }
+    }
     updateGameState((c) => ({
       status: c.prevStatus ?? 'settlement',
       prevStatus: prevGameStatus,

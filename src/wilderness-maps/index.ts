@@ -1,59 +1,164 @@
-import { generateMapZeroState, updateMapZeroState } from './map-0.js'
+import { isKeyCurrentlyDown, isButtonCurrentlyDown } from '../input.js'
 import {
-  generateMapMinusOneMinusOneState,
-  updateMapMinusOneMinusOneState,
-} from './map-[-1,-1].js'
-import {
-  generateMapMinusOneZeroState,
-  updateMapMinusOneZeroState,
-} from './map-[-1,0].js'
-import {
-  generateMapMinusOneOneState,
-  updateMapMinusOneOneState,
-} from './map-[-1,1].js'
-import {
-  generateMapMinusTwoMinusOneState,
-  updateMapMinusTwoMinusOneState,
-} from './map-[-2,-1].js'
-import {
-  generateMapMinusTwoZeroState,
-  updateMapMinusTwoZeroState,
-} from './map-[-2,0].js'
-import {
-  generateMapMinusThreeMinusOneState,
-  updateMapMinusThreeMinusOneState,
-} from './map-[-3,-1].js'
-import {
-  generateMapMinusThreeZeroState,
-  updateMapMinusThreeZeroState,
-} from './map-[-3,0].js'
-import { generateMapZeroOneState, updateMapZeroOneState } from './map-[0,1].js'
-import { generateMapZeroTwoState, updateMapZeroTwoState } from './map-[0,2].js'
-import {
-  generateMapZeroThreeState,
-  updateMapZeroThreeState,
-} from './map-[0,3].js'
-import { generateMapOneZeroState, updateMapOneZeroState } from './map-[1,0].js'
-import { generateMapOneOneState, updateMapOneOneState } from './map-[1,1].js'
-import {
-  generateSettlementMapState,
-  updateSettlementMapState,
-} from './settlement.js'
+  addNotification,
+  getCurrentMap,
+  getGameState,
+  getMapsState,
+  isPlayerInitialised,
+  updateGameState,
+  updateMapsState,
+} from '../state.js'
 
-export function generateMaps() {
-  updateMapZeroState(generateMapZeroState())
-  updateMapMinusOneZeroState(generateMapMinusOneZeroState())
-  updateMapZeroOneState(generateMapZeroOneState())
-  updateMapOneZeroState(generateMapOneZeroState())
-  updateMapOneOneState(generateMapOneOneState())
-  updateMapMinusOneOneState(generateMapMinusOneOneState())
-  updateMapMinusTwoZeroState(generateMapMinusTwoZeroState())
-  updateMapMinusThreeZeroState(generateMapMinusThreeZeroState())
-  updateMapMinusThreeMinusOneState(generateMapMinusThreeMinusOneState())
-  updateMapMinusTwoMinusOneState(generateMapMinusTwoMinusOneState())
-  updateMapMinusOneMinusOneState(generateMapMinusOneMinusOneState())
-  updateMapZeroTwoState(generateMapZeroTwoState())
-  updateMapZeroThreeState(generateMapZeroThreeState())
+export function handleMapExit() {
+  const currentMap = getCurrentMap()
+  const { maps } = getMapsState()
 
-  updateSettlementMapState(generateSettlementMapState())
+  const { player, blocksHorizontal, blocksVertical } = getGameState()
+  if (!isPlayerInitialised(player)) return
+
+  const [pCoordsX, pCoordsY] = player.coordinates
+  if (pCoordsY === blocksVertical - 1) {
+    if (
+      (isKeyCurrentlyDown(['s', 'arrowdown']) ||
+        isButtonCurrentlyDown('dpadDown')) &&
+      player.faceDirection === 'down'
+    ) {
+      if (currentMap.id === '[0,0]') {
+        updateGameState({
+          status: 'settlement',
+        })
+        updateMapsState({
+          currentMapId: 'settlement',
+        })
+      } else {
+        const [mapX, mapY] = currentMap.id
+          .replace(/\[|\]/g, '')
+          .split(',')
+          .map(Number)
+        const newMap = maps.find((m) => m.id === `[${mapX},${mapY - 1}]`)
+        if (!newMap) return
+        if (!newMap.isDiscovered) {
+          addNotification(
+            'New area discovered! This area has been added to the world map'
+          )
+        }
+        updateMapsState((c) => ({
+          currentMapId: newMap.id,
+          maps: c.maps.map((m) => {
+            if (m.id === newMap.id) {
+              return {
+                ...m,
+                isDiscovered: true,
+              }
+            }
+            return m
+          }),
+        }))
+      }
+      player.goToCoordinates(player.coordinates[0], 0)
+      player.stopMoving()
+    }
+  }
+
+  if (pCoordsX === 0) {
+    if (
+      (isKeyCurrentlyDown(['a', 'arrowleft']) ||
+        isButtonCurrentlyDown('dpadLeft')) &&
+      player.faceDirection === 'left'
+    ) {
+      const [mapX, mapY] = currentMap.id
+        .replace(/\[|\]/g, '')
+        .split(',')
+        .map(Number)
+      const newMap = maps.find((m) => m.id === `[${mapX - 1},${mapY}]`)
+      if (!newMap) return
+      if (!newMap.isDiscovered) {
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
+      }
+      updateMapsState((c) => ({
+        currentMapId: newMap.id,
+        maps: c.maps.map((m) => {
+          if (m.id === newMap.id) {
+            return {
+              ...m,
+              discovered: true,
+            }
+          }
+          return m
+        }),
+      }))
+      player.goToCoordinates(blocksHorizontal - 1, player.coordinates[1])
+      player.stopMoving()
+    }
+  }
+
+  if (pCoordsY === 0) {
+    if (
+      (isKeyCurrentlyDown(['w', 'arrowup']) ||
+        isButtonCurrentlyDown('dpadUp')) &&
+      player.faceDirection === 'up'
+    ) {
+      const [mapX, mapY] = currentMap.id
+        .replace(/\[|\]/g, '')
+        .split(',')
+        .map(Number)
+      const newMap = maps.find((m) => m.id === `[${mapX},${mapY + 1}]`)
+      if (!newMap) return
+      if (!newMap.isDiscovered) {
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
+      }
+      updateMapsState((c) => ({
+        currentMapId: newMap.id,
+        maps: c.maps.map((m) => {
+          if (m.id === newMap.id) {
+            return {
+              ...m,
+              isDiscovered: true,
+            }
+          }
+          return m
+        }),
+      }))
+      player.goToCoordinates(player.coordinates[0], blocksVertical - 1)
+      player.stopMoving()
+    }
+  }
+
+  if (pCoordsX === blocksHorizontal - 1) {
+    if (
+      (isKeyCurrentlyDown(['d', 'arrowright']) ||
+        isButtonCurrentlyDown('dpadRight')) &&
+      player.faceDirection === 'right'
+    ) {
+      const [mapX, mapY] = currentMap.id
+        .replace(/\[|\]/g, '')
+        .split(',')
+        .map(Number)
+      const newMap = maps.find((m) => m.id === `[${mapX + 1},${mapY}]`)
+      if (!newMap) return
+      if (!newMap.isDiscovered) {
+        addNotification(
+          'New area discovered! This area has been added to the world map'
+        )
+      }
+      updateMapsState((c) => ({
+        currentMapId: newMap.id,
+        maps: c.maps.map((m) => {
+          if (m.id === newMap.id) {
+            return {
+              ...m,
+              isDiscovered: true,
+            }
+          }
+          return m
+        }),
+      }))
+      player.goToCoordinates(0, player.coordinates[1])
+      player.stopMoving()
+    }
+  }
 }

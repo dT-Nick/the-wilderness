@@ -60,7 +60,7 @@ function handleMouseDown(e: MouseEvent) {
   })
 }
 
-function handleMouseUp(e: MouseEvent) {
+function handleMouseUp() {
   updateInputState({
     mouse: {
       isDown: false,

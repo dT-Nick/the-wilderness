@@ -1,43 +1,20 @@
-import { handleEnemyInteraction } from './enemy.js'
-import { calculateDamage } from './helpers/functions.js'
-import { activateConsumable, handleItemPickup } from './item.js'
+import { activateConsumable } from './item.js'
 import { loadGame } from './save.js'
 import {
   constants,
   getBattleState,
-  getCanvasState,
   getGameState,
   getInputState,
   getPrevInputState,
   getSettlementState,
   getStartMenuState,
-  getWildernessState,
-  isInitialised,
   isPlayerInitialised,
   updateBattleState,
   updateGameState,
-  updateMessageState,
   updateStartMenuState,
 } from './state.js'
-import { handleMapZeroInput } from './wilderness-maps/map-0.js'
-import { handleMapMinusOneMinusOneInput } from './wilderness-maps/map-[-1,-1].js'
-import { handleMapMinusOneZeroInput } from './wilderness-maps/map-[-1,0].js'
-import { handleMapMinusOneOneInput } from './wilderness-maps/map-[-1,1].js'
-import { handleMapMinusTwoMinusOneInput } from './wilderness-maps/map-[-2,-1].js'
-import { handleMapMinusTwoZeroInput } from './wilderness-maps/map-[-2,0].js'
-import { handleMapMinusThreeMinusOneInput } from './wilderness-maps/map-[-3,-1].js'
-import { handleMapMinusThreeZeroInput } from './wilderness-maps/map-[-3,0].js'
-import { handleMapZeroOneInput } from './wilderness-maps/map-[0,1].js'
-import { handleMapZeroTwoInput } from './wilderness-maps/map-[0,2].js'
-import { handleMapZeroThreeInput } from './wilderness-maps/map-[0,3].js'
-import { handleMapOneZeroInput } from './wilderness-maps/map-[1,0].js'
-import { handleMapOneOneInput } from './wilderness-maps/map-[1,1].js'
-import { getSettlementMapState } from './wilderness-maps/settlement.js'
 
 export function handleStartMenuInput() {
-  const { width, height } = getCanvasState()
-  const { mouseX, mouseY } = getInputState()
-  const { startMenuButtonSize } = constants
   const { selectedButton } = getStartMenuState()
 
   if (isKeyDownEvent(['e', 'enter']) || isButtonDownEvent('buttonA')) {
@@ -62,72 +39,6 @@ export function handleStartMenuInput() {
       selectedButton: c.selectedButton === 0 ? 1 : 0,
     }))
   }
-}
-
-export function handleWildernessInput() {
-  const { mapId } = getWildernessState()
-
-  switch (mapId) {
-    case 0: {
-      handleMapZeroInput()
-      break
-    }
-    case '[-1,0]': {
-      handleMapMinusOneZeroInput()
-      break
-    }
-    case '[-2,0]': {
-      handleMapMinusTwoZeroInput()
-      break
-    }
-    case '[-3,0]': {
-      handleMapMinusThreeZeroInput()
-      break
-    }
-    case '[0,1]': {
-      handleMapZeroOneInput()
-      break
-    }
-    case '[0,2]': {
-      handleMapZeroTwoInput()
-      break
-    }
-    case '[0,3]': {
-      handleMapZeroThreeInput()
-      break
-    }
-    case '[1,0]': {
-      handleMapOneZeroInput()
-      break
-    }
-    case '[1,1]': {
-      handleMapOneOneInput()
-      break
-    }
-    case '[-1,1]': {
-      handleMapMinusOneOneInput()
-      break
-    }
-    case '[-1,-1]': {
-      handleMapMinusOneMinusOneInput()
-      break
-    }
-    case '[-2,-1]': {
-      handleMapMinusTwoMinusOneInput()
-      break
-    }
-    case '[-3,-1]': {
-      handleMapMinusThreeMinusOneInput()
-      break
-    }
-    default: {
-      throw new Error(`Unknown mapId: ${mapId}`)
-    }
-  }
-
-  handleSettingsTriggerInputs()
-  handleItemPickup()
-  handleEnemyInteraction()
 }
 
 export function handleBattleInput() {
@@ -251,13 +162,13 @@ export function handleBattleInput() {
           enemy.takeHit(10)
         }
         if (selectedMove === 2) {
-          enemy.takeHit(5 + Math.round(Math.random() * 10))
+          enemy.takeHit(5 + Math.round(Math.random() * 7))
         }
         if (selectedMove === 3) {
-          enemy.takeHit(2 + Math.round(Math.random() * 20))
+          enemy.takeHit(enemy.maxHealth)
         }
         if (selectedMove === 4) {
-          enemy.takeHit(0 + Math.round(Math.random() * 30))
+          enemy.takeHit(2 + Math.round(Math.random() * 20))
         }
       }
       if (playerMenu === 'items') {

@@ -1,12 +1,25 @@
-import {
-  type ConsumableItem,
-  type EquipableItem,
-  type Enemy,
-  type FloorItem,
-  type Player,
-  Building,
-  QuestItem,
-} from './classes.js'
+import { Building } from './classes/Building.js'
+import { ConsumableItem } from './classes/ConsumableItem.js'
+import { Enemy } from './classes/Enemy.js'
+import { EquipableItem } from './classes/EquipableItem.js'
+import { FloorItem } from './classes/FloorItem.js'
+import { type Player } from './classes/Player.js'
+import { QuestItem } from './classes/QuestItem.js'
+import { generateMapZeroDesign } from './wilderness-maps/map-[0,0].js'
+import { generateMapMinusOneMinusOneDesign } from './wilderness-maps/map-[-1,-1].js'
+import { generateMapMinusOneZeroDesign } from './wilderness-maps/map-[-1,0].js'
+import { generateMapMinusOneOneDesign } from './wilderness-maps/map-[-1,1].js'
+import { generateMapMinusTwoMinusOneDesign } from './wilderness-maps/map-[-2,-1].js'
+import { generateMapMinusTwoZeroDesign } from './wilderness-maps/map-[-2,0].js'
+import { generateMapMinusThreeMinusOneDesign } from './wilderness-maps/map-[-3,-1].js'
+import { generateMapMinusThreeZeroDesign } from './wilderness-maps/map-[-3,0].js'
+import { generateMapZeroOneDesign } from './wilderness-maps/map-[0,1].js'
+import { generateMapZeroTwoDesign } from './wilderness-maps/map-[0,2].js'
+import { generateMapZeroThreeDesign } from './wilderness-maps/map-[0,3].js'
+import { generateMapOneZeroDesign } from './wilderness-maps/map-[1,0].js'
+import { generateMapOneOneDesign } from './wilderness-maps/map-[1,1].js'
+import { generateSettlementMapDesign } from './wilderness-maps/settlement.js'
+import { MapDesign } from './wilderness.js'
 
 export const constants: {
   playerSize: number
@@ -43,7 +56,9 @@ export function getCanvasState() {
 }
 
 export function updateCanvasState(
-  changes: Partial<CanvasState> | ((state: CanvasState) => Partial<CanvasState>)
+  changes:
+    | Partial<CanvasState>
+    | ((state: CanvasState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(canvasState, changes(canvasState))
@@ -100,7 +115,7 @@ export function getInputState() {
 export function updateInputState(
   changes:
     | Partial<typeof inputState>
-    | ((state: typeof inputState) => Partial<typeof inputState>)
+    | ((state: typeof inputState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(inputState, changes(inputState))
@@ -152,7 +167,7 @@ export function getDeltaFrames() {
 export function updateLoopState(
   changes:
     | Partial<typeof loopState>
-    | ((state: typeof loopState) => Partial<typeof loopState>)
+    | ((state: typeof loopState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(loopState, changes(loopState))
@@ -226,7 +241,7 @@ export function getGameState() {
 export function updateGameState(
   changes:
     | Partial<typeof gameState>
-    | ((state: typeof gameState) => Partial<typeof gameState>)
+    | ((state: typeof gameState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(gameState, changes(gameState))
@@ -258,7 +273,7 @@ export function getSettlementState() {
 export function updateSettlementState(
   changes:
     | Partial<typeof settlementState>
-    | ((state: typeof settlementState) => Partial<typeof settlementState>)
+    | ((state: typeof settlementState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(settlementState, changes(settlementState))
@@ -270,14 +285,12 @@ export function updateSettlementState(
 // ##############################
 
 interface WildernessState {
-  mapId: number | string
   wildernessTime: number
   enemyMovementCycleCount: number
   spawnCycleCount: number
 }
 
 const wildernessState: WildernessState = {
-  mapId: 0,
   wildernessTime: 0,
   enemyMovementCycleCount: 0,
   spawnCycleCount: 0,
@@ -290,7 +303,7 @@ export function getWildernessState() {
 export function updateWildernessState(
   changes:
     | Partial<typeof wildernessState>
-    | ((state: typeof wildernessState) => Partial<typeof wildernessState>)
+    | ((state: typeof wildernessState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(wildernessState, changes(wildernessState))
@@ -425,7 +438,7 @@ export function getBattleState() {
 export function updateBattleState(
   changes:
     | Partial<typeof battleState>
-    | ((state: typeof battleState) => Partial<typeof battleState>)
+    | ((state: typeof battleState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(battleState, changes(battleState))
@@ -454,7 +467,7 @@ export function getNotificationState() {
 export function updateNotificationState(
   changes:
     | Partial<typeof notificationState>
-    | ((state: typeof notificationState) => Partial<typeof notificationState>)
+    | ((state: typeof notificationState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(notificationState, changes(notificationState))
@@ -503,7 +516,7 @@ export function getMessageState() {
 export function updateMessageState(
   changes:
     | Partial<typeof messageState>
-    | ((state: typeof messageState) => Partial<typeof messageState>)
+    | ((state: typeof messageState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(messageState, changes(messageState))
@@ -539,7 +552,7 @@ export function getQuestState() {
 export function updateQuestState(
   changes:
     | Partial<typeof questState>
-    | ((state: typeof questState) => Partial<typeof questState>)
+    | ((state: typeof questState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(questState, changes(questState))
@@ -582,7 +595,7 @@ export function getSettingsState() {
 export function updateSettingsState(
   changes:
     | Partial<typeof settingsState>
-    | ((state: typeof settingsState) => Partial<typeof settingsState>)
+    | ((state: typeof settingsState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(settingsState, changes(settingsState))
@@ -593,12 +606,12 @@ export function updateSettingsState(
 
 // ##############################
 
-interface idState {
+interface IdState {
   entityId: number
   buildingId: number
 }
 
-const idState: idState = {
+const idState: IdState = {
   entityId: 0,
   buildingId: 0,
 }
@@ -618,7 +631,7 @@ export function getEntireIdState() {
 export function updateIdState(
   changes:
     | Partial<typeof idState>
-    | ((state: typeof idState) => Partial<typeof idState>)
+    | ((state: typeof idState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(idState, changes(idState))
@@ -644,13 +657,170 @@ export function getStartMenuState() {
 export function updateStartMenuState(
   changes:
     | Partial<typeof startMenuState>
-    | ((state: typeof startMenuState) => Partial<typeof startMenuState>)
+    | ((state: typeof startMenuState) => Partial<typeof state>)
 ) {
   if (typeof changes === 'function') {
     Object.assign(startMenuState, changes(startMenuState))
   } else {
     Object.assign(startMenuState, changes)
   }
+}
+
+// ##############################
+
+type MapsState = {
+  currentMapId: string
+  maps: Array<{
+    id: string
+    name: string
+    isDiscovered: boolean
+    design: MapDesign
+  }>
+}
+
+export const mapsState: MapsState = {
+  currentMapId: 'settlement',
+  maps: [
+    {
+      id: '[-1,-1]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapMinusOneMinusOneDesign(),
+    },
+    {
+      id: '[-1,0]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapMinusOneZeroDesign(),
+    },
+    {
+      id: '[-1,1]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapMinusOneOneDesign(),
+    },
+    {
+      id: '[-2,-1]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapMinusTwoMinusOneDesign(),
+    },
+    {
+      id: '[-2,0]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapMinusTwoZeroDesign(),
+    },
+    {
+      id: '[-3,-1]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapMinusThreeMinusOneDesign(),
+    },
+    {
+      id: '[-3,0]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapMinusThreeZeroDesign(),
+    },
+    {
+      id: '[0,0]',
+      name: 'Defence zone',
+      isDiscovered: false,
+      design: generateMapZeroDesign(),
+    },
+    {
+      id: '[0,1]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapZeroOneDesign(),
+    },
+    {
+      id: '[0,2]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapZeroTwoDesign(),
+    },
+    {
+      id: '[0,3]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapZeroThreeDesign(),
+    },
+    {
+      id: '[1,0]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapOneZeroDesign(),
+    },
+    {
+      id: '[1,1]',
+      name: 'Wilderness',
+      isDiscovered: false,
+      design: generateMapOneOneDesign(),
+    },
+    {
+      id: 'settlement',
+      name: 'Settlement',
+      isDiscovered: true,
+      design: generateSettlementMapDesign(),
+    },
+    {
+      id: 'home',
+      name: 'Home',
+      isDiscovered: true,
+      design: [],
+    },
+  ],
+}
+
+export function getMapsState() {
+  return mapsState
+}
+
+export function getCurrentMap() {
+  const map = mapsState.maps.find((m) => m.id === mapsState.currentMapId)
+  if (!map) {
+    throw new Error(`Unknown map id: ${mapsState.currentMapId}`)
+  }
+  return map
+}
+
+export function getMapById(mapId: string) {
+  const map = mapsState.maps.find((m) => m.id === mapId)
+  if (!map) {
+    throw new Error(`Unknown map id: ${mapId}`)
+  }
+  return map
+}
+
+export function updateMapsState(
+  changes:
+    | Partial<typeof mapsState>
+    | ((state: typeof mapsState) => Partial<typeof state>)
+) {
+  if (typeof changes === 'function') {
+    Object.assign(mapsState, changes(mapsState))
+  } else {
+    Object.assign(mapsState, changes)
+  }
+}
+
+export function updateMap(
+  mapId: string,
+  updates: Partial<MapsState['maps'][number]>
+) {
+  updateMapsState((c) => ({
+    maps: c.maps.map((m) => {
+      if (m.id === mapId) {
+        return {
+          ...m,
+          ...updates,
+        }
+      }
+      return m
+    }),
+  }))
 }
 
 // ##############################

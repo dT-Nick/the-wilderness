@@ -3,16 +3,18 @@ import {
   deriveRestrictedCoordsFromMap,
   drawBackgroundFromMap,
 } from './wilderness.js'
-import { getSettlementMapState } from './wilderness-maps/settlement.js'
 import {
   addNotification,
   getCanvasState,
+  getCurrentMap,
   getGameState,
+  getMapById,
   getSettlementState,
   isInitialised,
   isPlayerInitialised,
   updateGameState,
-  updateMessageState,
+  updateMap,
+  updateMapsState,
   updateNotificationState,
   updateSettlementState,
 } from './state.js'
@@ -25,16 +27,14 @@ import {
   isKeyDownEvent,
   isKeyUpEvent,
 } from './input.js'
-import { getMapZeroState, updateMapZeroState } from './wilderness-maps/map-0.js'
 
 export function drawSettlementMap() {
-  const { map } = getSettlementMapState()
-  drawBackgroundFromMap(map)
+  const { design } = getCurrentMap()
+  drawBackgroundFromMap(design)
 }
 
 export function drawBuildings() {
-  const { ctx, scale, verticalOffset } = getCanvasState()
-  const { blockSize } = getGameState()
+  const { ctx } = getCanvasState()
   if (!isInitialised(ctx)) return
   const { buildings, selected } = getSettlementState()
   for (let building of buildings.filter(
@@ -168,7 +168,7 @@ export function drawBuilding(
 }
 
 export function drawBuildingSelectionPanel() {
-  const { ctx, scale, width, height, verticalOffset } = getCanvasState()
+  const { ctx, scale, height, verticalOffset } = getCanvasState()
   if (!isInitialised(ctx)) return
 
   const { blockSize } = getGameState()
@@ -216,9 +216,9 @@ export function drawBuildingSelectionPanel() {
 }
 
 export function handleSettlementInput() {
-  const { map } = getSettlementMapState()
+  const { design } = getCurrentMap()
   const { status } = getSettlementState()
-  const restrictedCoords = deriveRestrictedCoordsFromMap(map, 'settlement')
+  const restrictedCoords = deriveRestrictedCoordsFromMap(design, 'settlement')
 
   if (status === 'exploring') {
     handlePlayerMovement(restrictedCoords)
@@ -246,10 +246,13 @@ export function handleSettlementExit() {
       updateGameState({
         status: 'wilderness',
       })
-      const { discovered } = getMapZeroState()
-      if (!discovered) {
-        updateMapZeroState({
-          discovered: true,
+      updateMapsState({
+        currentMapId: '[0,0]',
+      })
+      const { isDiscovered } = getMapById('[0,0]')
+      if (!isDiscovered) {
+        updateMap('[0,0]', {
+          isDiscovered: true,
         })
         addNotification(
           'New area discovered! This area has been added to the world map'
@@ -302,6 +305,9 @@ export function handleSettlementExit() {
             isButtonCurrentlyDown('dpadUp')) &&
           player.faceDirection === 'up'
         ) {
+          updateMapsState({
+            currentMapId: 'home',
+          })
           updateGameState({
             status: 'building',
             buildingId: id,
@@ -316,6 +322,9 @@ export function handleSettlementExit() {
             isButtonCurrentlyDown('dpadDown')) &&
           player.faceDirection === 'down'
         ) {
+          updateMapsState({
+            currentMapId: 'home',
+          })
           updateGameState({
             status: 'building',
             buildingId: id,
@@ -330,6 +339,9 @@ export function handleSettlementExit() {
             isButtonCurrentlyDown('dpadLeft')) &&
           player.faceDirection === 'left'
         ) {
+          updateMapsState({
+            currentMapId: 'home',
+          })
           updateGameState({
             status: 'building',
             buildingId: id,
@@ -344,6 +356,9 @@ export function handleSettlementExit() {
             isButtonCurrentlyDown('dpadRight')) &&
           player.faceDirection === 'right'
         ) {
+          updateMapsState({
+            currentMapId: 'home',
+          })
           updateGameState({
             status: 'building',
             buildingId: id,

@@ -60,7 +60,7 @@ export function generateMeasurementsTool() {
 
 export function generateFixedMeasurementsTool() {
   // same as generateMeasurementsTool, but fixed in the center of the canvas
-  const { ctx, verticalOffset } = getCanvasState()
+  const { ctx } = getCanvasState()
 
   if (!isInitialised(ctx)) return
 

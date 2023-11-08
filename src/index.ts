@@ -1,16 +1,11 @@
-import { Building, Enemy, FloorItem, Player } from './classes.js'
 import { drawBattle, handleBattleScenarios } from './battle.js'
 import { drawEnemies } from './enemy.js'
 import { startListeners } from './event-listeners.js'
 import { getEntityXAndYValuesFromCoords } from './helpers/coordinates.js'
-import {
-  generateFixedMeasurementsTool,
-  generateMeasurementsTool,
-} from './helpers/tools.js'
+import { generateFixedMeasurementsTool } from './helpers/tools.js'
 import {
   handleBattleInput,
   handleStartMenuInput,
-  handleWildernessInput,
   isKeyCurrentlyDown,
 } from './input.js'
 import { drawFloorItems, generateGameItems } from './item.js'
@@ -19,10 +14,10 @@ import {
   drawStartMenu,
   drawStatisticsAndPlayerDetails,
   handleSettingsInput,
+  handleSettingsScenarios,
 } from './menus.js'
 import { drawPlayer } from './player.js'
 import {
-  constants,
   getCanvasState,
   getGameState,
   getLoopState,
@@ -35,10 +30,10 @@ import {
   updatePrevInputState,
   updateSettlementState,
 } from './state.js'
-import { generateMaps } from './wilderness-maps/index.js'
 import {
   drawWilderness,
   drawWildernessClock,
+  handleWildernessInput,
   handleWildernessScenarios,
   spawnItemsAndEnemies,
   updateWildernessClock,
@@ -64,6 +59,8 @@ import {
   drawInventorySettings,
   handleInventorySettingsInput,
 } from './inventory.js'
+import { Player } from './classes/Player.js'
+import { Building } from './classes/Building.js'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -146,8 +143,6 @@ document.addEventListener('DOMContentLoaded', function () {
       ctx,
     })
 
-    generateMaps()
-
     const [playerStartingX, playerStartingY] = getEntityXAndYValuesFromCoords(
       41,
       1,
@@ -207,7 +202,7 @@ export function runGameLoop() {
 
   if (!isInitialised(ctx)) return requestAnimationFrame(runGameLoop)
 
-  const { status, player } = getGameState()
+  const { status } = getGameState()
   ctx.clearRect(0, 0, width, height)
 
   removeTimedOutNotifications()
@@ -305,14 +300,15 @@ export function runGameLoop() {
       break
     }
     case 'settings': {
+      drawSettingsMenu()
+      drawStatisticsAndPlayerDetails()
+
       if (!isMessageActive()) {
         handleSettingsInput()
+        handleSettingsScenarios()
       } else {
         handleMessageInput()
       }
-
-      drawSettingsMenu()
-      drawStatisticsAndPlayerDetails()
       break
     }
     case 'inventory': {

@@ -1,12 +1,10 @@
-import { Enemy } from './classes.js'
+import { Enemy } from './classes/Enemy.js'
 import { getColourFromEnemyName } from './helpers/functions.js'
-import { isKeyDownEvent } from './input.js'
+import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import {
-  getBattleState,
   getCanvasState,
-  getDeltaFrames,
+  getCurrentMap,
   getGameState,
-  getWildernessState,
   isInitialised,
   isPlayerInitialised,
   updateBattleState,
@@ -16,7 +14,7 @@ import {
 export function drawEnemies() {
   const { enemies, blockSize, status } = getGameState()
   const { ctx, scale, verticalOffset } = getCanvasState()
-  const { mapId } = getWildernessState()
+  const { id: mapId } = getCurrentMap()
 
   if (isInitialised(ctx)) {
     for (const enemy of enemies.filter(
@@ -80,10 +78,10 @@ export function drawEnemies() {
 
 export function handleEnemyInteraction() {
   const { player, enemies } = getGameState()
-  const { mapId } = getWildernessState()
+  const { id: mapId } = getCurrentMap()
   if (!isPlayerInitialised(player)) return
 
-  if (isKeyDownEvent('e')) {
+  if (isKeyDownEvent('e') || isButtonDownEvent('buttonA')) {
     for (const enemy of enemies.filter((e) => e.mapId === mapId)) {
       const {
         faceDirection,
@@ -129,7 +127,7 @@ export function generateKaurismakiDaemon(
   level: number,
   startX: number,
   startY: number,
-  mapId: number | string,
+  mapId: string,
   faceDirection?: 'up' | 'down' | 'left' | 'right'
 ) {
   const { blockSize } = getGameState()
@@ -153,7 +151,7 @@ export function generateSettlementZombie(
   level: number,
   startX: number,
   startY: number,
-  mapId: number | string,
+  mapId: string,
   faceDirection?: 'up' | 'down' | 'left' | 'right'
 ) {
   const { blockSize } = getGameState()
@@ -177,7 +175,7 @@ export function generateNightWitch(
   level: number,
   startX: number,
   startY: number,
-  mapId: number | string,
+  mapId: string,
   faceDirection?: 'up' | 'down' | 'left' | 'right'
 ) {
   const { blockSize } = getGameState()
@@ -192,7 +190,7 @@ export function generateNightWitch(
     mapId,
     120,
     Math.floor(Math.random() * 4 + 4),
-    Math.floor(Math.random() * 4 + 12),
+    Math.floor(Math.random() * 4 + 8),
     faceDirection
   )
 }
@@ -201,7 +199,7 @@ export function generateEliteWitch(
   level: number,
   startX: number,
   startY: number,
-  mapId: number | string,
+  mapId: string,
   faceDirection?: 'up' | 'down' | 'left' | 'right'
 ) {
   const { blockSize } = getGameState()
@@ -215,8 +213,8 @@ export function generateEliteWitch(
     blockSize * (3 / 4),
     mapId,
     200,
-    Math.floor(Math.random() * 4 + 13),
-    Math.floor(Math.random() * 4 + 15),
+    Math.floor(Math.random() * 4 + 10),
+    Math.floor(Math.random() * 4 + 10),
     faceDirection
   )
 }
@@ -224,7 +222,7 @@ export function generateEliteWitch(
 export function generateKaurismakiKing(
   startX: number,
   startY: number,
-  mapId: number | string,
+  mapId: string,
   faceDirection?: 'up' | 'down' | 'left' | 'right'
 ) {
   const { blockSize } = getGameState()
@@ -238,8 +236,8 @@ export function generateKaurismakiKing(
     blockSize * (3 / 4),
     mapId,
     1000,
-    25,
-    25,
+    14,
+    13,
     faceDirection
   )
 }

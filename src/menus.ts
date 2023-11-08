@@ -1,5 +1,5 @@
 import { calculateExperienceFromLevel } from './helpers/functions.js'
-import { isButtonDownEvent, isHoveringOn, isKeyDownEvent } from './input.js'
+import { isButtonDownEvent, isKeyDownEvent } from './input.js'
 import { saveGame } from './save.js'
 import {
   constants,
@@ -127,7 +127,6 @@ export function drawSettingsMenu() {
 
   const optionsMargin = 10 * scale
   const optionsWidth = width * (1 / 4) - optionsMargin
-  const optionsHeight = height - verticalOffset - 2 * optionsMargin
   const optionsX = width - optionsWidth - optionsMargin
   const optionsY = verticalOffset / 2 + optionsMargin
 
@@ -211,7 +210,9 @@ export function drawStatisticsAndPlayerDetails() {
     ctx.fillRect(
       experienceBarX,
       experienceBarY,
-      experienceBarFillWidth,
+      experienceBarFillWidth > experienceBarWidth
+        ? experienceBarWidth
+        : experienceBarFillWidth,
       experienceBarHeight
     )
 
@@ -340,7 +341,8 @@ export function drawStatisticsAndPlayerDetails() {
 
 export function handleSettingsInput() {
   const { selectedMenu } = getSettingsState()
-  const { prevStatus } = getGameState()
+  const { prevStatus, player } = getGameState()
+  if (!isPlayerInitialised(player)) return
 
   if (isKeyDownEvent(['s', 'arrowdown']) || isButtonDownEvent('dpadDown')) {
     updateSettingsState((c) => ({
@@ -380,8 +382,38 @@ export function handleSettingsInput() {
     isKeyDownEvent(['escape', 'tab']) ||
     isButtonDownEvent(['buttonB', 'start'])
   ) {
+    if (
+      prevStatus !== 'settings' &&
+      prevStatus !== 'inventory' &&
+      prevStatus !== 'world-map'
+    ) {
+      if (player.currentHeal > 0) {
+        player.addHealth(true)
+      }
+      if (player.currentExperienceGain > 0) {
+        player.addExperience(true)
+      }
+      if (player.currentDamage) {
+        player.takeDamage(true)
+      }
+    }
     updateGameState((c) => ({
       status: c.prevStatus ?? 'settlement',
     }))
+  }
+}
+
+export function handleSettingsScenarios() {
+  const { player } = getGameState()
+  if (!isPlayerInitialised(player)) return
+
+  if (player.currentHeal > 0) {
+    player.addHealth()
+  }
+  if (player.currentExperienceGain > 0) {
+    player.addExperience()
+  }
+  if (player.currentDamage) {
+    player.takeDamage()
   }
 }

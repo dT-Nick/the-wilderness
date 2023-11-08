@@ -1,5 +1,3 @@
-import { updateMessageState } from '../state.js'
-
 export function generateSlug(name: string) {
   return name.toLowerCase().replace(' ', '-')
 }
@@ -25,8 +23,8 @@ export function calculateDamage(
   damage: number
 ) {
   const isAttackerStronger = attackersAttack > defendersDefence
-  const diff = Math.abs(attackersAttack - defendersDefence)
-  const randomExtra = Math.floor(Math.random() * diff)
+  const diff = Math.abs(attackersAttack - defendersDefence) * (3 / 4)
+  const randomExtra = Math.floor(diff / 2 + Math.random() * (diff * (1 / 4)))
 
   const critMultiplier = Math.random() < 0.1 ? 1.5 : 1
 

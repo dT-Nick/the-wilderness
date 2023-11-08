@@ -1,5 +1,3 @@
-import { getGameState } from '../state.js'
-
 export function getEntityXAndYValuesFromCoords(
   xCoord: number,
   yCoord: number,

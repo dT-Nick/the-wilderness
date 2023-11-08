@@ -1,11 +1,5 @@
-// import { battleState, gameState } from './state.js'
-
-import { Enemy } from './classes.js'
-import {
-  calculateDamage,
-  calculateExperienceFromLevel,
-  calculateExperienceGainedFromBattle,
-} from './helpers/functions.js'
+import { Enemy } from './classes/Enemy.js'
+import { calculateExperienceFromLevel } from './helpers/functions.js'
 import { getItemViaId } from './item.js'
 import {
   getBattleState,
@@ -17,8 +11,8 @@ import {
   isPlayerInitialised,
   updateBattleState,
   updateGameState,
+  updateMapsState,
   updateMessageState,
-  updateSettlementState,
   updateWildernessState,
 } from './state.js'
 import {
@@ -92,7 +86,9 @@ export function drawPlayerInfo() {
     ctx.fillRect(
       experienceBarX,
       experienceBarY,
-      experienceBarFillWidth,
+      experienceBarFillWidth > experienceBarWidth
+        ? experienceBarWidth
+        : experienceBarFillWidth,
       experienceBarHeight
     )
 
@@ -131,7 +127,7 @@ export function drawPlayerInfo() {
 export function drawEnemyInfo() {
   const { ctx, scale, verticalOffset, width, height } = getCanvasState()
   const { enemies } = getGameState()
-  const { enemyId, lastMove } = getBattleState()
+  const { enemyId } = getBattleState()
 
   if (isInitialised(ctx)) {
     const enemy = enemies.find((e) => e.id === enemyId)
@@ -391,7 +387,7 @@ export function drawMoves() {
 
 export function drawInventory() {
   const { ctx, scale, verticalOffset, height, width } = getCanvasState()
-  const { lastMove, selectedItem, enemyId, status } = getBattleState()
+  const { lastMove, selectedItem } = getBattleState()
   const { inventory } = getGameState()
   if (!isInitialised(ctx)) return
 
@@ -460,6 +456,7 @@ export function handleBattleScenarios() {
     if (player.currentHeal > 0) {
       player.addHealth()
     }
+    console.log(player.currentExperienceGain)
     if (player.currentExperienceGain > 0) {
       player.addExperience()
       return
@@ -477,8 +474,8 @@ export function handleBattleScenarios() {
         status: 'building',
         buildingId: home.id,
       })
-      updateWildernessState({
-        mapId: 0,
+      updateMapsState({
+        currentMapId: 'home',
       })
       handleEnemyMovementCycle(true)
       player.restoreHealth()
