@@ -22,6 +22,7 @@ export function calculateDamage(
   defendersDefence: number,
   damage: number
 ) {
+  console.log(attackersAttack, defendersDefence)
   const isAttackerStronger = attackersAttack > defendersDefence
   const diff = Math.abs(attackersAttack - defendersDefence) * (3 / 4)
   const randomExtra = Math.floor(diff / 2 + Math.random() * (diff * (1 / 4)))
@@ -55,6 +56,16 @@ export function calculateLevelFromExperience(experience: number) {
   if (level > maxLevel) return maxLevel
 
   return level
+}
+
+export function calculateCombatLevelFromMeleeRangedAndMagic(
+  meleeExperience: number,
+  rangedExperience: number,
+  magicExperience: number
+) {
+  return calculateLevelFromExperience(
+    (meleeExperience + rangedExperience + magicExperience) / 3
+  )
 }
 
 export function calculateExperienceFromLevel(level: number) {
@@ -101,6 +112,8 @@ export function getColourFromItemSlug(slug: string | undefined) {
       return '#c0392b'
     case 'bridge-pieces':
       return '#553400'
+    case 'wooden-sword':
+      return '#333'
     default:
       return 'yellow'
   }

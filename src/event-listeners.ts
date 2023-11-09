@@ -1,5 +1,11 @@
 import { isControllerButtonCoords } from './controller/controller.js'
-import { getCanvasState, getInputState, updateInputState } from './state.js'
+import {
+  getCanvasState,
+  getGameState,
+  getInputState,
+  isPlayerInitialised,
+  updateInputState,
+} from './state.js'
 
 export function startListeners() {
   document.addEventListener('keydown', handleKeyDown)
@@ -30,6 +36,12 @@ export function stopListeners() {
 function handleKeyDown(e: KeyboardEvent) {
   e.preventDefault()
   const key = e.key.toLowerCase()
+
+  if (key === 'd' && e.ctrlKey) {
+    const { player } = getGameState()
+    if (!isPlayerInitialised(player)) return
+    player?.toggleGodMode()
+  }
 
   updateInputState((prevInputState) => ({
     keysDown: [

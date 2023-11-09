@@ -494,14 +494,16 @@ export function spawnItemsAndEnemies(initialSpawn: boolean = false) {
           typeof enemyLevel === 'function' ? enemyLevel() : enemyLevel,
           getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
           getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          id
+          id,
+          direction
         )
       } else if (enemyTypeRng < witchRatioThreshhold) {
         newEnemy = generateNightWitch(
           typeof enemyLevel === 'function' ? enemyLevel() : enemyLevel,
           getEntityXAndYValuesFromCoords(x, y, blockSize)[0],
           getEntityXAndYValuesFromCoords(x, y, blockSize)[1],
-          id
+          id,
+          direction
         )
       }
 

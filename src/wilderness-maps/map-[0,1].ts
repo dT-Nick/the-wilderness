@@ -6,7 +6,7 @@ import { MapDesign } from '../wilderness.js'
 export function generateMapZeroOneDesign(
   withBridge: boolean = false
 ): MapDesign {
-  const bridgeBlocks: MapDesign[number] = !withBridge
+  const bridgeBlocks: MapDesign[number] = withBridge
     ? {
         type: 'wood',
         fromCoords: [42, 7],

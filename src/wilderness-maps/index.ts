@@ -71,6 +71,7 @@ export function handleMapExit() {
         .split(',')
         .map(Number)
       const newMap = maps.find((m) => m.id === `[${mapX - 1},${mapY}]`)
+      console.log(newMap)
       if (!newMap) return
       if (!newMap.isDiscovered) {
         addNotification(
@@ -80,10 +81,12 @@ export function handleMapExit() {
       updateMapsState((c) => ({
         currentMapId: newMap.id,
         maps: c.maps.map((m) => {
+          console.log(m.id, newMap.id)
           if (m.id === newMap.id) {
+            console.log('okay...')
             return {
               ...m,
-              discovered: true,
+              isDiscovered: true,
             }
           }
           return m

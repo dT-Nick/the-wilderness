@@ -1,4 +1,4 @@
-import { activateConsumable } from './item.js'
+import { activateConsumable, getItemViaId, isConsumable } from './item.js'
 import { loadGame } from './save.js'
 import {
   constants,
@@ -54,6 +54,10 @@ export function handleBattleInput() {
     playerMenu,
   } = getBattleState()
 
+  const items = inventory
+    .map((item) => getItemViaId(item.itemId))
+    .filter((item) => isConsumable(item))
+
   if (isPlayerInitialised(player)) {
     const enemy = enemies.find((enemy) => enemy.id === enemyId)
     if (!enemy) throw new Error(`No enemy found with id: ${enemyId}`)
@@ -63,7 +67,8 @@ export function handleBattleInput() {
       status !== 'wait' &&
       player.currentDamage === null &&
       !player.currentHeal &&
-      !player.currentExperienceGain
+      enemy.currentHealth > 0 &&
+      enemy.currentDamage === null
 
     if (isKeyDownEvent(['escape', 'tab']) || isButtonDownEvent('buttonB')) {
       if (playerMenu === 'items') {
@@ -89,8 +94,7 @@ export function handleBattleInput() {
       }
       if (playerMenu === 'items' && isWaitingForPlayerInput) {
         updateBattleState({
-          selectedItem:
-            selectedItem === 1 ? inventory.length : selectedItem - 1,
+          selectedItem: selectedItem === 1 ? items.length : selectedItem - 1,
         })
       }
     }
@@ -105,8 +109,7 @@ export function handleBattleInput() {
       }
       if (playerMenu === 'items' && isWaitingForPlayerInput) {
         updateBattleState({
-          selectedItem:
-            selectedItem === inventory.length ? 1 : selectedItem + 1,
+          selectedItem: selectedItem === items.length ? 1 : selectedItem + 1,
         })
       }
     }
@@ -159,16 +162,16 @@ export function handleBattleInput() {
       }
       if (playerMenu === 'moves') {
         if (selectedMove === 1) {
-          enemy.takeHit(10)
+          enemy.takeHit(10, 'melee')
         }
         if (selectedMove === 2) {
-          enemy.takeHit(5 + Math.round(Math.random() * 7))
+          enemy.takeHit(5 + Math.round(Math.random() * 7), 'magic')
         }
         if (selectedMove === 3) {
-          enemy.takeHit(enemy.maxHealth)
+          enemy.takeHit(3 + Math.round(Math.random() * 15), 'ranged')
         }
         if (selectedMove === 4) {
-          enemy.takeHit(2 + Math.round(Math.random() * 20))
+          enemy.takeHit(2 + Math.round(Math.random() * 20), 'magic')
         }
       }
       if (playerMenu === 'items') {

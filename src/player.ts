@@ -72,7 +72,13 @@ export function drawPlayer() {
   ctx.font = '16px serif'
   ctx.textAlign = 'left'
   ctx.textBaseline = 'top'
-  ctx.fillText(`[${player.coordinates[0]}, ${player.coordinates[1]}]`, 10, 20)
+  ctx.fillText(
+    `[${player.coordinates[0]}, ${player.coordinates[1]}]${
+      player.godMode ? ' God mode enabled' : ''
+    }`,
+    10,
+    20
+  )
 }
 
 export function handlePlayerMovement(

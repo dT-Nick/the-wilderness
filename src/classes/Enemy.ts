@@ -1,8 +1,4 @@
-import {
-  calculateDamage,
-  calculateExperienceFromLevel,
-  calculateExperienceGainedFromBattle,
-} from '../helpers/functions.js'
+import { calculateExperienceFromLevel } from '../helpers/functions.js'
 import { SaveFile } from '../save.js'
 import { takeSettlementDamage } from '../settlement.js'
 import {
@@ -13,8 +9,10 @@ import {
   updateBattleState,
   getBattleState,
   getMapById,
+  getIdState,
 } from '../state.js'
 import { deriveRestrictedCoordsFromMap } from '../wilderness.js'
+import { FloorItem } from './FloorItem.js'
 import { LivingBeing } from './LivingBeing.js'
 
 export class Enemy extends LivingBeing {
@@ -22,6 +20,10 @@ export class Enemy extends LivingBeing {
   mapId: number | string
   playerPrompted: boolean
   pictureId: string
+  inventory: Array<{
+    id: number
+    itemId: string
+  }>
 
   constructor(
     name: string,
@@ -32,17 +34,30 @@ export class Enemy extends LivingBeing {
     size: number,
     mapId: string,
     health: number = 100,
-    attack: number = 10,
-    defence: number = 10,
+    meleeAttack: number = 10,
+    meleeDefence: number = 10,
+    magicAttack: number = 10,
+    magicDefence: number = 10,
+    rangedAttack: number = 10,
+    rangedDefence: number = 10,
     faceDirection?: 'up' | 'down' | 'left' | 'right'
   ) {
     super(startX, startY, size, health, faceDirection)
     this.baseStats = {
-      attack,
-      defence,
+      meleeAttack,
+      meleeDefence,
+      magicAttack,
+      magicDefence,
+      rangedAttack,
+      rangedDefence,
       health,
     }
-    this.experience = calculateExperienceFromLevel(level - 1)
+    const experience = calculateExperienceFromLevel(level - 1)
+    this.experience = {
+      magic: experience,
+      melee: experience,
+      ranged: experience,
+    }
     this.pictureId = pictureId
     this.prevExperience = this.experience
     this.currentHealth = this.maxHealth
@@ -50,6 +65,38 @@ export class Enemy extends LivingBeing {
     this.name = name
     this.mapId = mapId
     this.playerPrompted = false
+
+    if (this.name === 'Settlement Zombie') {
+      this.inventory = [
+        {
+          itemId: 'wooden-sword',
+          id: getIdState('entityId'),
+        },
+      ]
+    } else {
+      this.inventory = []
+    }
+  }
+
+  public dropInventory() {
+    const { blockSize } = getGameState()
+
+    updateGameState((c) => ({
+      ...c,
+      floorItems: [
+        ...c.floorItems,
+        ...this.inventory.map(
+          (i) =>
+            new FloorItem(
+              this.x,
+              this.y,
+              blockSize * (1 / 2),
+              i.itemId,
+              this.mapId
+            )
+        ),
+      ],
+    }))
   }
 
   public updatePlayerPrompted(bool: boolean) {
@@ -172,16 +219,34 @@ export class Enemy extends LivingBeing {
       const { player } = getGameState()
       if (!isPlayerInitialised(player)) return
 
-      const experienceGained = calculateExperienceGainedFromBattle(
-        player.currentLevel,
-        this.currentLevel
-      )
+      let experienceGainedArray: Array<string> = []
+      if (player.currentExperienceGain.melee > 0) {
+        experienceGainedArray.push(
+          `${player.currentExperienceGain.melee.toLocaleString()} Melee Experience`
+        )
+      }
+      if (player.currentExperienceGain.magic > 0) {
+        experienceGainedArray.push(
+          `${player.currentExperienceGain.magic.toLocaleString()} Magic Experience`
+        )
+      }
+      if (player.currentExperienceGain.ranged > 0) {
+        experienceGainedArray.push(
+          `${player.currentExperienceGain.ranged.toLocaleString()} Ranged Experience`
+        )
+      }
+      const experienceGainedString = experienceGainedArray
+        .map((e, i) => {
+          if (i === experienceGainedArray.length - 1) {
+            return i === 0 ? e : `and ${e}`
+          }
+          return e
+        })
+        .join(', ')
+
       updateMessageState({
-        message: `You defeated the ${
-          this.name
-        } and gained ${experienceGained.toLocaleString()} experience!`,
+        message: `You defeated the ${this.name} and gained ${experienceGainedString}!`,
       })
-      player.gainExperience(experienceGained)
 
       return
     }
@@ -205,31 +270,22 @@ export class Enemy extends LivingBeing {
       status === 'play' &&
       player.currentDamage === null
     ) {
-      player.takeHit(damage)
+      player.takeHit(damage, 'melee')
     }
   }
 
-  public takeHit(damage: number) {
+  public takeHit(damage: number, type: 'melee' | 'magic' | 'ranged') {
     const { player } = getGameState()
     if (!isPlayerInitialised(player)) return
-    const { damage: modifiedDamage, isCrit } = calculateDamage(
-      player.attack,
-      this.defence,
-      damage
-    )
 
-    super.takeHit(modifiedDamage)
-    if (modifiedDamage === 0) {
-      updateMessageState({
-        message: `You missed your attack!`,
-      })
-    } else {
-      updateMessageState({
-        message:
-          (isCrit ? 'Critical hit! ' : '') +
-          `You attacked the ${this.name} causing ${modifiedDamage} damage!`,
-      })
-    }
+    super.takeHit(
+      damage,
+      type,
+      player[`${type}Attack`],
+      this[`${type}Defence`],
+      'enemy',
+      this.name
+    )
   }
 
   public load(props: SaveFile['gameState']['enemies'][number]) {

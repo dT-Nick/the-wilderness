@@ -25,7 +25,6 @@ export function drawWorldMap() {
   const highestXCoord =
     Math.max(
       ...mapIds.map((mapId) => {
-        if (mapId === '[0,0]') return 0
         if (mapId === 'settlement') return 0
         return Number(mapId.replace(/[[\]]/g, '').split(',')[0])
       })
@@ -33,7 +32,6 @@ export function drawWorldMap() {
   const lowestXCoord =
     Math.min(
       ...mapIds.map((mapId) => {
-        if (mapId === '[0,0]') return 0
         if (mapId === 'settlement') return 0
         return Number(mapId.replace(/[[\]]/g, '').split(',')[0])
       })
@@ -41,7 +39,6 @@ export function drawWorldMap() {
   const highestYCoord =
     Math.max(
       ...mapIds.map((mapId) => {
-        if (mapId === '[0,0]') return 0
         if (mapId === 'settlement') return -1
         return Number(mapId.replace(/[[\]]/g, '').split(',')[1])
       })
@@ -64,7 +61,6 @@ export function drawWorldMap() {
       ) {
         let mapId: string | number = `[${i},${j}]`
         if (i === 0 && j === -1) mapId = 'settlement'
-        if (i === 0 && j === 0) mapId = 0
 
         drawWorldMapSection(
           mapId,

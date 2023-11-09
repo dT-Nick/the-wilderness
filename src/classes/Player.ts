@@ -1,7 +1,4 @@
-import {
-  calculateDamage,
-  calculateExperienceFromLevel,
-} from '../helpers/functions.js'
+import { calculateExperienceFromLevel } from '../helpers/functions.js'
 import { isButtonCurrentlyDown, isKeyCurrentlyDown } from '../input.js'
 import { SaveFile } from '../save.js'
 import {
@@ -24,7 +21,12 @@ export class Player extends LivingBeing {
     right: number
   }
   currentHeal: number
-  currentExperienceGain: number
+  currentExperienceGain: {
+    melee: number
+    magic: number
+    ranged: number
+  }
+  godMode: boolean
 
   constructor(startX: number, startY: number, size: number) {
     const health = 100
@@ -40,8 +42,40 @@ export class Player extends LivingBeing {
     }
     this.movementStatus = 'idle'
     this.currentHeal = 0
-    this.prevExperience = 2500000
-    this.experience = 2500000
+    this.currentExperienceGain = {
+      melee: 0,
+      magic: 0,
+      ranged: 0,
+    }
+    this.godMode = false
+  }
+
+  public toggleGodMode() {
+    this.godMode = !this.godMode
+  }
+
+  get meleeAttack() {
+    return this.godMode ? 10000 : super.meleeAttack
+  }
+
+  get meleeDefence() {
+    return this.godMode ? 10000 : super.meleeDefence
+  }
+
+  get rangedAttack() {
+    return this.godMode ? 10000 : super.rangedAttack
+  }
+
+  get rangedDefence() {
+    return this.godMode ? 10000 : super.rangedDefence
+  }
+
+  get magicAttack() {
+    return this.godMode ? 10000 : super.magicAttack
+  }
+
+  get magicDefence() {
+    return this.godMode ? 10000 : super.magicDefence
   }
 
   get coordinates() {
@@ -76,7 +110,10 @@ export class Player extends LivingBeing {
     const isSprintDown =
       isKeyCurrentlyDown('shift') || isButtonCurrentlyDown('buttonB')
 
-    return blockSize / (isSprintDown ? 8 : 12)
+    return (
+      blockSize /
+      (isSprintDown ? (this.godMode ? 2 : 8) : this.godMode ? 3 : 12)
+    )
   }
 
   public moveUp() {
@@ -206,30 +243,21 @@ export class Player extends LivingBeing {
     }
   }
 
-  public takeHit(damage: number): void {
+  public takeHit(damage: number, type: 'melee' | 'ranged' | 'magic') {
     const { enemies } = getGameState()
     const { enemyId } = getBattleState()
     const enemy = enemies.find((e) => e.id === enemyId)
     if (!enemy) return
 
-    const { damage: modifiedDamage, isCrit } = calculateDamage(
-      enemy.attack,
-      this.defence,
-      damage
+    super.takeHit(
+      damage,
+      type,
+      enemy[`${type}Attack`],
+      this[`${type}Defence`],
+      'player',
+      enemy.name
     )
 
-    super.takeHit(modifiedDamage)
-    if (modifiedDamage === 0) {
-      updateMessageState({
-        message: `The ${enemy.name} missed their attack!`,
-      })
-    } else {
-      updateMessageState({
-        message:
-          (isCrit ? 'Critical hit! ' : '') +
-          `The ${enemy.name} attacked you causing ${modifiedDamage} damage!`,
-      })
-    }
     updateBattleState({
       playerMenu: 'main',
     })
@@ -247,34 +275,115 @@ export class Player extends LivingBeing {
     })
   }
 
-  public gainExperience(amount: number) {
-    this.currentExperienceGain = amount
+  public gainExperience(amount: number, type: 'melee' | 'ranged' | 'magic') {
+    this.currentExperienceGain = {
+      ...this.currentExperienceGain,
+      [type]: this.currentExperienceGain[type] + amount,
+    }
+  }
+
+  get currentlyGainingExperience() {
+    return (
+      this.currentExperienceGain.magic > 0 ||
+      this.currentExperienceGain.melee > 0 ||
+      this.currentExperienceGain.ranged > 0
+    )
   }
 
   public addExperience(instant: boolean = false) {
-    if (!this.currentExperienceGain) return
-    const deltaFrames = getDeltaFrames()
-    const experienceAtNextLevel = calculateExperienceFromLevel(
-      this.currentLevel
+    if (
+      this.currentExperienceGain.magic === 0 &&
+      this.currentExperienceGain.melee === 0 &&
+      this.currentExperienceGain.ranged === 0
     )
-    const experienceIncrease = (this.currentExperienceGain / 100) * deltaFrames
-    const experienceAfterIncrease = this.experience + experienceIncrease
+      return
+    const deltaFrames = getDeltaFrames()
+    if (this.currentExperienceGain.melee) {
+      const experienceAtNextMeleeLevel = calculateExperienceFromLevel(
+        this.currentMeleeLevel
+      )
+      const experienceIncrease =
+        (this.currentExperienceGain.melee / 100) * deltaFrames
+      const meleeExperienceAfterIncrease =
+        this.experience.melee + experienceIncrease
 
-    this.experience += experienceIncrease
+      this.experience.melee += experienceIncrease
 
-    if (experienceAfterIncrease >= experienceAtNextLevel) {
-      this.currentHealth += 10
-      this.prevHealth += 10
+      if (meleeExperienceAfterIncrease >= experienceAtNextMeleeLevel) {
+        this.currentHealth += 10
+        this.prevHealth += 10
+      }
+    }
+    if (this.currentExperienceGain.ranged) {
+      const experienceAtNextRangedLevel = calculateExperienceFromLevel(
+        this.currentRangedLevel
+      )
+      const experienceIncrease =
+        (this.currentExperienceGain.ranged / 100) * deltaFrames
+      const rangedExperienceAfterIncrease =
+        this.experience.ranged + experienceIncrease
+
+      this.experience.ranged += experienceIncrease
+
+      if (rangedExperienceAfterIncrease >= experienceAtNextRangedLevel) {
+        this.currentHealth += 10
+        this.prevHealth += 10
+      }
+    }
+    if (this.currentExperienceGain.magic) {
+      const experienceAtNextMagicLevel = calculateExperienceFromLevel(
+        this.currentMagicLevel
+      )
+      const experienceIncrease =
+        (this.currentExperienceGain.magic / 100) * deltaFrames
+      const magicExperienceAfterIncrease =
+        this.experience.magic + experienceIncrease
+
+      this.experience.magic += experienceIncrease
+
+      if (magicExperienceAfterIncrease >= experienceAtNextMagicLevel) {
+        this.currentHealth += 10
+        this.prevHealth += 10
+      }
     }
 
     if (
-      this.experience >= this.prevExperience + this.currentExperienceGain ||
+      this.experience.melee >=
+        this.prevExperience.melee + this.currentExperienceGain.melee ||
       instant
     ) {
-      const newExperience = this.prevExperience + this.currentExperienceGain
-      this.experience = newExperience
-      this.prevExperience = newExperience
-      this.currentExperienceGain = 0
+      const newExperience =
+        this.prevExperience.melee + this.currentExperienceGain.melee
+      this.experience.melee = newExperience
+      this.prevExperience.melee = newExperience
+      this.currentExperienceGain.melee = 0
+    }
+    if (
+      this.experience.ranged >=
+      this.prevExperience.ranged + this.currentExperienceGain.ranged
+    ) {
+      const newExperience =
+        this.prevExperience.ranged + this.currentExperienceGain.ranged
+      this.experience.ranged = newExperience
+      this.prevExperience.ranged = newExperience
+      this.currentExperienceGain.ranged = 0
+    }
+    if (
+      this.experience.magic >=
+      this.prevExperience.magic + this.currentExperienceGain.magic
+    ) {
+      const newExperience =
+        this.prevExperience.magic + this.currentExperienceGain.magic
+      this.experience.magic = newExperience
+      this.prevExperience.magic = newExperience
+      this.currentExperienceGain.magic = 0
+    }
+
+    if (
+      this.currentExperienceGain.magic === 0 &&
+      this.currentExperienceGain.melee === 0 &&
+      this.currentExperienceGain.ranged === 0
+    ) {
       updateBattleState({
         status: 'wait',
         waitLengthMs: 2000,

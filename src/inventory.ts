@@ -176,7 +176,7 @@ export function handleInventorySettingsInput() {
       if (player.currentHeal > 0) {
         player.addHealth(true)
       }
-      if (player.currentExperienceGain > 0) {
+      if (player.currentlyGainingExperience) {
         player.addExperience(true)
       }
       if (player.currentDamage) {

@@ -28,10 +28,12 @@ export function drawBattle() {
 }
 
 export function drawPlayerInfo() {
-  const { ctx, scale, verticalOffset, height } = getCanvasState()
-  const { player } = getGameState()
+  const { ctx, scale, verticalOffset, height, width } = getCanvasState()
+  const { player, enemies } = getGameState()
+  const { enemyId } = getBattleState()
+  const enemy = enemies.find((e) => e.id === enemyId)
 
-  if (isInitialised(ctx) && isPlayerInitialised(player)) {
+  if (isInitialised(ctx) && isPlayerInitialised(player) && enemy) {
     const spacingBetweenElements = 10 * scale
 
     const nameHeight = 17 * scale
@@ -46,7 +48,7 @@ export function drawPlayerInfo() {
 
     // health bar
     const healthBarWidth = 400 * scale
-    const healthBarHeight = 15 * scale
+    const healthBarHeight = 25 * scale + spacingBetweenElements
     const healthBarX = 10 * scale
     const healthBarY =
       10 * scale + verticalOffset / 2 + nameHeight + spacingBetweenElements
@@ -59,42 +61,9 @@ export function drawPlayerInfo() {
     ctx.fillStyle = 'red'
     ctx.fillRect(healthBarX, healthBarY, healthBarFillWidth, healthBarHeight)
 
-    const experienceBarWidth = 400 * scale
-    const experienceBarHeight = 10 * scale
-    const experienceBarX = 10 * scale
-    const experienceBarY = healthBarY + healthBarHeight + spacingBetweenElements
-    const experienceAtStartOfLevel = calculateExperienceFromLevel(
-      player.currentLevel - 1
-    )
-    const experienceAtEndOfLevel = calculateExperienceFromLevel(
-      player.currentLevel
-    )
-
-    const experienceBarFillWidth =
-      ((player.experience - experienceAtStartOfLevel) /
-        (experienceAtEndOfLevel - experienceAtStartOfLevel)) *
-      experienceBarWidth
-
-    ctx.fillStyle = '#333333'
-    ctx.fillRect(
-      experienceBarX,
-      experienceBarY,
-      experienceBarWidth,
-      experienceBarHeight
-    )
-    ctx.fillStyle = 'green'
-    ctx.fillRect(
-      experienceBarX,
-      experienceBarY,
-      experienceBarFillWidth > experienceBarWidth
-        ? experienceBarWidth
-        : experienceBarFillWidth,
-      experienceBarHeight
-    )
-
-    const levelBoxHeight = healthBarHeight + experienceBarHeight + 10 * scale
+    const levelBoxHeight = healthBarHeight
     const levelBoxWidth = levelBoxHeight
-    const levelBoxX = healthBarX + healthBarWidth + 10 * scale
+    const levelBoxX = healthBarX + healthBarWidth + spacingBetweenElements
     const levelBoxY = healthBarY
 
     ctx.lineWidth = 2
@@ -106,7 +75,7 @@ export function drawPlayerInfo() {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(
-      player.currentLevel.toString(),
+      player.currentCombatLevel.toString(),
       levelBoxX + levelBoxWidth / 2,
       levelBoxY + levelBoxHeight / 2 + 2
     )
@@ -121,6 +90,181 @@ export function drawPlayerInfo() {
       imageWidth,
       imageHeight
     )
+
+    if (enemy.currentHealth === 0 && !isMessageActive()) {
+      const spacingBetweenElements = 20 * scale
+
+      const experienceBoxWidth = 600 * scale
+      const experienceBoxHeight = 300 * scale
+      const experienceBoxX = width / 2 - experienceBoxWidth / 2
+      const experienceBoxY = height / 2 - experienceBoxHeight / 2
+
+      const experienceBarHeight = 30 * scale
+      const experienceBarWidth =
+        experienceBoxWidth - spacingBetweenElements * 3 - experienceBarHeight
+      const experienceBarX = experienceBoxX + spacingBetweenElements
+
+      const levelBoxSize = experienceBarHeight
+      const levelBoxX =
+        experienceBarX + experienceBarWidth + spacingBetweenElements
+
+      ctx.fillStyle = '#333333'
+      ctx.shadowBlur = 7
+      ctx.shadowColor = 'black'
+      ctx.fillRect(
+        experienceBoxX,
+        experienceBoxY,
+        experienceBoxWidth,
+        experienceBoxHeight
+      )
+      ctx.shadowBlur = 0
+
+      const meleeExperienceBarY =
+        experienceBoxY +
+        experienceBoxHeight / 3 -
+        experienceBoxHeight / 6 -
+        experienceBarHeight / 2
+
+      const meleeExperienceBarFillWidth =
+        ((player.experience.melee -
+          calculateExperienceFromLevel(player.currentMeleeLevel - 1)) /
+          (calculateExperienceFromLevel(player.currentMeleeLevel) -
+            calculateExperienceFromLevel(player.currentMeleeLevel - 1))) *
+        experienceBarWidth
+
+      ctx.fillStyle = 'white'
+      ctx.font = `${Math.floor(14 * scale)}px monospace`
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'bottom'
+      ctx.fillText('Melee', experienceBarX, meleeExperienceBarY - 10)
+
+      ctx.fillStyle = '#444444'
+      ctx.fillRect(
+        experienceBarX,
+        meleeExperienceBarY,
+        experienceBarWidth,
+        experienceBarHeight
+      )
+
+      ctx.fillStyle = '#912700'
+      ctx.fillRect(
+        experienceBarX,
+        meleeExperienceBarY,
+        meleeExperienceBarFillWidth,
+        experienceBarHeight
+      )
+
+      ctx.fillStyle = 'white'
+      ctx.font = `${Math.floor(20 * scale)}px monospace`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(
+        player.currentMeleeLevel.toString(),
+        levelBoxX + levelBoxSize / 2,
+        meleeExperienceBarY + experienceBarHeight / 2 + 2
+      )
+
+      ctx.strokeRect(levelBoxX, meleeExperienceBarY, levelBoxSize, levelBoxSize)
+
+      const rangedExperienceBarY =
+        experienceBoxY +
+        experienceBoxHeight / 3 +
+        experienceBoxHeight / 6 -
+        experienceBarHeight / 2
+
+      const rangedExperienceBarFillWidth =
+        ((player.experience.ranged -
+          calculateExperienceFromLevel(player.currentRangedLevel - 1)) /
+          (calculateExperienceFromLevel(player.currentRangedLevel) -
+            calculateExperienceFromLevel(player.currentRangedLevel - 1))) *
+        experienceBarWidth
+
+      ctx.fillStyle = 'white'
+      ctx.font = `${Math.floor(14 * scale)}px monospace`
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'bottom'
+      ctx.fillText('Ranged', experienceBarX, rangedExperienceBarY - 10)
+
+      ctx.fillStyle = '#444444'
+      ctx.fillRect(
+        experienceBarX,
+        rangedExperienceBarY,
+        experienceBarWidth,
+        experienceBarHeight
+      )
+
+      ctx.fillStyle = 'green'
+      ctx.fillRect(
+        experienceBarX,
+        rangedExperienceBarY,
+        rangedExperienceBarFillWidth,
+        experienceBarHeight
+      )
+
+      ctx.fillStyle = 'white'
+      ctx.font = `${Math.floor(20 * scale)}px monospace`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(
+        player.currentRangedLevel.toString(),
+        levelBoxX + levelBoxSize / 2,
+        rangedExperienceBarY + experienceBarHeight / 2 + 2
+      )
+
+      ctx.strokeRect(
+        levelBoxX,
+        rangedExperienceBarY,
+        levelBoxSize,
+        levelBoxSize
+      )
+
+      const magicExperienceBarY =
+        experienceBoxY +
+        experienceBoxHeight / 3 +
+        experienceBoxHeight / 2 -
+        experienceBarHeight / 2
+
+      const magicExperienceBarFillWidth =
+        ((player.experience.magic -
+          calculateExperienceFromLevel(player.currentMagicLevel - 1)) /
+          (calculateExperienceFromLevel(player.currentMagicLevel) -
+            calculateExperienceFromLevel(player.currentMagicLevel - 1))) *
+        experienceBarWidth
+
+      ctx.fillStyle = 'white'
+      ctx.font = `${Math.floor(14 * scale)}px monospace`
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'bottom'
+      ctx.fillText('Magic', experienceBarX, magicExperienceBarY - 10)
+
+      ctx.fillStyle = '#444444'
+      ctx.fillRect(
+        experienceBarX,
+        magicExperienceBarY,
+        experienceBarWidth,
+        experienceBarHeight
+      )
+
+      ctx.fillStyle = '#0070a8'
+      ctx.fillRect(
+        experienceBarX,
+        magicExperienceBarY,
+        magicExperienceBarFillWidth,
+        experienceBarHeight
+      )
+
+      ctx.fillStyle = 'white'
+      ctx.font = `${Math.floor(20 * scale)}px monospace`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(
+        player.currentMagicLevel.toString(),
+        levelBoxX + levelBoxSize / 2,
+        magicExperienceBarY + experienceBarHeight / 2 + 2
+      )
+
+      ctx.strokeRect(levelBoxX, magicExperienceBarY, levelBoxSize, levelBoxSize)
+    }
   }
 }
 
@@ -192,7 +336,7 @@ export function drawEnemyInfo() {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(
-      enemy.currentLevel.toString(),
+      enemy.currentCombatLevel.toString(),
       levelBoxX + levelBoxWidth / 2,
       levelBoxY + levelBoxHeight / 2 + 2
     )
@@ -263,7 +407,7 @@ function drawMainOptions() {
 
     const isWaiting = Boolean(
       player.currentDamage !== null ||
-        player.currentExperienceGain > 0 ||
+        enemy.currentHealth <= 0 ||
         player.currentHeal > 0 ||
         enemy.currentDamage !== null ||
         status === 'wait'
@@ -312,7 +456,7 @@ export function drawMoves() {
 
     const isWaiting = Boolean(
       player.currentDamage !== null ||
-        player.currentExperienceGain > 0 ||
+        enemy.currentHealth <= 0 ||
         player.currentHeal ||
         enemy.currentDamage !== null ||
         status === 'wait'
@@ -400,7 +544,7 @@ export function drawInventory() {
   ctx.fillRect(0, verticalOffset / 2, width, height - verticalOffset)
 
   for (let i = 0; i < consumableItems.length; i++) {
-    const item = items[i]
+    const item = consumableItems[i]
 
     const colour = getOptionsColour(lastMove, false, selectedItem, i + 1)
     ctx.fillStyle = colour
@@ -456,11 +600,6 @@ export function handleBattleScenarios() {
     if (player.currentHeal > 0) {
       player.addHealth()
     }
-    console.log(player.currentExperienceGain)
-    if (player.currentExperienceGain > 0) {
-      player.addExperience()
-      return
-    }
   }
   if (player.currentHealth <= 0 && !isMessageActive()) {
     const { buildings } = getSettlementState()
@@ -494,41 +633,42 @@ export function handleBattleScenarios() {
     }
   }
 
-  if (
-    enemy.currentHealth <= 0 &&
-    player.currentExperienceGain <= 0 &&
-    !isMessageActive() &&
-    status !== 'wait'
-  ) {
-    updateWildernessState((c) => ({
-      wildernessTime: c.wildernessTime + 30 * 1000,
-    }))
-    updateGameState((c) => ({
-      enemies: [...c.enemies.filter((e) => e.id !== enemy.id)],
-      status: 'wilderness',
-    }))
-    if (enemy.name === 'Elite Witch') {
-      const [eCoordsX, eCoordsY] = enemy.coordinates
+  if (enemy.currentHealth <= 0 && !isMessageActive() && status !== 'wait') {
+    if (!player.currentlyGainingExperience) {
+      updateWildernessState((c) => ({
+        wildernessTime: c.wildernessTime + 30 * 1000,
+      }))
+      enemy.dropInventory()
 
-      let nextEliteWitch: Enemy | undefined
-      if (eCoordsX === 40 && eCoordsY !== 12) {
-        nextEliteWitch = enemies.find(
-          (e) => e.coordinates[0] === 42 && e.coordinates[1] === eCoordsY - 1
+      updateGameState((c) => ({
+        enemies: [...c.enemies.filter((e) => e.id !== enemy.id)],
+        status: 'wilderness',
+      }))
+      if (enemy.name === 'Elite Witch') {
+        const [eCoordsX, eCoordsY] = enemy.coordinates
+
+        let nextEliteWitch: Enemy | undefined
+        if (eCoordsX === 40 && eCoordsY !== 12) {
+          nextEliteWitch = enemies.find(
+            (e) => e.coordinates[0] === 42 && e.coordinates[1] === eCoordsY - 1
+          )
+        }
+        if (eCoordsX === 42) {
+          nextEliteWitch = enemies.find(
+            (e) => e.coordinates[0] === 40 && e.coordinates[1] === eCoordsY - 1
+          )
+        }
+        if (!nextEliteWitch) return
+        player.goToCoordinates(
+          nextEliteWitch.coordinates[0] === 40
+            ? nextEliteWitch.coordinates[0] + 1
+            : nextEliteWitch.coordinates[0] - 1,
+          nextEliteWitch.coordinates[1]
         )
+        player.stopMoving()
       }
-      if (eCoordsX === 42) {
-        nextEliteWitch = enemies.find(
-          (e) => e.coordinates[0] === 40 && e.coordinates[1] === eCoordsY - 1
-        )
-      }
-      if (!nextEliteWitch) return
-      player.goToCoordinates(
-        nextEliteWitch.coordinates[0] === 40
-          ? nextEliteWitch.coordinates[0] + 1
-          : nextEliteWitch.coordinates[0] - 1,
-        nextEliteWitch.coordinates[1]
-      )
-      player.stopMoving()
+    } else {
+      player.addExperience()
     }
   }
 }

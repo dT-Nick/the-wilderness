@@ -166,10 +166,10 @@ export function drawStatisticsAndPlayerDetails() {
 
     // health bar
     const experienceBarHeight = 10 * scale
-    const healthBarHeight = 15 * scale
+    const healthBarHeight = 25 * scale + spacingBetweenElements
     const healthBarWidth =
       width * (3 / 4) -
-      spacingBetweenElements * 5 -
+      spacingBetweenElements * 3 -
       healthBarHeight -
       experienceBarHeight -
       spacingBetweenElements
@@ -184,39 +184,7 @@ export function drawStatisticsAndPlayerDetails() {
     ctx.fillStyle = 'red'
     ctx.fillRect(healthBarX, healthBarY, healthBarFillWidth, healthBarHeight)
 
-    const experienceBarWidth = healthBarWidth
-    const experienceBarX = 20 * scale
-    const experienceBarY = healthBarY + healthBarHeight + spacingBetweenElements
-    const experienceAtStartOfLevel = calculateExperienceFromLevel(
-      player.currentLevel - 1
-    )
-    const experienceAtEndOfLevel = calculateExperienceFromLevel(
-      player.currentLevel
-    )
-
-    const experienceBarFillWidth =
-      ((player.experience - experienceAtStartOfLevel) /
-        (experienceAtEndOfLevel - experienceAtStartOfLevel)) *
-      experienceBarWidth
-
-    ctx.fillStyle = '#333333'
-    ctx.fillRect(
-      experienceBarX,
-      experienceBarY,
-      experienceBarWidth,
-      experienceBarHeight
-    )
-    ctx.fillStyle = 'green'
-    ctx.fillRect(
-      experienceBarX,
-      experienceBarY,
-      experienceBarFillWidth > experienceBarWidth
-        ? experienceBarWidth
-        : experienceBarFillWidth,
-      experienceBarHeight
-    )
-
-    const levelBoxHeight = healthBarHeight + experienceBarHeight + 10 * scale
+    const levelBoxHeight = healthBarHeight
     const levelBoxWidth = levelBoxHeight
     const levelBoxX = healthBarX + healthBarWidth + 10 * scale
     const levelBoxY = healthBarY
@@ -230,7 +198,7 @@ export function drawStatisticsAndPlayerDetails() {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(
-      player.currentLevel.toString(),
+      player.currentCombatLevel.toString(),
       levelBoxX + levelBoxWidth / 2,
       levelBoxY + levelBoxHeight / 2 + 2
     )
@@ -243,25 +211,21 @@ export function drawStatisticsAndPlayerDetails() {
       document.getElementById('player-image') as HTMLImageElement,
       (healthBarWidth + levelBoxWidth + spacingBetweenElements) / 2 -
         imageWidth / 2,
-      experienceBarY + experienceBarHeight + 10 * scale - imageNudgeY,
+      healthBarY + healthBarHeight + 10 * scale - imageNudgeY,
       imageWidth,
       imageHeight
     )
 
     const detailsX = 20 * scale
     const detailsY =
-      experienceBarY +
-      experienceBarHeight +
-      (imageHeight - imageNudgeY) +
-      20 * scale
+      healthBarY + healthBarHeight + (imageHeight - imageNudgeY) + 20 * scale
     const detailsWidth = healthBarWidth + levelBoxWidth + spacingBetweenElements
     const detailsHeight =
       height -
       verticalOffset -
       healthBarHeight -
-      experienceBarHeight -
       (imageHeight - imageNudgeY) -
-      spacingBetweenElements * 7
+      spacingBetweenElements * 6
 
     ctx.fillStyle = '#333333'
     ctx.fillRect(detailsX, detailsY, detailsWidth, detailsHeight)
@@ -277,24 +241,9 @@ export function drawStatisticsAndPlayerDetails() {
       detailsY + spacingBetweenElements
     )
     ctx.fillText(
-      `Experience: ${player.experience}`,
-      detailsX + 10 * scale,
-      detailsY + textHeight + spacingBetweenElements * 3
-    )
-    ctx.fillText(
-      `Attack: ${player.attack}`,
-      detailsX + 10 * scale,
-      detailsY + textHeight * 2 + spacingBetweenElements * 4
-    )
-    ctx.fillText(
-      `Defence: ${player.defence}`,
-      detailsX + 10 * scale,
-      detailsY + textHeight * 3 + spacingBetweenElements * 5
-    )
-    ctx.fillText(
       `Max Health: ${player.maxHealth}`,
       detailsX + 10 * scale,
-      detailsY + textHeight * 4 + spacingBetweenElements * 6
+      detailsY + textHeight + spacingBetweenElements * 2
     )
     const settlementHealthMax =
       buildings.reduce((acc, b) => (b.isPlaced ? acc + b.maxHealth : acc), 0) +
@@ -308,7 +257,7 @@ export function drawStatisticsAndPlayerDetails() {
     ctx.fillText(
       `Settlement Health: ${settlementHealthCurrent}/${settlementHealthMax}`,
       detailsX + 10 * scale,
-      detailsY + textHeight * 5 + spacingBetweenElements * 7
+      detailsY + textHeight * 2 + spacingBetweenElements * 3
     )
 
     const playTimeMinutes = Math.floor(playTime / 60 / 1000)
@@ -335,6 +284,177 @@ export function drawStatisticsAndPlayerDetails() {
       `Wilderness time: ${wildernessTimeMinutes}:${wildernessTimeSeconds}`,
       detailsX + 10 * scale,
       height - verticalOffset / 2 - spacingBetweenElements * 4 - textHeight
+    )
+
+    const statExperienceBarHeight = 30 * scale
+    const statExperienceBarWidth =
+      (detailsWidth - spacingBetweenElements * 2) * (2 / 3) -
+      statExperienceBarHeight -
+      spacingBetweenElements
+    const statExperienceBarX = detailsX + detailsWidth * (1 / 3)
+    const statLevelBoxSize = statExperienceBarHeight
+    const statLevelBoxX =
+      statExperienceBarX + statExperienceBarWidth + spacingBetweenElements
+
+    const meleeStatExperienceBarY =
+      detailsY +
+      detailsHeight / 3 -
+      detailsHeight / 6 -
+      statExperienceBarHeight / 2
+    const meleeStatExperienceBarFillWidth =
+      ((player.experience.melee -
+        calculateExperienceFromLevel(player.currentMeleeLevel - 1)) /
+        (calculateExperienceFromLevel(player.currentMeleeLevel) -
+          calculateExperienceFromLevel(player.currentMeleeLevel - 1))) *
+      statExperienceBarWidth
+
+    console.log(meleeStatExperienceBarFillWidth)
+
+    ctx.fillStyle = '#444444'
+    ctx.fillRect(
+      statExperienceBarX,
+      meleeStatExperienceBarY,
+      statExperienceBarWidth,
+      statExperienceBarHeight
+    )
+    ctx.fillStyle = '#912700'
+    ctx.fillRect(
+      statExperienceBarX,
+      meleeStatExperienceBarY,
+      meleeStatExperienceBarFillWidth,
+      statExperienceBarHeight
+    )
+
+    ctx.lineWidth = 2
+    ctx.strokeStyle = 'white'
+    ctx.strokeRect(
+      statLevelBoxX,
+      meleeStatExperienceBarY,
+      statLevelBoxSize,
+      statLevelBoxSize
+    )
+
+    ctx.fillStyle = 'white'
+    ctx.font = `${Math.floor(20 * scale)}px monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(
+      player.currentMeleeLevel.toString(),
+      statLevelBoxX + statLevelBoxSize / 2,
+      meleeStatExperienceBarY + statLevelBoxSize / 2 + 2
+    )
+
+    ctx.font = `${Math.floor(14 * scale)}px monospace`
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'bottom'
+    ctx.fillText(
+      `Melee`,
+      statExperienceBarX,
+      meleeStatExperienceBarY - 5 * scale
+    )
+
+    const rangedStatExperienceBarY =
+      detailsY + detailsHeight / 2 - statExperienceBarHeight / 2
+    const rangedStatExperienceBarFillWidth =
+      ((player.experience.ranged -
+        calculateExperienceFromLevel(player.currentRangedLevel - 1)) /
+        (calculateExperienceFromLevel(player.currentRangedLevel) -
+          calculateExperienceFromLevel(player.currentRangedLevel - 1))) *
+      statExperienceBarWidth
+
+    ctx.fillStyle = '#444444'
+    ctx.fillRect(
+      statExperienceBarX,
+      rangedStatExperienceBarY,
+      statExperienceBarWidth,
+      statExperienceBarHeight
+    )
+    ctx.fillStyle = 'green'
+    ctx.fillRect(
+      statExperienceBarX,
+      rangedStatExperienceBarY,
+      rangedStatExperienceBarFillWidth,
+      statExperienceBarHeight
+    )
+
+    ctx.lineWidth = 2
+    ctx.strokeStyle = 'white'
+    ctx.strokeRect(
+      statLevelBoxX,
+      rangedStatExperienceBarY,
+      statLevelBoxSize,
+      statLevelBoxSize
+    )
+
+    ctx.fillStyle = 'white'
+    ctx.font = `${Math.floor(20 * scale)}px monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(
+      player.currentRangedLevel.toString(),
+      statLevelBoxX + statLevelBoxSize / 2,
+      rangedStatExperienceBarY + statLevelBoxSize / 2 + 2
+    )
+
+    ctx.font = `${Math.floor(14 * scale)}px monospace`
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'bottom'
+    ctx.fillText(
+      `Ranged`,
+      statExperienceBarX,
+      rangedStatExperienceBarY - 5 * scale
+    )
+
+    const magicStatExperienceBarY =
+      detailsY + detailsHeight - detailsHeight / 6 - statExperienceBarHeight / 2
+    const magicStatExperienceBarFillWidth =
+      ((player.experience.magic -
+        calculateExperienceFromLevel(player.currentMagicLevel - 1)) /
+        (calculateExperienceFromLevel(player.currentMagicLevel) -
+          calculateExperienceFromLevel(player.currentMagicLevel - 1))) *
+      statExperienceBarWidth
+
+    ctx.fillStyle = '#444444'
+    ctx.fillRect(
+      statExperienceBarX,
+      magicStatExperienceBarY,
+      statExperienceBarWidth,
+      statExperienceBarHeight
+    )
+    ctx.fillStyle = '#0070a8'
+    ctx.fillRect(
+      statExperienceBarX,
+      magicStatExperienceBarY,
+      magicStatExperienceBarFillWidth,
+      statExperienceBarHeight
+    )
+
+    ctx.lineWidth = 2
+    ctx.strokeStyle = 'white'
+    ctx.strokeRect(
+      statLevelBoxX,
+      magicStatExperienceBarY,
+      statLevelBoxSize,
+      statLevelBoxSize
+    )
+
+    ctx.fillStyle = 'white'
+    ctx.font = `${Math.floor(20 * scale)}px monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(
+      player.currentMagicLevel.toString(),
+      statLevelBoxX + statLevelBoxSize / 2,
+      magicStatExperienceBarY + statLevelBoxSize / 2 + 2
+    )
+
+    ctx.font = `${Math.floor(14 * scale)}px monospace`
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'bottom'
+    ctx.fillText(
+      `Magic`,
+      statExperienceBarX,
+      magicStatExperienceBarY - 5 * scale
     )
   }
 }
@@ -390,7 +510,7 @@ export function handleSettingsInput() {
       if (player.currentHeal > 0) {
         player.addHealth(true)
       }
-      if (player.currentExperienceGain > 0) {
+      if (player.currentlyGainingExperience) {
         player.addExperience(true)
       }
       if (player.currentDamage) {
@@ -410,7 +530,7 @@ export function handleSettingsScenarios() {
   if (player.currentHeal > 0) {
     player.addHealth()
   }
-  if (player.currentExperienceGain > 0) {
+  if (player.currentlyGainingExperience) {
     player.addExperience()
   }
   if (player.currentDamage) {

@@ -143,6 +143,10 @@ export function generateKaurismakiDaemon(
     100,
     Math.floor(Math.random() * 4 + 8),
     Math.floor(Math.random() * 4 + 4),
+    Math.floor(Math.random() * 4 + 4),
+    0,
+    0,
+    Math.floor(Math.random() * 10 + 8),
     faceDirection
   )
 }
@@ -167,6 +171,10 @@ export function generateSettlementZombie(
     70,
     Math.floor(Math.random() * 4 + 10),
     Math.floor(Math.random() * 6 + 2),
+    0,
+    Math.floor(Math.random() * 5),
+    0,
+    Math.floor(Math.random() * 4 + 10),
     faceDirection
   )
 }
@@ -189,8 +197,12 @@ export function generateNightWitch(
     blockSize * (3 / 4),
     mapId,
     120,
-    Math.floor(Math.random() * 4 + 4),
-    Math.floor(Math.random() * 4 + 8),
+    Math.floor(Math.random() * 4 + 2),
+    Math.floor(Math.random() * 4 + 3),
+    Math.floor(Math.random() * 8 + 4),
+    Math.floor(Math.random() * 10 + 4),
+    0,
+    Math.floor(Math.random() * 5 + 1),
     faceDirection
   )
 }
@@ -213,8 +225,12 @@ export function generateEliteWitch(
     blockSize * (3 / 4),
     mapId,
     200,
-    Math.floor(Math.random() * 4 + 10),
-    Math.floor(Math.random() * 4 + 10),
+    Math.floor(Math.random() * 4 + 2),
+    Math.floor(Math.random() * 4 + 7),
+    Math.floor(Math.random() * 8 + 8),
+    Math.floor(Math.random() * 10 + 8),
+    0,
+    Math.floor(Math.random() * 5 + 7),
     faceDirection
   )
 }
@@ -238,6 +254,10 @@ export function generateKaurismakiKing(
     1000,
     14,
     13,
+    12,
+    12,
+    0,
+    15,
     faceDirection
   )
 }

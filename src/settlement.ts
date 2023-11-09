@@ -227,7 +227,6 @@ export function handleSettlementInput() {
   if (status === 'building') {
     handleBuildingInput()
   }
-  handleSettingsTriggerInputs()
   handleSettlementExit()
 }
 
@@ -372,6 +371,8 @@ export function handleSettlementExit() {
 }
 
 function handleExploringInput() {
+  handleSettingsTriggerInputs()
+
   if (isKeyDownEvent(['b']) || isButtonDownEvent('buttonX')) {
     updateSettlementState({
       status: 'building',

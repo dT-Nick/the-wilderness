@@ -1,5 +1,14 @@
-import { calculateLevelFromExperience } from '../helpers/functions.js'
-import { getDeltaFrames } from '../state.js'
+import {
+  calculateCombatLevelFromMeleeRangedAndMagic,
+  calculateDamage,
+  calculateLevelFromExperience,
+} from '../helpers/functions.js'
+import {
+  getDeltaFrames,
+  getGameState,
+  isPlayerInitialised,
+  updateMessageState,
+} from '../state.js'
 import { Entity } from './Entity.js'
 
 export class LivingBeing extends Entity {
@@ -8,12 +17,24 @@ export class LivingBeing extends Entity {
   currentDamage: number | null
   faceDirection: 'up' | 'down' | 'left' | 'right'
   baseStats: {
-    attack: number
-    defence: number
+    meleeAttack: number
+    meleeDefence: number
     health: number
+    magicAttack: number
+    magicDefence: number
+    rangedAttack: number
+    rangedDefence: number
   }
-  experience: number
-  prevExperience: number
+  experience: {
+    melee: number
+    magic: number
+    ranged: number
+  }
+  prevExperience: {
+    melee: number
+    magic: number
+    ranged: number
+  }
 
   constructor(
     startX: number,
@@ -30,34 +51,99 @@ export class LivingBeing extends Entity {
 
     this.currentDamage = null
     this.baseStats = {
-      attack: 10,
-      defence: 10,
+      meleeAttack: 10,
+      meleeDefence: 10,
+      magicAttack: 10,
+      magicDefence: 10,
+      rangedAttack: 10,
+      rangedDefence: 10,
       health,
     }
-    this.experience = 0
-    this.prevExperience = 0
+    this.experience = {
+      melee: 0,
+      magic: 0,
+      ranged: 0,
+    }
+    this.prevExperience = {
+      melee: 0,
+      magic: 0,
+      ranged: 0,
+    }
   }
 
-  get currentLevel() {
-    return calculateLevelFromExperience(this.experience)
+  get currentMeleeLevel() {
+    return calculateLevelFromExperience(this.experience.melee)
   }
 
-  get attack() {
-    return (
-      this.baseStats.attack +
-      (this.currentLevel - 1) * Math.floor(this.baseStats.attack / 2)
+  get currentMagicLevel() {
+    return calculateLevelFromExperience(this.experience.magic)
+  }
+
+  get currentRangedLevel() {
+    return calculateLevelFromExperience(this.experience.ranged)
+  }
+
+  get currentCombatLevel() {
+    return calculateCombatLevelFromMeleeRangedAndMagic(
+      this.experience.melee,
+      this.experience.ranged,
+      this.experience.magic
     )
   }
 
-  get defence() {
+  get meleeAttack() {
     return (
-      this.baseStats.defence +
-      (this.currentLevel - 1) * Math.floor(this.baseStats.defence / 2)
+      this.baseStats.meleeAttack +
+      (this.currentMeleeLevel - 1) * Math.floor(this.baseStats.meleeAttack / 2)
+    )
+  }
+
+  get meleeDefence() {
+    return (
+      this.baseStats.meleeDefence +
+      (this.currentMeleeLevel - 1) * Math.floor(this.baseStats.meleeDefence / 2)
+    )
+  }
+
+  get magicAttack() {
+    return (
+      this.baseStats.magicAttack +
+      (this.currentMagicLevel - 1) * Math.floor(this.baseStats.magicAttack / 2)
+    )
+  }
+
+  get magicDefence() {
+    return (
+      this.baseStats.magicDefence +
+      (this.currentMagicLevel - 1) * Math.floor(this.baseStats.magicDefence / 2)
+    )
+  }
+
+  get rangedAttack() {
+    return (
+      this.baseStats.rangedAttack +
+      (this.currentRangedLevel - 1) *
+        Math.floor(this.baseStats.rangedAttack / 2)
+    )
+  }
+
+  get rangedDefence() {
+    return (
+      this.baseStats.rangedDefence +
+      (this.currentRangedLevel - 1) *
+        Math.floor(this.baseStats.rangedDefence / 2)
     )
   }
 
   get maxHealth() {
-    return this.baseStats.health + (this.currentLevel - 1) * 10
+    return (
+      this.baseStats.health +
+      (this.currentMeleeLevel +
+        this.currentMagicLevel +
+        this.currentRangedLevel -
+        3) *
+        10
+    )
   }
 
   get coordinatesOfBlockInFront() {
@@ -120,7 +206,55 @@ export class LivingBeing extends Entity {
     this.prevHealth = this.maxHealth
   }
 
-  public takeHit(damage: number) {
-    this.currentDamage = damage
+  public takeHit(
+    damage: number,
+    type: 'melee' | 'magic' | 'ranged',
+    attack: number,
+    defence: number,
+    enemyOrPlayer: 'player' | 'enemy',
+    enemyName: string
+  ) {
+    const { player } = getGameState()
+    if (!isPlayerInitialised(player)) return
+    const { damage: modifiedDamage, isCrit } = calculateDamage(
+      attack,
+      defence,
+      damage
+    )
+
+    if (modifiedDamage === 0) {
+      if (enemyOrPlayer === 'player') {
+        updateMessageState({
+          message: `The ${enemyName} missed their attack!`,
+        })
+      } else {
+        updateMessageState({
+          message: `You missed your attack!`,
+        })
+      }
+    } else {
+      if (enemyOrPlayer === 'player') {
+        updateMessageState({
+          message:
+            (isCrit ? 'Critical hit! ' : '') +
+            `The ${enemyName} attacked you causing ${modifiedDamage} damage!`,
+        })
+      } else {
+        player.gainExperience(
+          ((modifiedDamage > this.maxHealth ? this.maxHealth : modifiedDamage) *
+            this.currentCombatLevel) /
+            2,
+          type
+        )
+
+        updateMessageState({
+          message:
+            (isCrit ? 'Critical hit! ' : '') +
+            `You attacked the ${enemyName} causing ${modifiedDamage} damage!`,
+        })
+      }
+    }
+
+    this.currentDamage = modifiedDamage
   }
 }
